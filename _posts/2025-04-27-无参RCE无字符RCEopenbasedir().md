@@ -1,3 +1,14 @@
+---
+layout:     post
+title:      无参无数无字符opendir()
+subtitle:   null
+date:       2025-04-27
+author:     b1ank
+header-img: img/post-bg-coffee.jpg
+catalog: 	  true
+tags:
+    - 知识
+---
 ### 无参RCE|无字符RCE|openbasedir()
 
 ###### 一.Main contents
