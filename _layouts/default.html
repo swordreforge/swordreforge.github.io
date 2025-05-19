@@ -4,7 +4,7 @@
 
 <body ontouchstart="">
   
-  <!-- 在导航栏中添加主题切换按钮 -->
+  <!-- 右下角主题切换按钮 -->
   <div class="theme-switcher">
     <button onclick="switchTheme('dark')">暗黑主题</button>
     <button onclick="switchTheme('light')">护眼主题</button>
@@ -18,7 +18,7 @@
 
   <style>
     :root {
-      /* 暗黑主题默认变量 */
+      /* 暗黑主题变量 */
       --bg-color: #1a1a1a;
       --text-color: #0f0;
       --accent-color: #00ff00;
@@ -26,7 +26,7 @@
     }
 
     [data-theme="light"] {
-      /* 米黄护眼主题变量 */
+      /* 护眼主题变量 */
       --bg-color: #f0e7d8;
       --text-color: #4a4a4a;
       --accent-color: #8b4513;
@@ -36,31 +36,46 @@
     body {
       background-color: var(--bg-color);
       color: var(--text-color);
-      transition: background-color 0.3s ease;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
+    /* 主题切换按钮样式 */
     .theme-switcher {
       position: fixed;
-      top: 10px;
+      bottom: 20px;
       right: 20px;
       z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-family: 'Courier New', monospace;
     }
 
     .theme-switcher button {
       background: var(--accent-color);
       color: var(--bg-color);
-      border: none;
-      padding: 5px 10px;
-      margin: 0 5px;
+      border: 2px solid var(--text-color);
+      padding: 8px 20px;
       cursor: pointer;
-      border-radius: 3px;
+      border-radius: 25px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    .hacker-text {
-      color: var(--accent-color);
-      text-shadow: 0 0 5px var(--accent-color);
+    .theme-switcher button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      opacity: 0.9;
     }
 
+    .theme-switcher button:active {
+      transform: translateY(0);
+    }
+
+    /* 矩阵画布样式 */
     #matrixCanvas {
       position: fixed;
       top: 0;
@@ -71,53 +86,58 @@
   </style>
 
   <script>
-    // 主题切换功能
+    // 主题管理功能
     function switchTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
       localStorage.setItem('theme', theme);
       updateMatrixColor(theme);
     }
 
-    // 初始化主题
     function initializeTheme() {
       const savedTheme = localStorage.getItem('theme') || 
         (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       switchTheme(savedTheme);
     }
 
-    // 更新矩阵颜色
     function updateMatrixColor(theme) {
-      const matrixColor = theme === 'dark' ? '#0f0' : '#654321';
+      const matrixColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--matrix-color').trim();
       if (window.matrixAnimation) {
         window.matrixAnimation.setColor(matrixColor);
       }
     }
 
-    // 初始化
-    document.addEventListener('DOMContentLoaded', initializeTheme);
-  </script>
-
-  <!-- 原矩阵代码需要修改颜色设置部分，示例： -->
-  <script>
+    // 矩阵动画类（需补充完整实现）
     class MatrixAnimation {
-      constructor(canvas, color = '#0f0') {
+      constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.color = color;
-        // ...其他初始化代码...
+        this.color = getComputedStyle(document.documentElement)
+          .getPropertyValue('--matrix-color').trim();
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+      }
+
+      resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
       }
 
       setColor(newColor) {
         this.color = newColor;
-        // 重置动画或更新颜色
+        // 这里需要补充实际的颜色更新逻辑
       }
+
+      // 补充其他矩阵动画方法...
     }
-    // 初始化矩阵动画
-    window.matrixAnimation = new MatrixAnimation(
-      document.getElementById('matrixCanvas'),
-      getComputedStyle(document.documentElement)
-        .getPropertyValue('--matrix-color').trim()
-    );
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeTheme();
+      window.matrixAnimation = new MatrixAnimation(
+        document.getElementById('matrixCanvas')
+      );
+    });
   </script>
 </body>
 </html>
