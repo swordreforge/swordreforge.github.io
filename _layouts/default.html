@@ -5,46 +5,7 @@
 
 <!-- hack iOS CSS :active style -->
 <body ontouchstart="">
-
-    {% include nav.html %}
-
-    {{ content }}
-
-    {% include footer.html %}
-
-
-<!-- Image to hack wechat -->
-<img src="/img/apple-touch-icon.png" width="0" height="0" />
-<!-- Migrate from head to bottom, no longer block render and still work -->
-
-</body>
-<!-- 在您的布局文件中（如 _layouts/default.html 的底部）添加以下内容 -->
-<canvas id="matrixCanvas" style="position:fixed;top:0;left:0;pointer-events:none;z-index:-1;"></canvas>
-
-<style>
-.hacker-text {
-  position: absolute;
-  color: #0f0;
-  font-family: 'Courier New', monospace;
-  font-weight: bold;
-  text-shadow: 0 0 5px #0f0;
-  pointer-events: none;
-  animation: floatUp 2s ease-out forwards;
-}
-
-@keyframes floatUp {
-  0% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-100px);
-  }
-}
-</style>
-
-<script>
+    <script>
 (function() {
   // 随机文字配置
   const messages = [
@@ -119,4 +80,44 @@
   initMatrix();
 })();
 </script>
+
+    {% include nav.html %}
+
+    {{ content }}
+
+    {% include footer.html %}
+
+
+<!-- Image to hack wechat -->
+<img src="/img/apple-touch-icon.png" width="0" height="0" />
+<!-- Migrate from head to bottom, no longer block render and still work -->
+
+</body>
+<!-- 在您的布局文件中（如 _layouts/default.html 的底部）添加以下内容 -->
+<canvas id="matrixCanvas" style="position:fixed;top:0;left:0;pointer-events:none;z-index:-1;"></canvas>
+
+<style>
+.hacker-text {
+  position: absolute;
+  color: #0f0;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  text-shadow: 0 0 5px #0f0;
+  pointer-events: none;
+  animation: floatUp 2s ease-out forwards;
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100px);
+  }
+}
+</style>
+
+
 </html>
