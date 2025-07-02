@@ -1,3 +1,16 @@
+---
+layout:     post
+title:      php小特性
+subtitle:   null
+date:       2025-07-02
+author:     sword Reforge
+header-img: img/post-bg-coffee.jpg
+catalog: 	  true
+tags:
+
+   - 知识
+---
+
 #### 有关php的一些啸特性-1
 
 1.绕过waf(超过10000次就***）
