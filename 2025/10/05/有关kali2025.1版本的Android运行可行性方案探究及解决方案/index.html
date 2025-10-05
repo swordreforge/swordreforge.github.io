@@ -7,8 +7,8 @@
     <link rel="icon" href="/favicon.ico">
   
   
-  <title>文章归档: 2025 | Diver&#39;s blog</title>
-  <link rel="canonical" href="https://swordreforge.github.io/archives/2025/index.html">
+  <title>Run Android in Kali-2025.1 ignoring its kernel | Diver&#39;s blog</title>
+  <link rel="canonical" href="https://swordreforge.github.io/2025/10/05/%E6%9C%89%E5%85%B3kali2025.1%E7%89%88%E6%9C%AC%E7%9A%84Android%E8%BF%90%E8%A1%8C%E5%8F%AF%E8%A1%8C%E6%80%A7%E6%96%B9%E6%A1%88%E6%8E%A2%E7%A9%B6%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">
   <meta name="author" content="Diver" />
   <meta http-equiv="Cache-Control" content="no-transform" />
   <meta http-equiv="Cache-Control" content="no-siteapp" />
@@ -17,15 +17,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <meta name="format-detection" content="telphone=no, email=no" />
   
-    <meta name="keywords" content="" />
+    <meta name="keywords" content="玩机" />
   
-  <meta property="og:type" content="website">
-<meta property="og:title" content="文章归档: 2025">
-<meta property="og:url" content="https://swordreforge.github.io/archives/2025/index.html">
+  <meta name="description" content="摘要：使用Andriod-x86项目获得的iso文件，加上houdini的开源模块，实现andriod-x86环境下的对arm64-v8a,arm32架构应用的支持.  123└─$ uname -a                         Linux swordreforge 6.12.38+kali-amd64 #1 SMP PREEMPT_DYNAMIC Kali 6.12.38-">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Run Android in Kali-2025.1 ignoring its kernel">
+<meta property="og:url" content="https://swordreforge.github.io/2025/10/05/%E6%9C%89%E5%85%B3kali2025.1%E7%89%88%E6%9C%AC%E7%9A%84Android%E8%BF%90%E8%A1%8C%E5%8F%AF%E8%A1%8C%E6%80%A7%E6%96%B9%E6%A1%88%E6%8E%A2%E7%A9%B6%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/index.html">
 <meta property="og:site_name" content="Diver&#39;s blog">
+<meta property="og:description" content="摘要：使用Andriod-x86项目获得的iso文件，加上houdini的开源模块，实现andriod-x86环境下的对arm64-v8a,arm32架构应用的支持.  123└─$ uname -a                         Linux swordreforge 6.12.38+kali-amd64 #1 SMP PREEMPT_DYNAMIC Kali 6.12.38-">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://swordreforge.github.io/2025/10/05/%E6%9C%89%E5%85%B3kali2025.1%E7%89%88%E6%9C%AC%E7%9A%84Android%E8%BF%90%E8%A1%8C%E5%8F%AF%E8%A1%8C%E6%80%A7%E6%96%B9%E6%A1%88%E6%8E%A2%E7%A9%B6%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/e7c2932b6f6c6aea32d5311300f39ed4.png">
+<meta property="og:image" content="https://swordreforge.github.io/2025/10/05/%E6%9C%89%E5%85%B3kali2025.1%E7%89%88%E6%9C%AC%E7%9A%84Android%E8%BF%90%E8%A1%8C%E5%8F%AF%E8%A1%8C%E6%80%A7%E6%96%B9%E6%A1%88%E6%8E%A2%E7%A9%B6%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/b396aa1bc65013cea4f3c29c51187a8e.png">
+<meta property="og:image" content="https://swordreforge.github.io/2025/10/05/%E6%9C%89%E5%85%B3kali2025.1%E7%89%88%E6%9C%AC%E7%9A%84Android%E8%BF%90%E8%A1%8C%E5%8F%AF%E8%A1%8C%E6%80%A7%E6%96%B9%E6%A1%88%E6%8E%A2%E7%A9%B6%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/0064ac8ed7e94023d58250e0f5d0e69b.png">
+<meta property="og:image" content="https://swordreforge.github.io/2025/10/05/%E6%9C%89%E5%85%B3kali2025.1%E7%89%88%E6%9C%AC%E7%9A%84Android%E8%BF%90%E8%A1%8C%E5%8F%AF%E8%A1%8C%E6%80%A7%E6%96%B9%E6%A1%88%E6%8E%A2%E7%A9%B6%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/01487e6b4296d9b132d43a24c2678e0b.png">
+<meta property="article:published_time" content="2025-10-05T13:17:07.924Z">
+<meta property="article:modified_time" content="2025-10-05T13:17:07.924Z">
 <meta property="article:author" content="Diver">
+<meta property="article:tag" content="玩机">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://swordreforge.github.io/2025/10/05/%E6%9C%89%E5%85%B3kali2025.1%E7%89%88%E6%9C%AC%E7%9A%84Android%E8%BF%90%E8%A1%8C%E5%8F%AF%E8%A1%8C%E6%80%A7%E6%96%B9%E6%A1%88%E6%8E%A2%E7%A9%B6%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/e7c2932b6f6c6aea32d5311300f39ed4.png">
   
   <!-- 样式表文件 -->
   <link rel="stylesheet" id="kratos-css" href="/css/kr-core.min.css" media="all"></link>
@@ -213,171 +223,133 @@
 
         
 
+            <article itemscope itemtype="https://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="https://swordreforge.github.io/2025/10/05/%E6%9C%89%E5%85%B3kali2025.1%E7%89%88%E6%9C%AC%E7%9A%84Android%E8%BF%90%E8%A1%8C%E5%8F%AF%E8%A1%8C%E6%80%A7%E6%96%B9%E6%A1%88%E6%8E%A2%E7%A9%B6%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">
+    <div class="kratos-hentry kratos-page-inner clearfix">
+        <header class="kratos-page-header">
             
-<style>
-  .post-meta time{color:#00a7e0}
-  @media (max-width:767px){.posts-collapse{margin:0 20px}
-  .posts-collapse .post-meta,
-  .posts-collapse .post-title{display:block;width:auto;text-align:left}}
-  .posts-collapse{position:relative}
-  .posts-collapse::after{content:" ";position:absolute;top:20px;left:0;margin-left:-2px;width:4px;height:calc(100% - 35px);background:#f5f5f5;z-index:-1}
-  @media (max-width:991px){.posts-collapse{margin:0 20px}}
-  .posts-collapse .collection-title{position:relative}
-  .posts-collapse .collection-title h1,
-  .posts-collapse .collection-title h2{margin-left:20px}
-  .posts-collapse .collection-title small{color:#bbb;margin-left:5px}
-  .posts-collapse .collection-title::before{content:" ";position:absolute;left:0;top:50%;margin-left:-4px;margin-top:-4px;width:8px;height:8px;background:#bbb;border-radius:50%}
-  .posts-collapse .post-header{position:relative;transition-duration:.2s;transition-timing-function:ease-in-out;transition-delay:0s;transition-property:border}
-  .posts-collapse .post-header::before{content:" ";position:absolute;left:0;top:12px;width:6px;height:6px;margin-left:-4px;background:#bbb;border-radius:50%;border:1px solid #fff;transition: all .3s ease-in-out}
-  .posts-collapse .post-header:hover{border-bottom-color:#666}
-  .posts-collapse .post-header:hover::before{background:#222}
-  .posts-collapse .post-meta{position:absolute;font-size:12px;left:20px;top:5px}
-  .posts-collapse .kr-comments-count{display:none}
-  .posts-collapse .post-title{margin-left:70px;font-size:16px;font-weight:400;line-height:inherit}
-  .posts-collapse .post-title::after{margin-left:3px;opacity:.6}
-  .posts-collapse .post-title a{color:#666;border-bottom:none}
-</style>
-
-  <article>
-      <div class="kratos-hentry kratos-page-inner clearfix">
-          <header class="kratos-page-header">
-            <h1 class="kratos-page-title text-center" itemprop="name headline">文章归档</h1>
-          </header>
-          <div class="kratos-page-content kr-archive">
-            <div id="archives">
-              <div class="post-block archive post" style="margin-left: 2em;">
-                <h3 class="archive-page-counter">当前共有 5 篇文章 (゜-゜)つロ 干杯~</h3>
-                <div class="posts-collapse">
-                  
-                  
-                    
-                    
-                      <!-- 没遇到Title的会被自动忽略年份，即使并不一致 -->
-                      
-                      <div class="collection-title">
-                        <a href="/archives/2025/"><h2 class="archive-year">2025</h2></a>
-                      </div>
-                    
-                    
-                      <article class="post" itemscope itemtype="https://schema.org/Article">
-                        <header class="post-header">
-                          <h3 class="post-title">
-                            
-                                <a class="post-title-link" href="/2025/10/05/%E6%9C%89%E5%85%B3kali2025.1%E7%89%88%E6%9C%AC%E7%9A%84Android%E8%BF%90%E8%A1%8C%E5%8F%AF%E8%A1%8C%E6%80%A7%E6%96%B9%E6%A1%88%E6%8E%A2%E7%A9%B6%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" itemprop="mainEntityOfPage">
-                                  <span itemprop="name headline">Run Android in Kali-2025.1 ignoring its kernel</span>
-                                </a>
-                            
-                          </h3>
-                          <div class="post-meta">
-                            <time class="post-time" itemprop="datePublished"
-                                  datetime="2025-10-05T13:17:07.924Z">
-                              10-05
-                            </time>
-                          </div>
-                        </header>
-                      </article>
-                    
-                  
-                    
-                    
-                    
-                  
-                    
-                    
-                    
-                      <article class="post" itemscope itemtype="https://schema.org/Article">
-                        <header class="post-header">
-                          <h3 class="post-title">
-                            
-                                <a class="post-title-link" href="/2025/10/05/%E6%8F%90%E6%9D%83%EF%BC%88%E4%B8%80%EF%BC%89/" itemprop="mainEntityOfPage">
-                                  <span itemprop="name headline">CTF中常见提权(一)</span>
-                                </a>
-                            
-                          </h3>
-                          <div class="post-meta">
-                            <time class="post-time" itemprop="datePublished"
-                                  datetime="2025-10-05T11:26:59.796Z">
-                              10-05
-                            </time>
-                          </div>
-                        </header>
-                      </article>
-                    
-                  
-                    
-                    
-                    
-                      <article class="post" itemscope itemtype="https://schema.org/Article">
-                        <header class="post-header">
-                          <h3 class="post-title">
-                            
-                                <a class="post-title-link" href="/2025/10/05/codeql%E4%BD%BF%E7%94%A8%E8%BD%AC%E8%BD%BD/" itemprop="mainEntityOfPage">
-                                  <span itemprop="name headline">白盒代码审计工具—CodeQL安装教程【Liunx】</span>
-                                </a>
-                            
-                          </h3>
-                          <div class="post-meta">
-                            <time class="post-time" itemprop="datePublished"
-                                  datetime="2025-10-05T11:26:45.876Z">
-                              10-05
-                            </time>
-                          </div>
-                        </header>
-                      </article>
-                    
-                  
-                    
-                    
-                    
-                      <article class="post" itemscope itemtype="https://schema.org/Article">
-                        <header class="post-header">
-                          <h3 class="post-title">
-                            
-                                <a class="post-title-link" href="/2025/10/05/n1-ctf/" itemprop="mainEntityOfPage">
-                                  <span itemprop="name headline">n1-ctf-赛后复现</span>
-                                </a>
-                            
-                          </h3>
-                          <div class="post-meta">
-                            <time class="post-time" itemprop="datePublished"
-                                  datetime="2025-10-05T11:18:24.408Z">
-                              10-05
-                            </time>
-                          </div>
-                        </header>
-                      </article>
-                    
-                  
-                    
-                    
-                    
-                      <article class="post" itemscope itemtype="https://schema.org/Article">
-                        <header class="post-header">
-                          <h3 class="post-title">
-                            
-                                <a class="post-title-link" href="/2025/10/04/hello-world/" itemprop="mainEntityOfPage">
-                                  <span itemprop="name headline">开始的开始</span>
-                                </a>
-                            
-                          </h3>
-                          <div class="post-meta">
-                            <time class="post-time" itemprop="datePublished"
-                                  datetime="2025-10-04T15:39:37.124Z">
-                              10-04
-                            </time>
-                          </div>
-                        </header>
-                      </article>
-                    
-                  
-                </div>
-              </div>
-            </div>
+                <h1 class="kratos-page-title text-center" itemprop="name headline">Run Android in Kali-2025.1 ignoring its kernel</h1>
+            
+            <ul class="kratos-page-meta text-center">
+                <li><time datetime="2025-10-05T13:17:07.924Z" itemprop="datePublished"><i class="fa fa-calendar"></i> 2025-10-05</time></li>
+                <li itemprop="author" itemscope itemtype="https://schema.org/Person">
+                    <i class="fa fa-user"></i> 作者 <span itemprop="name">Diver</span>
+                </li>
+                
+                    <li>
+                        <i class="fa fa-edit"></i> 
+                        
+                        
+                            ~2.52K
+                        
+                        字
+                    </li>
+                
+                
+                
+            </ul>
+        </header>
+        <div class="kratos-page-content kr-post">
+            
+            
+            
+            <hr />
+            <div itemprop="articleBody"><blockquote>
+<p>摘要：使用Andriod-x86项目获得的iso文件，加上houdini的开源模块，实现andriod-x86环境下的对arm64-v8a,arm32架构应用的支持.</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">└─$ uname -a                         </span><br><span class="line">Linux swordreforge 6.12.38+kali-amd64 #1 SMP PREEMPT_DYNAMIC Kali 6.12.38-1kali1 (2025-08-12) x86_64 GNU/Linux</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>写在前面：由于kali2025.1 rolling版本版本内核较新，目前大多数应用会存在冲突，而我目前用实体机装的kali,不好重装windows,遂作出探究</p>
+</blockquote>
+<h2 id="现行方案"><a href="#现行方案" class="headerlink" title="现行方案"></a>现行方案</h2><h3 id="❌一-使用kvm驱动"><a href="#❌一-使用kvm驱动" class="headerlink" title="❌一.使用kvm驱动"></a>❌一.使用kvm驱动</h3><h5 id="Andriod-Studio"><a href="#Andriod-Studio" class="headerlink" title="Andriod Studio"></a>Andriod Studio</h5><p>需要kvm,支持最新的andriod版本，由于内核较新，无法正常使用。</p>
+<blockquote>
+<p>占用是真的高。。。，启动慢，兼容性差</p>
+</blockquote>
+<h5 id="Genymotion"><a href="#Genymotion" class="headerlink" title="Genymotion"></a>Genymotion</h5><p>1.简介<br>Genymotion是一个跨平台的Android模拟器，它可以在Linux、Windows和Mac上运行。它提供了完整的Android系统镜像，并且支持OpenGL加速，适合用于测试和开发。Genymotion 基于 Oracle VirtualBox 开发的</p>
+<blockquote>
+<p>评注:我都用virtualBOX了你让我玩这。。。更何况新系统用了还报错。。。</p>
+</blockquote>
+<h3 id="❌二-使用容器化系统启动"><a href="#❌二-使用容器化系统启动" class="headerlink" title="❌二.使用容器化系统启动"></a>❌二.使用容器化系统启动</h3><h5 id="Anbox-or-Waydroid"><a href="#Anbox-or-Waydroid" class="headerlink" title="Anbox or Waydroid"></a>Anbox or Waydroid</h5><p>Anbox（Android in a Box）是一个开源的容器化系统，可以在Linux系统上运行Android应用。它使用Linux容器（LXC）将Android系统放入容器中，并集成到宿主系统中，使得Android应用可以像原生应用一样运行。</p>
+<blockquote>
+<p>要求:系统有binder<br>模块，但巧了刚好kali2025就刚好没有<br>lsmod | grep -e ashmem_linux -e binder<br>（无输出）你总不想自己编译模块吧<br>   系统需要支持 Snap（因为 Anbox 通过 Snap 包分发）<br>图形驱动需要支持 OpenGL ES 3.0 或以上</p>
+</blockquote>
+<p>总结：如果内核模块无法加载，可能需要自己编译内核。具体步骤参考 Anbox 官方文档。<br>图形问题</p>
+<p>如果遇到图形问题，确保你的显卡驱动支持 OpenGL ES 3.0 或以上。<br>Snap 问题</p>
+<p>如果系统不支持 Snap，可以考虑从源码编译安装，但过程较为复杂。<br>其他发行版</p>
+<p>对于其他发行版，安装步骤可能有所不同，特别是内核模块的安装。请参考 Anbox 官方文档或相应发行版的 Wiki。<br>注意</p>
+<p>Anbox 仍处于开发阶段，可能不稳定。如果遇到问题，可以考虑使用 Waydroid（Anbox 的一个分支，据说有更好的性能和支持）。</p>
+<h3 id="✅三-no🧠操作（fake）"><a href="#✅三-no🧠操作（fake）" class="headerlink" title="✅三.no🧠操作（fake）"></a>✅三.no🧠操作（fake）</h3><p><del>主播主播，以上的方案都太吃操作了，有没有更加简单的方案呢，有的有的，那就用某位四字干员助你（bushi）,北京麟卓。</del><br>不是，我系统装好了怎么开不了应用了，还报模块缺失，是何意味。<br>官方给出的文档是暂未支持，请期待后续版本（还是被内核缺失做局了啊x）</p>
+<h3 id="✅四-最终方案VirtualBox-Android-x86"><a href="#✅四-最终方案VirtualBox-Android-x86" class="headerlink" title="✅四.最终方案VirtualBox + Android-x86"></a>✅四.最终方案VirtualBox + Android-x86</h3><h4 id="1-1文件准备："><a href="#1-1文件准备：" class="headerlink" title="1.1文件准备："></a>1.1文件准备：</h4><p>1.Andriod-x86 iso文件:<br><a target="_blank" rel="noopener" href="https://www.fosshub.com/Android-x86-old.html">https://www.fosshub.com/Android-x86-old.html</a><br>2.</p>
+<blockquote>
+<p>详情：有关arm64,arm86兼容库的官方版本解释：<br><a target="_blank" rel="noopener" href="http://juniorprincewang.github.io/2023/12/11/androidx86-libhoudini/">http://juniorprincewang.github.io/2023/12/11/androidx86-libhoudini/</a></p>
+</blockquote>
+<p>arm64后的兼容库在android-x86 7.1版本后不再提供支持，需手动从chorme-os中提取，有被别人提取好的文件，但须处理,这里有个压缩文件<br><a target="_blank" rel="noopener" href="https://gitee.com/negoces/libhoudini">https://gitee.com/negoces/libhoudini</a><br>3.【高级操作：手动移植】<br>参考：<br><a target="_blank" rel="noopener" href="https://www.bilibili.com/opus/749918384055910481">https://www.bilibili.com/opus/749918384055910481</a></p>
+<h4 id="1-2安装系统"><a href="#1-2安装系统" class="headerlink" title="1.2安装系统"></a>1.2安装系统</h4><ol>
+<li></li>
+</ol>
+<p>在virtual-box 选择控制-&gt;新建-&gt;选择你下载好的iso文件，系统选linux就行,但一定要选择64位，确保你的盘大小为不小于8GB，内核数大于8,尽量大一点<br><img src="/2025/10/05/%E6%9C%89%E5%85%B3kali2025.1%E7%89%88%E6%9C%AC%E7%9A%84Android%E8%BF%90%E8%A1%8C%E5%8F%AF%E8%A1%8C%E6%80%A7%E6%96%B9%E6%A1%88%E6%8E%A2%E7%A9%B6%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/e7c2932b6f6c6aea32d5311300f39ed4.png" alt="e7c2932b6f6c6aea32d5311300f39ed4.png"></p>
+<p><img src="/2025/10/05/%E6%9C%89%E5%85%B3kali2025.1%E7%89%88%E6%9C%AC%E7%9A%84Android%E8%BF%90%E8%A1%8C%E5%8F%AF%E8%A1%8C%E6%80%A7%E6%96%B9%E6%A1%88%E6%8E%A2%E7%A9%B6%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/b396aa1bc65013cea4f3c29c51187a8e.png" alt="b396aa1bc65013cea4f3c29c51187a8e.png"></p>
+<p><img src="/2025/10/05/%E6%9C%89%E5%85%B3kali2025.1%E7%89%88%E6%9C%AC%E7%9A%84Android%E8%BF%90%E8%A1%8C%E5%8F%AF%E8%A1%8C%E6%80%A7%E6%96%B9%E6%A1%88%E6%8E%A2%E7%A9%B6%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/0064ac8ed7e94023d58250e0f5d0e69b.png" alt="0064ac8ed7e94023d58250e0f5d0e69b.png"></p>
+<blockquote>
+<p>评注：为了系统性能，推荐勾选“✅预先分配所有存储空间”</p>
+</blockquote>
+<p>2.拉满显存</p>
+<p><img src="/2025/10/05/%E6%9C%89%E5%85%B3kali2025.1%E7%89%88%E6%9C%AC%E7%9A%84Android%E8%BF%90%E8%A1%8C%E5%8F%AF%E8%A1%8C%E6%80%A7%E6%96%B9%E6%A1%88%E6%8E%A2%E7%A9%B6%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/01487e6b4296d9b132d43a24c2678e0b.png" alt="01487e6b4296d9b132d43a24c2678e0b.png"></p>
+<p>3.启动！<br>请看相关教程<br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/jnhs/p/13744278.html">https://www.cnblogs.com/jnhs/p/13744278.html</a><br>弹出iso文件，重启(评注：推荐下载Andriod9的iso，还有插拔挂载需谨慎，出现detect deivce………………………………………………，可能就寄了)&#x2F;system一定要挂可写<br>要用的命令已经在下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mount -o remount,rw /mnt</span><br><span class="line">vi /mnt/grub/menu.lst</span><br><span class="line">i键插入nomodeset选项</span><br></pre></td></tr></table></figure>
+<p>手动重启<br>第一个选项<br>4.设置系统<br>根据视频操作</p>
+<h4 id="2-1-使用某种方法推送文件到你的新系统"><a href="#2-1-使用某种方法推送文件到你的新系统" class="headerlink" title="2.1 使用某种方法推送文件到你的新系统"></a>2.1 使用某种方法推送文件到你的新系统</h4><p>推荐gitee,建个仓库，push除镜像外的你需要的文件上去，登陆就用手机登陆<br>，使用验证码的登陆，用浏览器下文件，下到本地，直接用。<br>下个mt-mannerger或者用系统自带的终端管理器</p>
+<h4 id="2-2-利用enable-nativebridge命令激活一下"><a href="#2-2-利用enable-nativebridge命令激活一下" class="headerlink" title="2.2 利用enable_nativebridge命令激活一下"></a>2.2 利用enable_nativebridge命令激活一下</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">su</span><br><span class="line">enable_nativebridge</span><br><span class="line">会创建文件夹/storage/emulated/0/arm</span><br><span class="line">将下好的文件houdini9_x.sfs(具体请依据版本号使用)</span><br><span class="line">在su</span><br><span class="line">enable_nativebridge</span><br><span class="line">enable_nativebridge 64</span><br></pre></td></tr></table></figure>
+<h4 id="2-3持久化存储-重启不丢失"><a href="#2-3持久化存储-重启不丢失" class="headerlink" title="2.3持久化存储(重启不丢失)"></a>2.3持久化存储(重启不丢失)</h4><p>由于根目录下的&#x2F;init.rc不可写，我们需要对&#x2F;system&#x2F;etc&#x2F;init.rc进行修改。<br>在return 0之前添上三行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">su</span><br><span class="line">enable_nativebridge</span><br><span class="line">enable_nativebridge 64</span><br></pre></td></tr></table></figure>
+<h4 id="3-1最后的最后"><a href="#3-1最后的最后" class="headerlink" title="3.1最后的最后"></a>3.1最后的最后</h4><p>应用可正常运行，其他可尝试适配</p>
+</div>
         </div>
-      </div>
-      
-  </article>
-
+        
+            <div class="kratos-copyright text-center clearfix">
+                <span itemprop="copyrightNotice">本作品采用 <a rel="license nofollow" target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/">知识共享署名-相同方式共享 4.0 国际许可协议</a> 进行许可</span>
+            </div>
+        
+        <footer class="kratos-entry-footer clearfix">
+            
+            
+            
+                <div class="post-actions text-center clearfix" id="post-actions">
+                
+                    <a class="donate" href="javascript:;" onclick="krOpenDonateModal()"><i class="fa fa-bitcoin"></i> 打赏</a>
+                
+                
+                    <a class="share" href="javascript:;" onclick="krOpenShareModal()"><i class="fa fa-share-alt"></i> 分享</a>
+                
+                </div>
+            
+            <div class="footer-tag clearfix">
+                <div class="pull-left">
+                <i class="fa fa-tags"></i>
+                    <a class="tag-none-link" href="/tags/%E7%8E%A9%E6%9C%BA/" rel="tag">玩机</a>
+                </div>
+                <div class="pull-date">
+                    <time datetime="2025-10-05T13:17:07.924Z" itemprop="dateModified">最后编辑：2025-10-05</time>
+                </div>
+            </div>
+        </footer>
+    </div>
+    
+        <nav class="navigation post-navigation clearfix" role="navigation">
+            
+            <div class="nav-previous clearfix">
+                <a title=" (无标题)" href="/2025/10/05/n1-ctf/IOT-小兴趣/有关kali2025.1版本的Android运行可行性方案探究及解决方案/"><i class="fa fa-angle-left"></i> 上一篇</a>
+            </div>
+            
+            
+        </nav>
+    
+    
+        <div class="comment-post">
+            
+        </div>
+    
+</article>
 
         
 
@@ -388,8 +360,6 @@
 
 <section id="kratos-widget-area" class="col-md-4 hidden-xs hidden-sm">
     <!-- 文章和页面根据splitter来分割，没有的话就从头开始设置为sticky -->
-    
-        <div class="sticky-area">
     
     
                 <aside id="krw-about" class="widget widget-kratos-about clearfix">
@@ -430,6 +400,8 @@
     </div>
 </aside>
             
+                    <div class="sticky-area">
+                
                 
 
             
