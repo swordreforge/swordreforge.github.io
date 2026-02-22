@@ -13,47 +13,51 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #2c2c2c;
             min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.9;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
         }
 
         .main-content {
             display: flex;
-            min-height: 600px;
+            flex: 1;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #444;
+            color: white;
+            border: none;
+            padding: 15px 8px;
+            cursor: pointer;
+            z-index: 1000;
+            border-radius: 0 5px 5px 0;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: #555;
         }
 
         .sidebar {
-            width: 300px;
-            background: #f8f9fa;
+            width: 320px;
+            background: #333;
             padding: 20px;
-            border-right: 1px solid #dee2e6;
+            border-right: 1px solid #444;
+            overflow-y: auto;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar.hidden {
+            margin-left: -320px;
         }
 
         .editor-area {
@@ -63,7 +67,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: #1a1a2e;
+            background: #1a1a1a;
+            overflow: hidden;
         }
 
         .section {
@@ -71,31 +76,31 @@
         }
 
         .section h3 {
-            color: #495057;
+            color: #e0e0e0;
             margin-bottom: 12px;
             font-size: 1.1em;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid #555;
             padding-bottom: 5px;
         }
 
         .upload-area {
-            border: 2px dashed #667eea;
+            border: 2px dashed #555;
             border-radius: 10px;
             padding: 30px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: white;
+            background: #2a2a2a;
         }
 
         .upload-area:hover {
-            background: #f0f4ff;
-            border-color: #764ba2;
+            background: #3a3a3a;
+            border-color: #666;
         }
 
         .upload-area.dragover {
-            background: #e0e7ff;
-            border-color: #667eea;
+            background: #4a4a4a;
+            border-color: #777;
         }
 
         .upload-icon {
@@ -104,7 +109,7 @@
         }
 
         .upload-text {
-            color: #667eea;
+            color: #aaa;
             font-weight: 600;
         }
 
@@ -122,52 +127,64 @@
             font-size: 0.9em;
             font-weight: 600;
             transition: all 0.3s ease;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #444;
+            color: #e0e0e0;
         }
 
         .btn:hover {
+            background: #555;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
         .btn:disabled {
-            background: #ccc;
+            background: #2a2a2a;
+            color: #555;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
         }
 
         .btn-danger {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: #8b3a3a;
+        }
+
+        .btn-danger:hover {
+            background: #a04a4a;
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            background: #3a8b5a;
+        }
+
+        .btn-success:hover {
+            background: #4aaa6b;
         }
 
         .canvas-container {
             position: relative;
             max-width: 100%;
-            max-height: 500px;
+            max-height: calc(100vh - 100px);
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         #imageCanvas {
             display: block;
             max-width: 100%;
-            max-height: 500px;
+            max-height: calc(100vh - 100px);
         }
 
         .info-panel {
             margin-top: 15px;
             padding: 15px;
-            background: #f8f9fa;
+            background: #2a2a2a;
             border-radius: 8px;
             font-size: 0.9em;
-            color: #495057;
+            color: #e0e0e0;
+        }
+
+        .info-panel p {
+            margin: 5px 0;
         }
 
         .loading {
@@ -205,7 +222,7 @@
             display: block;
             margin-bottom: 5px;
             font-size: 0.85em;
-            color: #495057;
+            color: #e0e0e0;
         }
 
         .slider-container input[type="range"] {
@@ -216,13 +233,13 @@
         .slider-value {
             text-align: right;
             font-size: 0.85em;
-            color: #667eea;
+            color: #aaa;
             font-weight: 600;
         }
 
         .empty-state {
             text-align: center;
-            color: #667eea;
+            color: #888;
             font-size: 1.2em;
             padding: 50px;
         }
@@ -238,13 +255,9 @@
         <div class="loading-spinner"></div>
     </div>
 
-    <div class="container">
-        <div class="header">
-            <h1>🎨 WebAssembly 图像处理器</h1>
-            <p>使用 Rust 和 Photon-rs 构建的高性能图像处理工具</p>
-        </div>
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
 
-        <div class="main-content">
+    <div class="main-content">
             <div class="sidebar">
                 <div class="section">
                     <h3>📤 上传图片</h3>
@@ -256,12 +269,38 @@
                 </div>
 
                 <div class="section">
-                    <h3>🎭 滤镜效果</h3>
+                    <h3>🎭 基础滤镜</h3>
                     <div class="btn-group">
                         <button class="btn" onclick="applyFilter('grayscale')" disabled>灰度</button>
                         <button class="btn" onclick="applyFilter('sepia')" disabled>复古</button>
                         <button class="btn" onclick="applyFilter('invert')" disabled>反色</button>
                         <button class="btn" onclick="applyThreshold()" disabled>二值化</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>🌈 预设滤镜</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="applyPresetFilter('oceanic')" disabled>海洋</button>
+                        <button class="btn" onclick="applyPresetFilter('lofi')" disabled>复古风</button>
+                        <button class="btn" onclick="applyPresetFilter('vintage')" disabled>怀旧</button>
+                        <button class="btn" onclick="applyPresetFilter('dramatic')" disabled>戏剧</button>
+                        <button class="btn" onclick="applyPresetFilter('pastel_pink')" disabled>粉红</button>
+                        <button class="btn" onclick="applyPresetFilter('cali')" disabled>加州</button>
+                        <button class="btn" onclick="applyPresetFilter('firenze')" disabled>佛罗伦萨</button>
+                        <button class="btn" onclick="applyPresetFilter('obsidian')" disabled>黑曜</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>✨ 特殊效果</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="applyPixelate()" disabled>像素化</button>
+                        <button class="btn" onclick="applyHalftone()" disabled>半色调</button>
+                        <button class="btn" onclick="applySolarize()" disabled>曝光</button>
+                        <button class="btn" onclick="applyDither()" disabled>抖动</button>
+                        <button class="btn" onclick="applyOil()" disabled>油画</button>
+                        <button class="btn" onclick="applyDuotone()" disabled>双色</button>
                     </div>
                 </div>
 
@@ -293,8 +332,10 @@
                     <h3>🔄 变换操作</h3>
                     <div class="btn-group">
                         <button class="btn" onclick="rotateImage()" disabled>旋转 90°</button>
-                        <button class="btn" onclick="flipImage()" disabled>水平翻转</button>
+                        <button class="btn" onclick="flipHorizontal()" disabled>水平翻转</button>
+                        <button class="btn" onclick="flipVertical()" disabled>垂直翻转</button>
                         <button class="btn" onclick="resizeImage()" disabled>缩放</button>
+                        <button class="btn" onclick="cropImage()" disabled>裁剪</button>
                     </div>
                 </div>
 
@@ -329,7 +370,6 @@
                     <canvas id="imageCanvas" style="display: none;"></canvas>
                 </div>
             </div>
-        </div>
     </div>
 
     <script type="module">
@@ -373,6 +413,20 @@
             sliders.forEach(slider => {
                 slider.disabled = !currentImage;
             });
+        }
+
+        // 切换侧边栏
+        window.toggleSidebar = function() {
+            const sidebar = document.querySelector('.sidebar');
+            const toggle = document.getElementById('sidebarToggle');
+            sidebar.classList.toggle('hidden');
+            if (sidebar.classList.contains('hidden')) {
+                toggle.textContent = '▶';
+                toggle.style.left = '0';
+            } else {
+                toggle.textContent = '☰';
+                toggle.style.left = '320px';
+            }
         }
 
         // 文件上传处理
@@ -494,6 +548,110 @@
             showLoading(false);
         };
 
+        // 应用预设滤镜
+        window.applyPresetFilter = function(filterName) {
+            if (!processor) return;
+            showLoading(true);
+            try {
+                processor.apply_preset_filter(filterName);
+                updateCanvas();
+            } catch (error) {
+                console.error('Preset filter error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 特殊效果
+        window.applyPixelate = function() {
+            if (!processor) return;
+            const pixelSize = prompt('请输入像素大小 (建议 5-20):', '10');
+            if (pixelSize && !isNaN(pixelSize)) {
+                showLoading(true);
+                try {
+                    processor.apply_pixelate(parseInt(pixelSize));
+                    updateCanvas();
+                } catch (error) {
+                    console.error('Pixelate error:', error);
+                }
+                showLoading(false);
+            }
+        };
+
+        window.applyHalftone = function() {
+            if (!processor) return;
+            showLoading(true);
+            try {
+                processor.apply_halftone();
+                updateCanvas();
+            } catch (error) {
+                console.error('Halftone error:', error);
+            }
+            showLoading(false);
+        };
+
+        window.applySolarize = function() {
+            if (!processor) return;
+            showLoading(true);
+            try {
+                processor.apply_solarize();
+                updateCanvas();
+            } catch (error) {
+                console.error('Solarize error:', error);
+            }
+            showLoading(false);
+        };
+
+        window.applyDither = function() {
+            if (!processor) return;
+            const depth = prompt('请输入色深 (建议 8-64):', '16');
+            if (depth && !isNaN(depth)) {
+                showLoading(true);
+                try {
+                    processor.apply_dither(parseInt(depth));
+                    updateCanvas();
+                } catch (error) {
+                    console.error('Dither error:', error);
+                }
+                showLoading(false);
+            }
+        };
+
+        window.applyOil = function() {
+            if (!processor) return;
+            const radius = prompt('请输入半径 (建议 1-5):', '3');
+            const intensity = prompt('请输入强度 (0.0-1.0):', '0.5');
+            if (radius && intensity && !isNaN(radius) && !isNaN(intensity)) {
+                showLoading(true);
+                try {
+                    processor.apply_oil(parseInt(radius), parseFloat(intensity));
+                    updateCanvas();
+                } catch (error) {
+                    console.error('Oil error:', error);
+                }
+                showLoading(false);
+            }
+        };
+
+        window.applyDuotone = function() {
+            if (!processor) return;
+            const color1 = prompt('请输入第一种颜色 (R,G,B，如: 255,0,0):', '100,100,200');
+            const color2 = prompt('请输入第二种颜色 (R,G,B，如: 0,255,0):', '200,100,100');
+            if (color1 && color2) {
+                const c1 = color1.split(',').map(Number);
+                const c2 = color2.split(',').map(Number);
+                if (c1.length === 3 && c2.length === 3) {
+                    showLoading(true);
+                    try {
+                        processor.apply_duotone(c1[0], c1[1], c1[2], c2[0], c2[1], c2[2]);
+                        updateCanvas();
+                    } catch (error) {
+                        console.error('Duotone error:', error);
+                    }
+                    showLoading(false);
+                }
+            }
+        };
+
         // 应用无级调节
         window.applyAdjustments = function() {
             if (!processor) return;
@@ -525,22 +683,36 @@
             if (!processor) return;
             showLoading(true);
             try {
-                // 旋转 90 度需要特殊处理
-                alert('旋转功能需要额外的 WebAssembly 支持');
+                processor.rotate_90();
+                updateCanvas();
             } catch (error) {
                 console.error('Rotate error:', error);
             }
             showLoading(false);
         };
 
-        // 翻转图片
-        window.flipImage = function() {
+        // 水平翻转
+        window.flipHorizontal = function() {
             if (!processor) return;
             showLoading(true);
             try {
-                alert('翻转功能需要额外的 WebAssembly 支持');
+                processor.flip_horizontal();
+                updateCanvas();
             } catch (error) {
-                console.error('Flip error:', error);
+                console.error('Flip horizontal error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 垂直翻转
+        window.flipVertical = function() {
+            if (!processor) return;
+            showLoading(true);
+            try {
+                processor.flip_vertical();
+                updateCanvas();
+            } catch (error) {
+                console.error('Flip vertical error:', error);
             }
             showLoading(false);
         };
@@ -548,13 +720,36 @@
         // 缩放图片
         window.resizeImage = function() {
             if (!processor) return;
-            const scale = prompt('请输入缩放比例 (0.1 - 2.0):', '0.5');
-            if (scale && !isNaN(scale)) {
+            const width = prompt('请输入新宽度:', processor.get_width() / 2);
+            const height = prompt('请输入新高度:', processor.get_height() / 2);
+            if (width && height && !isNaN(width) && !isNaN(height)) {
                 showLoading(true);
                 try {
-                    alert('缩放功能需要额外的 WebAssembly 支持');
+                    processor.resize(parseInt(width), parseInt(height));
+                    updateCanvas();
                 } catch (error) {
                     console.error('Resize error:', error);
+                }
+                showLoading(false);
+            }
+        };
+
+        // 裁剪图片
+        window.cropImage = function() {
+            if (!processor) return;
+            const currentWidth = processor.get_width();
+            const currentHeight = processor.get_height();
+            const x1 = prompt(`请输入起始 X (0 - ${currentWidth}):`, '0');
+            const y1 = prompt(`请输入起始 Y (0 - ${currentHeight}):`, '0');
+            const x2 = prompt(`请输入结束 X (1 - ${currentWidth}):`, Math.floor(currentWidth / 2));
+            const y2 = prompt(`请输入结束 Y (1 - ${currentHeight}):`, Math.floor(currentHeight / 2));
+            if (x1 && y1 && x2 && y2 && !isNaN(x1) && !isNaN(y1) && !isNaN(x2) && !isNaN(y2)) {
+                showLoading(true);
+                try {
+                    processor.crop(parseInt(x1), parseInt(y1), parseInt(x2), parseInt(y2));
+                    updateCanvas();
+                } catch (error) {
+                    console.error('Crop error:', error);
                 }
                 showLoading(false);
             }
