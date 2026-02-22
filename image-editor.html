@@ -449,7 +449,7 @@
                     <h3>降噪</h3>
                     <div class="slider-container">
                         <label>降噪强度 (0 ~ 10)</label>
-                        <input type="range" id="noiseReductionSlider" min="0" max="10" value="0" step="0.1" oninput="applyAdjustments()" disabled>
+                        <input type="range" id="noiseReductionSlider" min="0" max="100" value="0" oninput="applyAdjustments()" disabled>
                         <div class="slider-value"><span id="noiseReductionValue">0.0</span></div>
                     </div>
                 </div>
@@ -458,7 +458,7 @@
                     <h3>噪点</h3>
                     <div class="slider-container">
                         <label>噪点强度 (0 ~ 10)</label>
-                        <input type="range" id="noiseSlider" min="0" max="10" value="0" step="0.1" oninput="applyAdjustments()" disabled>
+                        <input type="range" id="noiseSlider" min="0" max="100" value="0" oninput="applyAdjustments()" disabled>
                         <div class="slider-value"><span id="noiseValue">0.0</span></div>
                     </div>
                 </div>
@@ -522,7 +522,7 @@
     </div>
 
     <script type="module">
-        import init, { ImageProcessor } from './photon-wasm/pkg/photon_wasm.js';
+        import init, { ImageProcessor } from './photon-wasm/pkg/photon_wasm.js?v=2';
 
         let wasmModule = null;
         let processor = null;
