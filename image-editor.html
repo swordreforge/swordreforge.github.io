@@ -453,6 +453,10 @@
                         <button class="btn" onclick="applyDither()" disabled>抖动</button>
                         <button class="btn" onclick="applyOil()" disabled>油画</button>
                         <button class="btn" onclick="applyDuotone()" disabled>双色</button>
+                        <button class="btn" onclick="applyPrimary()" disabled>主色</button>
+                        <button class="btn" onclick="applyColorize()" disabled>着色</button>
+                        <button class="btn" onclick="applyFrostedGlass()" disabled>毛玻璃</button>
+                        <button class="btn" onclick="applyTint()" disabled>色调</button>
                     </div>
                 </div>
 
@@ -1007,6 +1011,67 @@
                     }
                     showLoading(false);
                 }
+            }
+        };
+
+        // 主色效果
+        window.applyPrimary = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_primary();
+                updateCanvas();
+            } catch (error) {
+                console.error('Primary error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 着色
+        window.applyColorize = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_colorize();
+                updateCanvas();
+            } catch (error) {
+                console.error('Colorize error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 毛玻璃效果
+        window.applyFrostedGlass = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_frosted_glass();
+                updateCanvas();
+            } catch (error) {
+                console.error('Frosted glass error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 色调
+        window.applyTint = function() {
+            if (!processor) return;
+            const rOffset = prompt('请输入红色偏移量 (0-255):', '50');
+            const gOffset = prompt('请输入绿色偏移量 (0-255):', '30');
+            const bOffset = prompt('请输入蓝色偏移量 (0-255):', '20');
+            if (rOffset && gOffset && bOffset) {
+                showLoading(true);
+                saveToHistory();
+                try {
+                    processor.apply_tint(parseInt(rOffset), parseInt(gOffset), parseInt(bOffset));
+                    updateCanvas();
+                } catch (error) {
+                    console.error('Tint error:', error);
+                }
+                showLoading(false);
             }
         };
 

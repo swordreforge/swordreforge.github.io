@@ -7,6 +7,7 @@ export class ImageProcessor {
     apply_all_adjustments(brightness: number, contrast: number, saturation: number, hue: number, lightness: number, lightness_color_space: string, gamma_red: number, gamma_green: number, gamma_blue: number, sharpen_strength: number, noise_reduction_strength: number, noise_strength: number, r_offset: number, g_offset: number, b_offset: number): void;
     apply_box_blur(): void;
     apply_brightness(level: number): void;
+    apply_colorize(): void;
     apply_contrast(level: number): void;
     apply_detect_135_deg_lines(): void;
     apply_detect_45_deg_lines(): void;
@@ -17,6 +18,7 @@ export class ImageProcessor {
     apply_edge_detection(): void;
     apply_edge_one(): void;
     apply_emboss(): void;
+    apply_frosted_glass(): void;
     apply_gamma(red: number, green: number, blue: number): void;
     apply_gaussian_blur(radius: number): void;
     apply_grayscale(): void;
@@ -32,6 +34,7 @@ export class ImageProcessor {
     apply_pixelate(pixel_size: number): void;
     apply_preset_filter(filter_name: string): void;
     apply_prewitt_horizontal(): void;
+    apply_primary(): void;
     apply_saturation(level: number): void;
     apply_sepia(): void;
     apply_sharpen(strength: number): void;
@@ -40,6 +43,7 @@ export class ImageProcessor {
     apply_sobel_vertical(): void;
     apply_solarize(): void;
     apply_threshold(threshold: number): void;
+    apply_tint(r_offset: number, g_offset: number, b_offset: number): void;
     crop(x1: number, y1: number, x2: number, y2: number): void;
     flip_horizontal(): void;
     flip_vertical(): void;
@@ -3157,6 +3161,7 @@ export interface InitOutput {
     readonly imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number) => void;
     readonly imageprocessor_apply_box_blur: (a: number) => void;
     readonly imageprocessor_apply_brightness: (a: number, b: number) => void;
+    readonly imageprocessor_apply_colorize: (a: number) => void;
     readonly imageprocessor_apply_contrast: (a: number, b: number) => void;
     readonly imageprocessor_apply_detect_135_deg_lines: (a: number) => void;
     readonly imageprocessor_apply_detect_45_deg_lines: (a: number) => void;
@@ -3167,6 +3172,7 @@ export interface InitOutput {
     readonly imageprocessor_apply_edge_detection: (a: number) => void;
     readonly imageprocessor_apply_edge_one: (a: number) => void;
     readonly imageprocessor_apply_emboss: (a: number) => void;
+    readonly imageprocessor_apply_frosted_glass: (a: number) => void;
     readonly imageprocessor_apply_gamma: (a: number, b: number, c: number, d: number) => void;
     readonly imageprocessor_apply_gaussian_blur: (a: number, b: number) => void;
     readonly imageprocessor_apply_grayscale: (a: number) => void;
@@ -3182,6 +3188,7 @@ export interface InitOutput {
     readonly imageprocessor_apply_pixelate: (a: number, b: number) => void;
     readonly imageprocessor_apply_preset_filter: (a: number, b: number, c: number) => void;
     readonly imageprocessor_apply_prewitt_horizontal: (a: number) => void;
+    readonly imageprocessor_apply_primary: (a: number) => void;
     readonly imageprocessor_apply_saturation: (a: number, b: number) => void;
     readonly imageprocessor_apply_sepia: (a: number) => void;
     readonly imageprocessor_apply_sharpen: (a: number, b: number) => void;
@@ -3190,6 +3197,7 @@ export interface InitOutput {
     readonly imageprocessor_apply_sobel_vertical: (a: number) => void;
     readonly imageprocessor_apply_solarize: (a: number) => void;
     readonly imageprocessor_apply_threshold: (a: number, b: number) => void;
+    readonly imageprocessor_apply_tint: (a: number, b: number, c: number, d: number) => void;
     readonly imageprocessor_crop: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly imageprocessor_flip_horizontal: (a: number) => void;
     readonly imageprocessor_flip_vertical: (a: number) => void;

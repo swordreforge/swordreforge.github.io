@@ -49,6 +49,9 @@ export class ImageProcessor {
     apply_brightness(level) {
         wasm.imageprocessor_apply_brightness(this.__wbg_ptr, level);
     }
+    apply_colorize() {
+        wasm.imageprocessor_apply_colorize(this.__wbg_ptr);
+    }
     /**
      * @param {number} level
      */
@@ -92,6 +95,9 @@ export class ImageProcessor {
     }
     apply_emboss() {
         wasm.imageprocessor_apply_emboss(this.__wbg_ptr);
+    }
+    apply_frosted_glass() {
+        wasm.imageprocessor_apply_frosted_glass(this.__wbg_ptr);
     }
     /**
      * @param {number} red
@@ -173,6 +179,9 @@ export class ImageProcessor {
     apply_prewitt_horizontal() {
         wasm.imageprocessor_apply_prewitt_horizontal(this.__wbg_ptr);
     }
+    apply_primary() {
+        wasm.imageprocessor_apply_primary(this.__wbg_ptr);
+    }
     /**
      * @param {number} level
      */
@@ -205,6 +214,14 @@ export class ImageProcessor {
      */
     apply_threshold(threshold) {
         wasm.imageprocessor_apply_threshold(this.__wbg_ptr, threshold);
+    }
+    /**
+     * @param {number} r_offset
+     * @param {number} g_offset
+     * @param {number} b_offset
+     */
+    apply_tint(r_offset, g_offset, b_offset) {
+        wasm.imageprocessor_apply_tint(this.__wbg_ptr, r_offset, g_offset, b_offset);
     }
     /**
      * @param {number} x1
