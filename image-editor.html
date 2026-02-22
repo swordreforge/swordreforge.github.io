@@ -618,6 +618,12 @@
             sliders.forEach(slider => {
                 slider.disabled = !currentImage;
             });
+
+            // 启用选择器
+            const selects = document.querySelectorAll('select');
+            selects.forEach(select => {
+                select.disabled = !currentImage;
+            });
         }
 
         // 切换侧边栏
