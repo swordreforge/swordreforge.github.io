@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WebAssembly Hello World</title>
+</head>
+<body>
+    <h1>WebAssembly Hello World</h1>
+    <pre id="output">Loading...</pre>
+
+    <script>
+        async function loadWasm() {
+            try {
+                const response = await fetch('hello.wasm');
+                const buffer = await response.arrayBuffer();
+                const wasmModule = await WebAssembly.compile(buffer);
+                const wasmInstance = await WebAssembly.instantiate(wasmModule);
+
+                // 调用导出的函数
+                const helloPtr = wasmInstance.exports.getHello();
+                
+                // 读取字符串（Wasm 中的字符串以空字节结尾）
+                const memory = new Uint8Array(wasmInstance.exports.memory.buffer);
+                let helloString = '';
+                let i = helloPtr;
+                while (memory[i] !== 0) {
+                    helloString += String.fromCharCode(memory[i]);
+                    i++;
+                }
+
+                document.getElementById('output').textContent = 
+                    'Message from WebAssembly: ' + helloString;
+            } catch (error) {
+                document.getElementById('output').textContent = 
+                    'Error loading WebAssembly: ' + error.message;
+            }
+        }
+
+        loadWasm();
+    </script>
+</body>
+</html>
