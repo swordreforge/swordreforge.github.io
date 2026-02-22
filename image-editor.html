@@ -471,6 +471,13 @@
                 </div>
 
                 <div class="section">
+                    <h3>色彩校正</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="applyNormalize()" disabled>归一化</button>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>无级调节</h3>
                     <div class="slider-container">
                         <label>亮度 (-100 ~ 100)</label>
@@ -1159,6 +1166,20 @@
                     showLoading(false);
                 }
             }
+        };
+
+        // 归一化
+        window.applyNormalize = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_normalize();
+                updateCanvas();
+            } catch (error) {
+                console.error('Normalize error:', error);
+            }
+            showLoading(false);
         };
 
         // 盒式模糊

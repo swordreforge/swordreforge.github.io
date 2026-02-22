@@ -31,6 +31,7 @@ export const imageprocessor_apply_laplace: (a: number) => void;
 export const imageprocessor_apply_lightness: (a: number, b: number, c: number, d: number) => void;
 export const imageprocessor_apply_noise: (a: number, b: number) => void;
 export const imageprocessor_apply_noise_reduction: (a: number, b: number) => void;
+export const imageprocessor_apply_normalize: (a: number) => void;
 export const imageprocessor_apply_oil: (a: number, b: number, c: number) => void;
 export const imageprocessor_apply_pixelate: (a: number, b: number) => void;
 export const imageprocessor_apply_preset_filter: (a: number, b: number, c: number) => void;

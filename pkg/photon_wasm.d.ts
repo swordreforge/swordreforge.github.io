@@ -33,6 +33,7 @@ export class ImageProcessor {
     apply_lightness(level: number, color_space: string): void;
     apply_noise(strength: number): void;
     apply_noise_reduction(strength: number): void;
+    apply_normalize(): void;
     apply_oil(radius: number, intensity: number): void;
     apply_pixelate(pixel_size: number): void;
     apply_preset_filter(filter_name: string): void;
@@ -3191,6 +3192,7 @@ export interface InitOutput {
     readonly imageprocessor_apply_lightness: (a: number, b: number, c: number, d: number) => void;
     readonly imageprocessor_apply_noise: (a: number, b: number) => void;
     readonly imageprocessor_apply_noise_reduction: (a: number, b: number) => void;
+    readonly imageprocessor_apply_normalize: (a: number) => void;
     readonly imageprocessor_apply_oil: (a: number, b: number, c: number) => void;
     readonly imageprocessor_apply_pixelate: (a: number, b: number) => void;
     readonly imageprocessor_apply_preset_filter: (a: number, b: number, c: number) => void;

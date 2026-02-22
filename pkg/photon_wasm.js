@@ -179,6 +179,9 @@ export class ImageProcessor {
     apply_noise_reduction(strength) {
         wasm.imageprocessor_apply_noise_reduction(this.__wbg_ptr, strength);
     }
+    apply_normalize() {
+        wasm.imageprocessor_apply_normalize(this.__wbg_ptr);
+    }
     /**
      * @param {number} radius
      * @param {number} intensity
