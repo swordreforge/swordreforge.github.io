@@ -104,23 +104,19 @@
         }
 
         .upload-area {
-            border: 2px dashed #555;
-            border-radius: 10px;
             padding: 30px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: #2a2a2a;
+            background: transparent;
         }
 
         .upload-area:hover {
-            background: #3a3a3a;
-            border-color: #666;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .upload-area.dragover {
-            background: #4a4a4a;
-            border-color: #777;
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .upload-icon {
@@ -265,6 +261,16 @@
             text-align: center;
             color: #888;
             font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .empty-state:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .empty-state.dragover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .empty-state .icon {
@@ -387,15 +393,8 @@
                             <polyline points="21 15 16 10 5 21"></polyline>
                         </svg>
                         <p>请上传图片开始编辑</p>
-                        <div class="upload-area" id="uploadArea" style="margin-top: 20px;">
-                            <svg class="upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                            <div class="upload-text">点击或拖拽上传</div>
-                            <input type="file" id="fileInput" accept="image/*" style="display: none;">
-                        </div>
+                        <p style="font-size: 0.9em; color: #666; margin-top: 10px;">点击或拖拽上传</p>
+                        <input type="file" id="fileInput" accept="image/*" style="display: none;">
                     </div>
                     <canvas id="imageCanvas" style="display: none;"></canvas>
                 </div>
@@ -466,22 +465,32 @@
         }
 
         // 文件上传处理
-        document.getElementById('uploadArea').addEventListener('click', () => {
-            document.getElementById('fileInput').click();
+        const emptyState = document.getElementById('emptyState');
+        const editorArea = document.querySelector('.editor-area');
+
+        // 点击整个编辑区域触发上传（仅在没有图片时）
+        editorArea.addEventListener('click', (e) => {
+            if (!currentImage && !e.target.closest('.sidebar')) {
+                document.getElementById('fileInput').click();
+            }
         });
 
-        document.getElementById('uploadArea').addEventListener('dragover', (e) => {
+        // 整个编辑区域支持拖拽
+        editorArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            document.getElementById('uploadArea').classList.add('dragover');
+            if (!currentImage) {
+                emptyState.classList.add('dragover');
+            }
         });
 
-        document.getElementById('uploadArea').addEventListener('dragleave', () => {
-            document.getElementById('uploadArea').classList.remove('dragover');
-        });
-
-        document.getElementById('uploadArea').addEventListener('drop', (e) => {
+        editorArea.addEventListener('dragleave', (e) => {
             e.preventDefault();
-            document.getElementById('uploadArea').classList.remove('dragover');
+            emptyState.classList.remove('dragover');
+        });
+
+        editorArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            emptyState.classList.remove('dragover');
             const file = e.dataTransfer.files[0];
             if (file && file.type.startsWith('image/')) {
                 loadImage(file);
