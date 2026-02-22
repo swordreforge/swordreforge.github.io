@@ -500,8 +500,8 @@
 
             // 获取滑块值
             const brightness = parseInt(document.getElementById('brightnessSlider').value);
-            const contrast = parseInt(document.getElementById('contrastSlider').value);
-            const saturation = parseInt(document.getElementById('saturationSlider').value);
+            const contrast = parseFloat(document.getElementById('contrastSlider').value);
+            const saturation = parseFloat(document.getElementById('saturationSlider').value);
             const hue = parseInt(document.getElementById('hueSlider').value);
 
             // 更新显示值
@@ -512,23 +512,8 @@
 
             // 应用调整
             try {
-                // 重置到原始图像
-                processor.reset();
-
-                // 应用各项调整
-                if (brightness !== 0) {
-                    processor.apply_brightness(brightness);
-                }
-                if (contrast !== 100) {
-                    processor.apply_contrast(contrast);
-                }
-                if (saturation !== 100) {
-                    processor.apply_saturation(saturation);
-                }
-                if (hue !== 0) {
-                    processor.apply_hue(hue);
-                }
-
+                // 使用批量应用方法，避免重复重置
+                processor.apply_all_adjustments(brightness, contrast, saturation, hue);
                 updateCanvas();
             } catch (error) {
                 console.error('Adjustments error:', error);
