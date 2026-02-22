@@ -302,6 +302,13 @@ export class ImageProcessor {
         return v1;
     }
     /**
+     * @returns {bigint}
+     */
+    get_file_size() {
+        const ret = wasm.imageprocessor_get_file_size(this.__wbg_ptr);
+        return BigInt.asUintN(64, ret);
+    }
+    /**
      * @returns {number}
      */
     get_height() {

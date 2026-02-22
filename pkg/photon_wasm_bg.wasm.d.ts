@@ -57,6 +57,7 @@ export const imageprocessor_crop: (a: number, b: number, c: number, d: number, e
 export const imageprocessor_flip_horizontal: (a: number) => void;
 export const imageprocessor_flip_vertical: (a: number) => void;
 export const imageprocessor_get_bytes: (a: number) => [number, number];
+export const imageprocessor_get_file_size: (a: number) => bigint;
 export const imageprocessor_get_height: (a: number) => number;
 export const imageprocessor_get_width: (a: number) => number;
 export const imageprocessor_new: (a: number, b: number, c: number, d: number) => [number, number, number];
@@ -72,8 +73,8 @@ export const imageprocessor_rotate_90: (a: number) => void;
 export const imageprocessor_to_base64: (a: number) => [number, number];
 export const imageprocessor_to_jpeg: (a: number, b: number) => [number, number];
 export const imageprocessor_to_png: (a: number) => [number, number];
-export const init: () => void;
 export const imageprocessor_to_webp: (a: number, b: number) => [number, number];
+export const init: () => void;
 export const box_blur: (a: number) => void;
 export const detect_135_deg_lines: (a: number) => void;
 export const detect_45_deg_lines: (a: number) => void;

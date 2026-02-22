@@ -59,6 +59,7 @@ export class ImageProcessor {
     flip_horizontal(): void;
     flip_vertical(): void;
     get_bytes(): Uint8Array;
+    get_file_size(): bigint;
     get_height(): number;
     get_width(): number;
     constructor(width: number, height: number, data: Uint8Array);
@@ -3224,6 +3225,7 @@ export interface InitOutput {
     readonly imageprocessor_flip_horizontal: (a: number) => void;
     readonly imageprocessor_flip_vertical: (a: number) => void;
     readonly imageprocessor_get_bytes: (a: number) => [number, number];
+    readonly imageprocessor_get_file_size: (a: number) => bigint;
     readonly imageprocessor_get_height: (a: number) => number;
     readonly imageprocessor_get_width: (a: number) => number;
     readonly imageprocessor_new: (a: number, b: number, c: number, d: number) => [number, number, number];
@@ -3239,8 +3241,8 @@ export interface InitOutput {
     readonly imageprocessor_to_base64: (a: number) => [number, number];
     readonly imageprocessor_to_jpeg: (a: number, b: number) => [number, number];
     readonly imageprocessor_to_png: (a: number) => [number, number];
-    readonly init: () => void;
     readonly imageprocessor_to_webp: (a: number, b: number) => [number, number];
+    readonly init: () => void;
     readonly box_blur: (a: number) => void;
     readonly detect_135_deg_lines: (a: number) => void;
     readonly detect_45_deg_lines: (a: number) => void;

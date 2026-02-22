@@ -609,6 +609,7 @@
                     <div class="btn-group">
                         <button class="btn btn-success" onclick="convertFormat('png')" disabled>转 PNG</button>
                         <button class="btn btn-success" onclick="convertFormat('jpeg')" disabled>转 JPEG</button>
+                        <button class="btn btn-success" onclick="convertFormat('webp')" disabled>转 WebP</button>
                     </div>
                 </div>
 
@@ -626,6 +627,7 @@
                 <div class="info-panel" id="infoPanel">
                     <p>尺寸: <span id="imageSize">未加载</span></p>
                     <p>格式: <span id="imageFormat">-</span></p>
+                    <p>文件大小: <span id="fileSize">-</span></p>
                 </div>
             </div>
 
@@ -2102,6 +2104,15 @@
                 ctx.drawImage(img, 0, 0);
             };
             img.src = base64;
+
+            // 更新文件大小显示
+            const fileSize = processor.get_file_size();
+            const fileSizeKB = (fileSize / 1024).toFixed(2);
+            const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+            const fileSizeStr = fileSize > 1024 * 1024 
+                ? `${fileSizeMB} MB` 
+                : `${fileSizeKB} KB`;
+            document.getElementById('fileSize').textContent = fileSizeStr;
         }
 
         // 初始化
