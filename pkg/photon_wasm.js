@@ -28,11 +28,12 @@ export class ImageProcessor {
      * @param {number} gamma_red
      * @param {number} gamma_green
      * @param {number} gamma_blue
+     * @param {number} sharpen_strength
      */
-    apply_all_adjustments(brightness, contrast, saturation, hue, lightness, lightness_color_space, gamma_red, gamma_green, gamma_blue) {
+    apply_all_adjustments(brightness, contrast, saturation, hue, lightness, lightness_color_space, gamma_red, gamma_green, gamma_blue, sharpen_strength) {
         const ptr0 = passStringToWasm0(lightness_color_space, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.imageprocessor_apply_all_adjustments(this.__wbg_ptr, brightness, contrast, saturation, hue, lightness, ptr0, len0, gamma_red, gamma_green, gamma_blue);
+        wasm.imageprocessor_apply_all_adjustments(this.__wbg_ptr, brightness, contrast, saturation, hue, lightness, ptr0, len0, gamma_red, gamma_green, gamma_blue, sharpen_strength);
     }
     /**
      * @param {number} level
@@ -124,6 +125,12 @@ export class ImageProcessor {
     }
     apply_sepia() {
         wasm.imageprocessor_apply_sepia(this.__wbg_ptr);
+    }
+    /**
+     * @param {number} strength
+     */
+    apply_sharpen(strength) {
+        wasm.imageprocessor_apply_sharpen(this.__wbg_ptr, strength);
     }
     apply_solarize() {
         wasm.imageprocessor_apply_solarize(this.__wbg_ptr);
@@ -3982,6 +3989,35 @@ export function sepia(img) {
 export function sharpen(photon_image) {
     _assertClass(photon_image, PhotonImage);
     wasm.sharpen(photon_image.__wbg_ptr);
+}
+
+/**
+ * Sharpen an image with adjustable strength.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `strength` - Sharpening strength. Range: 0.0 to 10.0.
+ *   - 0.0: No sharpening effect
+ *   - 1.0: Standard sharpening (equivalent to sharpen())
+ *   - >1.0: Stronger sharpening
+ *   - <1.0: Subtle sharpening
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to sharpen an image with strength 2.0:
+ * use photon_rs::conv::sharpen_with_strength;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * sharpen_with_strength(&mut img, 2.0);
+ * ```
+ * @param {PhotonImage} photon_image
+ * @param {number} strength
+ */
+export function sharpen_with_strength(photon_image, strength) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.sharpen_with_strength(photon_image.__wbg_ptr, strength);
 }
 
 /**

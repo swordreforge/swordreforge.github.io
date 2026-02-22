@@ -2,7 +2,7 @@
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
 export const __wbg_imageprocessor_free: (a: number, b: number) => void;
-export const imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => void;
+export const imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => void;
 export const imageprocessor_apply_brightness: (a: number, b: number) => void;
 export const imageprocessor_apply_contrast: (a: number, b: number) => void;
 export const imageprocessor_apply_dither: (a: number, b: number) => void;
@@ -18,6 +18,7 @@ export const imageprocessor_apply_pixelate: (a: number, b: number) => void;
 export const imageprocessor_apply_preset_filter: (a: number, b: number, c: number) => void;
 export const imageprocessor_apply_saturation: (a: number, b: number) => void;
 export const imageprocessor_apply_sepia: (a: number) => void;
+export const imageprocessor_apply_sharpen: (a: number, b: number) => void;
 export const imageprocessor_apply_solarize: (a: number) => void;
 export const imageprocessor_apply_threshold: (a: number, b: number) => void;
 export const imageprocessor_crop: (a: number, b: number, c: number, d: number, e: number) => void;
@@ -68,6 +69,7 @@ export const laplace: (a: number) => void;
 export const noise_reduction: (a: number) => void;
 export const prewitt_horizontal: (a: number) => void;
 export const sharpen: (a: number) => void;
+export const sharpen_with_strength: (a: number, b: number) => void;
 export const sobel_global: (a: number) => void;
 export const sobel_horizontal: (a: number) => void;
 export const sobel_vertical: (a: number) => void;
