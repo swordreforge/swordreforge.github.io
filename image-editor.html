@@ -461,6 +461,16 @@
                 </div>
 
                 <div class="section">
+                    <h3>条纹效果</h3>
+                    <div class="btn-group" style="grid-template-columns: repeat(2, 1fr);">
+                        <button class="btn" onclick="applyHorizontalStrips()" disabled>水平条纹</button>
+                        <button class="btn" onclick="applyVerticalStrips()" disabled>垂直条纹</button>
+                        <button class="btn" onclick="applyColorHorizontalStrips()" disabled>彩色水平</button>
+                        <button class="btn" onclick="applyColorVerticalStrips()" disabled>彩色垂直</button>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>无级调节</h3>
                     <div class="slider-container">
                         <label>亮度 (-100 ~ 100)</label>
@@ -1072,6 +1082,82 @@
                     console.error('Tint error:', error);
                 }
                 showLoading(false);
+            }
+        };
+
+        // 水平条纹
+        window.applyHorizontalStrips = function() {
+            if (!processor) return;
+            const numStrips = prompt('请输入条纹数量 (建议 5-20):', '10');
+            if (numStrips && !isNaN(numStrips)) {
+                showLoading(true);
+                saveToHistory();
+                try {
+                    processor.apply_horizontal_strips(parseInt(numStrips));
+                    updateCanvas();
+                } catch (error) {
+                    console.error('Horizontal strips error:', error);
+                }
+                showLoading(false);
+            }
+        };
+
+        // 垂直条纹
+        window.applyVerticalStrips = function() {
+            if (!processor) return;
+            const numStrips = prompt('请输入条纹数量 (建议 5-20):', '10');
+            if (numStrips && !isNaN(numStrips)) {
+                showLoading(true);
+                saveToHistory();
+                try {
+                    processor.apply_vertical_strips(parseInt(numStrips));
+                    updateCanvas();
+                } catch (error) {
+                    console.error('Vertical strips error:', error);
+                }
+                showLoading(false);
+            }
+        };
+
+        // 彩色水平条纹
+        window.applyColorHorizontalStrips = function() {
+            if (!processor) return;
+            const numStrips = prompt('请输入条纹数量 (建议 5-20):', '10');
+            const color = prompt('请输入条纹颜色 (R,G,B，如: 255,0,0):', '255,0,0');
+            if (numStrips && color) {
+                const rgb = color.split(',').map(Number);
+                if (rgb.length === 3) {
+                    showLoading(true);
+                    saveToHistory();
+                    try {
+                        processor.apply_color_horizontal_strips(parseInt(numStrips), rgb[0], rgb[1], rgb[2]);
+                        updateCanvas();
+                    } catch (error) {
+                        console.error('Color horizontal strips error:', error);
+                    }
+                    showLoading(false);
+                }
+            }
+        };
+
+        // 彩色垂直条纹
+        window.applyColorVerticalStrips = function() {
+            if (!processor) return;
+            const numStrips = prompt('请输入条纹数量 (建议 5-20):', '10');
+            const color = prompt('请输入条纹颜色 (R,G,B，如: 0,255,0):', '0,255,0');
+            if (numStrips && color) {
+                const rgb = color.split(',').map(Number);
+                if (rgb.length === 3) {
+                    showLoading(true);
+                    saveToHistory();
+                    try {
+                        processor.apply_color_vertical_strips(parseInt(numStrips), rgb[0], rgb[1], rgb[2]);
+                        updateCanvas();
+                    } catch (error) {
+                        console.error('Color vertical strips error:', error);
+                    }
+                    showLoading(false);
+                }
             }
         };
 

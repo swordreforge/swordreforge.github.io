@@ -7,6 +7,8 @@ export class ImageProcessor {
     apply_all_adjustments(brightness: number, contrast: number, saturation: number, hue: number, lightness: number, lightness_color_space: string, gamma_red: number, gamma_green: number, gamma_blue: number, sharpen_strength: number, noise_reduction_strength: number, noise_strength: number, r_offset: number, g_offset: number, b_offset: number): void;
     apply_box_blur(): void;
     apply_brightness(level: number): void;
+    apply_color_horizontal_strips(num_strips: number, r: number, g: number, b: number): void;
+    apply_color_vertical_strips(num_strips: number, r: number, g: number, b: number): void;
     apply_colorize(): void;
     apply_contrast(level: number): void;
     apply_detect_135_deg_lines(): void;
@@ -23,6 +25,7 @@ export class ImageProcessor {
     apply_gaussian_blur(radius: number): void;
     apply_grayscale(): void;
     apply_halftone(): void;
+    apply_horizontal_strips(num_strips: number): void;
     apply_hue(level: number): void;
     apply_identity(): void;
     apply_invert(): void;
@@ -44,6 +47,7 @@ export class ImageProcessor {
     apply_solarize(): void;
     apply_threshold(threshold: number): void;
     apply_tint(r_offset: number, g_offset: number, b_offset: number): void;
+    apply_vertical_strips(num_strips: number): void;
     crop(x1: number, y1: number, x2: number, y2: number): void;
     flip_horizontal(): void;
     flip_vertical(): void;
@@ -3161,6 +3165,8 @@ export interface InitOutput {
     readonly imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number) => void;
     readonly imageprocessor_apply_box_blur: (a: number) => void;
     readonly imageprocessor_apply_brightness: (a: number, b: number) => void;
+    readonly imageprocessor_apply_color_horizontal_strips: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly imageprocessor_apply_color_vertical_strips: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly imageprocessor_apply_colorize: (a: number) => void;
     readonly imageprocessor_apply_contrast: (a: number, b: number) => void;
     readonly imageprocessor_apply_detect_135_deg_lines: (a: number) => void;
@@ -3177,6 +3183,7 @@ export interface InitOutput {
     readonly imageprocessor_apply_gaussian_blur: (a: number, b: number) => void;
     readonly imageprocessor_apply_grayscale: (a: number) => void;
     readonly imageprocessor_apply_halftone: (a: number) => void;
+    readonly imageprocessor_apply_horizontal_strips: (a: number, b: number) => void;
     readonly imageprocessor_apply_hue: (a: number, b: number) => void;
     readonly imageprocessor_apply_identity: (a: number) => void;
     readonly imageprocessor_apply_invert: (a: number) => void;
@@ -3198,6 +3205,7 @@ export interface InitOutput {
     readonly imageprocessor_apply_solarize: (a: number) => void;
     readonly imageprocessor_apply_threshold: (a: number, b: number) => void;
     readonly imageprocessor_apply_tint: (a: number, b: number, c: number, d: number) => void;
+    readonly imageprocessor_apply_vertical_strips: (a: number, b: number) => void;
     readonly imageprocessor_crop: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly imageprocessor_flip_horizontal: (a: number) => void;
     readonly imageprocessor_flip_vertical: (a: number) => void;

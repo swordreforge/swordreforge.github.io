@@ -49,6 +49,24 @@ export class ImageProcessor {
     apply_brightness(level) {
         wasm.imageprocessor_apply_brightness(this.__wbg_ptr, level);
     }
+    /**
+     * @param {number} num_strips
+     * @param {number} r
+     * @param {number} g
+     * @param {number} b
+     */
+    apply_color_horizontal_strips(num_strips, r, g, b) {
+        wasm.imageprocessor_apply_color_horizontal_strips(this.__wbg_ptr, num_strips, r, g, b);
+    }
+    /**
+     * @param {number} num_strips
+     * @param {number} r
+     * @param {number} g
+     * @param {number} b
+     */
+    apply_color_vertical_strips(num_strips, r, g, b) {
+        wasm.imageprocessor_apply_color_vertical_strips(this.__wbg_ptr, num_strips, r, g, b);
+    }
     apply_colorize() {
         wasm.imageprocessor_apply_colorize(this.__wbg_ptr);
     }
@@ -118,6 +136,12 @@ export class ImageProcessor {
     }
     apply_halftone() {
         wasm.imageprocessor_apply_halftone(this.__wbg_ptr);
+    }
+    /**
+     * @param {number} num_strips
+     */
+    apply_horizontal_strips(num_strips) {
+        wasm.imageprocessor_apply_horizontal_strips(this.__wbg_ptr, num_strips);
     }
     /**
      * @param {number} level
@@ -222,6 +246,12 @@ export class ImageProcessor {
      */
     apply_tint(r_offset, g_offset, b_offset) {
         wasm.imageprocessor_apply_tint(this.__wbg_ptr, r_offset, g_offset, b_offset);
+    }
+    /**
+     * @param {number} num_strips
+     */
+    apply_vertical_strips(num_strips) {
+        wasm.imageprocessor_apply_vertical_strips(this.__wbg_ptr, num_strips);
     }
     /**
      * @param {number} x1
