@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebAssembly 图像处理器</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>">
     <style>
         * {
             margin: 0;
@@ -279,6 +280,57 @@
             margin-bottom: 20px;
             color: #666;
         }
+
+        /* 裁剪框样式 */
+        .crop-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .crop-box {
+            position: absolute;
+            border: 2px solid #fff;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: move;
+        }
+
+        .crop-handle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border: 2px solid #333;
+            pointer-events: auto;
+        }
+
+        .crop-handle.nw { top: -6px; left: -6px; cursor: nw-resize; }
+        .crop-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
+        .crop-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+        .crop-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
+        .crop-handle.n { top: -6px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+        .crop-handle.s { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+        .crop-handle.w { top: 50%; left: -6px; transform: translateY(-50%); cursor: w-resize; }
+        .crop-handle.e { top: 50%; right: -6px; transform: translateY(-50%); cursor: e-resize; }
+
+        .crop-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            padding: 15px 25px;
+            border-radius: 10px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+        }
+
+        .crop-controls .btn {
+            min-width: 80px;
+        }
     </style>
 </head>
 <body>
@@ -372,6 +424,8 @@
                 <div class="section">
                     <h3>操作</h3>
                     <div class="btn-group">
+                        <button class="btn" onclick="undo()" disabled id="undoBtn">↩ 撤销</button>
+                        <button class="btn" onclick="redo()" disabled id="redoBtn">↪ 重做</button>
                         <button class="btn" onclick="resetImage()" disabled>重置</button>
                         <button class="btn btn-danger" onclick="clearImage()" disabled>清空图像</button>
                         <button class="btn btn-danger" onclick="downloadImage()" disabled>下载</button>
@@ -397,6 +451,11 @@
                         <input type="file" id="fileInput" accept="image/*" style="display: none;">
                     </div>
                     <canvas id="imageCanvas" style="display: none;"></canvas>
+                    <canvas id="cropOverlay" class="crop-overlay" style="display: none;"></canvas>
+                    <div class="crop-controls" id="cropControls" style="display: none;">
+                        <button class="btn btn-success" onclick="applyCrop()">✓ 确认裁剪</button>
+                        <button class="btn btn-danger" onclick="cancelCrop()">✕ 取消</button>
+                    </div>
                 </div>
             </div>
     </div>
@@ -408,6 +467,83 @@
         let processor = null;
         let originalImageData = null;
         let currentImage = null;
+        
+        // 历史记录管理
+        let historyStack = [];
+        let redoStack = [];
+        const MAX_HISTORY = 30;
+
+        // 保存当前状态到历史记录
+        function saveToHistory() {
+            if (!processor) return;
+            
+            const state = {
+                base64: processor.to_base64(),
+                width: processor.get_width(),
+                height: processor.get_height()
+            };
+            
+            historyStack.push(state);
+            if (historyStack.length > MAX_HISTORY) {
+                historyStack.shift();
+            }
+            
+            // 清空重做栈
+            redoStack = [];
+            
+            updateUndoRedoButtons();
+        }
+
+        // 撤销
+        window.undo = function() {
+            if (historyStack.length === 0) return;
+            
+            // 保存当前状态到重做栈
+            redoStack.push({
+                base64: processor.to_base64(),
+                width: processor.get_width(),
+                height: processor.get_height()
+            });
+            
+            // 恢复上一个状态
+            const state = historyStack.pop();
+            restoreState(state);
+            
+            updateUndoRedoButtons();
+        }
+
+        // 重做
+        window.redo = function() {
+            if (redoStack.length === 0) return;
+            
+            // 保存当前状态到历史栈
+            historyStack.push({
+                base64: processor.to_base64(),
+                width: processor.get_width(),
+                height: processor.get_height()
+            });
+            
+            // 恢复重做状态
+            const state = redoStack.pop();
+            restoreState(state);
+            
+            updateUndoRedoButtons();
+        }
+
+        // 恢复状态
+        function restoreState(state) {
+            // 提取纯 base64 数据（移除可能的 data URI 前缀）
+            const base64Data = state.base64.includes(',') ? state.base64.split(',')[1] : state.base64;
+            const uint8Array = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+            processor = ImageProcessor.new_from_bytes(uint8Array);
+            updateCanvas();
+        }
+
+        // 更新撤销/重做按钮状态
+        function updateUndoRedoButtons() {
+            document.getElementById('undoBtn').disabled = historyStack.length === 0;
+            document.getElementById('redoBtn').disabled = redoStack.length === 0;
+        }
 
         // 初始化 WASM 模块
         async function initWasm() {
@@ -561,6 +697,8 @@
         window.applyFilter = function(filterType) {
             if (!processor) return;
             showLoading(true);
+            // 保存状态到历史记录
+            saveToHistory();
             try {
                 switch (filterType) {
                     case 'grayscale':
@@ -584,6 +722,7 @@
         window.applyThreshold = function() {
             if (!processor) return;
             showLoading(true);
+            saveToHistory();
             try {
                 processor.apply_threshold(128);
                 updateCanvas();
@@ -597,6 +736,7 @@
         window.applyPresetFilter = function(filterName) {
             if (!processor) return;
             showLoading(true);
+            saveToHistory();
             try {
                 processor.apply_preset_filter(filterName);
                 updateCanvas();
@@ -612,6 +752,7 @@
             const pixelSize = prompt('请输入像素大小 (建议 5-20):', '10');
             if (pixelSize && !isNaN(pixelSize)) {
                 showLoading(true);
+                saveToHistory();
                 try {
                     processor.apply_pixelate(parseInt(pixelSize));
                     updateCanvas();
@@ -625,6 +766,7 @@
         window.applyHalftone = function() {
             if (!processor) return;
             showLoading(true);
+            saveToHistory();
             try {
                 processor.apply_halftone();
                 updateCanvas();
@@ -637,6 +779,7 @@
         window.applySolarize = function() {
             if (!processor) return;
             showLoading(true);
+            saveToHistory();
             try {
                 processor.apply_solarize();
                 updateCanvas();
@@ -651,6 +794,7 @@
             const depth = prompt('请输入色深 (建议 8-64):', '16');
             if (depth && !isNaN(depth)) {
                 showLoading(true);
+                saveToHistory();
                 try {
                     processor.apply_dither(parseInt(depth));
                     updateCanvas();
@@ -667,6 +811,7 @@
             const intensity = prompt('请输入强度 (0.0-1.0):', '0.5');
             if (radius && intensity && !isNaN(radius) && !isNaN(intensity)) {
                 showLoading(true);
+                saveToHistory();
                 try {
                     processor.apply_oil(parseInt(radius), parseFloat(intensity));
                     updateCanvas();
@@ -686,6 +831,7 @@
                 const c2 = color2.split(',').map(Number);
                 if (c1.length === 3 && c2.length === 3) {
                     showLoading(true);
+                    saveToHistory();
                     try {
                         processor.apply_duotone(c1[0], c1[1], c1[2], c2[0], c2[1], c2[2]);
                         updateCanvas();
@@ -698,6 +844,7 @@
         };
 
         // 应用无级调节
+        let adjustmentTimeout = null;
         window.applyAdjustments = function() {
             if (!processor) return;
 
@@ -718,6 +865,12 @@
                 // 使用批量应用方法，避免重复重置
                 processor.apply_all_adjustments(brightness, contrast, saturation, hue);
                 updateCanvas();
+                
+                // 防抖动保存历史记录（用户停止调节 500ms 后保存）
+                clearTimeout(adjustmentTimeout);
+                adjustmentTimeout = setTimeout(() => {
+                    saveToHistory();
+                }, 500);
             } catch (error) {
                 console.error('Adjustments error:', error);
             }
@@ -728,6 +881,7 @@
             if (!processor) return;
             showLoading(true);
             try {
+                saveToHistory();
                 processor.rotate_90();
                 updateCanvas();
             } catch (error) {
@@ -741,6 +895,7 @@
             if (!processor) return;
             showLoading(true);
             try {
+                saveToHistory();
                 processor.flip_horizontal();
                 updateCanvas();
             } catch (error) {
@@ -754,6 +909,7 @@
             if (!processor) return;
             showLoading(true);
             try {
+                saveToHistory();
                 processor.flip_vertical();
                 updateCanvas();
             } catch (error) {
@@ -770,6 +926,7 @@
             if (width && height && !isNaN(width) && !isNaN(height)) {
                 showLoading(true);
                 try {
+                    saveToHistory();
                     processor.resize(parseInt(width), parseInt(height));
                     updateCanvas();
                 } catch (error) {
@@ -779,25 +936,277 @@
             }
         };
 
-        // 裁剪图片
+        // 裁剪模式
+        let isCropMode = false;
+        let cropBox = { x: 0, y: 0, width: 0, height: 0 };
+        let isDragging = false;
+        let isResizing = false;
+        let resizeHandle = null;
+        let dragStart = { x: 0, y: 0 };
+        let initialCropBox = { x: 0, y: 0, width: 0, height: 0 };
+
+        // 进入裁剪模式
         window.cropImage = function() {
             if (!processor) return;
-            const currentWidth = processor.get_width();
-            const currentHeight = processor.get_height();
-            const x1 = prompt(`请输入起始 X (0 - ${currentWidth}):`, '0');
-            const y1 = prompt(`请输入起始 Y (0 - ${currentHeight}):`, '0');
-            const x2 = prompt(`请输入结束 X (1 - ${currentWidth}):`, Math.floor(currentWidth / 2));
-            const y2 = prompt(`请输入结束 Y (1 - ${currentHeight}):`, Math.floor(currentHeight / 2));
-            if (x1 && y1 && x2 && y2 && !isNaN(x1) && !isNaN(y1) && !isNaN(x2) && !isNaN(y2)) {
-                showLoading(true);
-                try {
-                    processor.crop(parseInt(x1), parseInt(y1), parseInt(x2), parseInt(y2));
-                    updateCanvas();
-                } catch (error) {
-                    console.error('Crop error:', error);
+            isCropMode = true;
+            
+            // 初始化裁剪框为图像中心的一半大小
+            const canvas = document.getElementById('imageCanvas');
+            const width = canvas.width;
+            const height = canvas.height;
+            cropBox = {
+                x: width * 0.25,
+                y: height * 0.25,
+                width: width * 0.5,
+                height: height * 0.5
+            };
+            
+            // 显示裁剪覆盖层
+            const cropOverlay = document.getElementById('cropOverlay');
+            cropOverlay.style.display = 'block';
+            cropOverlay.width = width;
+            cropOverlay.height = height;
+            
+            // 显示裁剪控制按钮
+            document.getElementById('cropControls').style.display = 'flex';
+            
+            // 绘制裁剪框
+            drawCropOverlay();
+            
+            // 添加事件监听
+            setupCropEvents();
+        };
+
+        // 设置裁剪事件监听
+        function setupCropEvents() {
+            const cropOverlay = document.getElementById('cropOverlay');
+            const canvas = document.getElementById('imageCanvas');
+            
+            // 移除旧的事件监听器（通过克隆节点）
+            const newCropOverlay = cropOverlay.cloneNode(true);
+            cropOverlay.parentNode.replaceChild(newCropOverlay, cropOverlay);
+            
+            // 更新引用
+            const updatedCropOverlay = document.getElementById('cropOverlay');
+            
+            // 鼠标按下
+            updatedCropOverlay.addEventListener('mousedown', (e) => {
+                const rect = updatedCropOverlay.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                // 检查是否点击了裁剪框
+                if (mouseX >= cropBox.x && mouseX <= cropBox.x + cropBox.width &&
+                    mouseY >= cropBox.y && mouseY <= cropBox.y + cropBox.height) {
+                    
+                    // 检查是否点击了调整手柄
+                    const handleSize = 10;
+                    if (Math.abs(mouseX - cropBox.x) < handleSize && Math.abs(mouseY - cropBox.y) < handleSize) {
+                        isResizing = true;
+                        resizeHandle = 'nw';
+                    } else if (Math.abs(mouseX - (cropBox.x + cropBox.width)) < handleSize && Math.abs(mouseY - cropBox.y) < handleSize) {
+                        isResizing = true;
+                        resizeHandle = 'ne';
+                    } else if (Math.abs(mouseX - cropBox.x) < handleSize && Math.abs(mouseY - (cropBox.y + cropBox.height)) < handleSize) {
+                        isResizing = true;
+                        resizeHandle = 'sw';
+                    } else if (Math.abs(mouseX - (cropBox.x + cropBox.width)) < handleSize && Math.abs(mouseY - (cropBox.y + cropBox.height)) < handleSize) {
+                        isResizing = true;
+                        resizeHandle = 'se';
+                    } else {
+                        isDragging = true;
+                    }
+                    
+                    dragStart = { x: mouseX, y: mouseY };
+                    initialCropBox = { ...cropBox };
+                    e.preventDefault();
                 }
-                showLoading(false);
+            });
+
+            // 鼠标移动
+            updatedCropOverlay.addEventListener('mousemove', (e) => {
+                if (!isCropMode) return;
+                
+                const rect = updatedCropOverlay.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const dx = mouseX - dragStart.x;
+                const dy = mouseY - dragStart.y;
+                
+                // 更新光标样式
+                updateCursor(mouseX, mouseY, rect);
+                
+                if (isDragging) {
+                    cropBox.x = Math.max(0, Math.min(canvas.width - cropBox.width, initialCropBox.x + dx));
+                    cropBox.y = Math.max(0, Math.min(canvas.height - cropBox.height, initialCropBox.y + dy));
+                    drawCropOverlay();
+                } else if (isResizing) {
+                    handleResize(dx, dy);
+                    drawCropOverlay();
+                }
+            });
+
+            // 鼠标释放
+            updatedCropOverlay.addEventListener('mouseup', () => {
+                isDragging = false;
+                isResizing = false;
+                resizeHandle = null;
+            });
+            
+            // 鼠标离开
+            updatedCropOverlay.addEventListener('mouseleave', () => {
+                isDragging = false;
+                isResizing = false;
+                resizeHandle = null;
+            });
+        }
+
+        // 更新光标样式
+        function updateCursor(mouseX, mouseY, rect) {
+            const canvas = document.getElementById('imageCanvas');
+            const handleSize = 10;
+            
+            if (mouseX >= cropBox.x && mouseX <= cropBox.x + cropBox.width &&
+                mouseY >= cropBox.y && mouseY <= cropBox.y + cropBox.height) {
+                if (Math.abs(mouseX - cropBox.x) < handleSize && Math.abs(mouseY - cropBox.y) < handleSize) {
+                    canvas.style.cursor = 'nw-resize';
+                } else if (Math.abs(mouseX - (cropBox.x + cropBox.width)) < handleSize && Math.abs(mouseY - cropBox.y) < handleSize) {
+                    canvas.style.cursor = 'ne-resize';
+                } else if (Math.abs(mouseX - cropBox.x) < handleSize && Math.abs(mouseY - (cropBox.y + cropBox.height)) < handleSize) {
+                    canvas.style.cursor = 'sw-resize';
+                } else if (Math.abs(mouseX - (cropBox.x + cropBox.width)) < handleSize && Math.abs(mouseY - (cropBox.y + cropBox.height)) < handleSize) {
+                    canvas.style.cursor = 'se-resize';
+                } else {
+                    canvas.style.cursor = 'move';
+                }
+            } else {
+                canvas.style.cursor = 'default';
             }
+        }
+
+        // 处理调整大小
+        function handleResize(dx, dy) {
+            const canvas = document.getElementById('imageCanvas');
+            const minSize = 20;
+            
+            switch (resizeHandle) {
+                case 'nw':
+                    cropBox.x = Math.max(0, initialCropBox.x + dx);
+                    cropBox.y = Math.max(0, initialCropBox.y + dy);
+                    cropBox.width = Math.max(minSize, initialCropBox.width - dx);
+                    cropBox.height = Math.max(minSize, initialCropBox.height - dy);
+                    break;
+                case 'ne':
+                    cropBox.y = Math.max(0, initialCropBox.y + dy);
+                    cropBox.width = Math.max(minSize, initialCropBox.width + dx);
+                    cropBox.height = Math.max(minSize, initialCropBox.height - dy);
+                    break;
+                case 'sw':
+                    cropBox.x = Math.max(0, initialCropBox.x + dx);
+                    cropBox.width = Math.max(minSize, initialCropBox.width - dx);
+                    cropBox.height = Math.max(minSize, initialCropBox.height + dy);
+                    break;
+                case 'se':
+                    cropBox.width = Math.max(minSize, initialCropBox.width + dx);
+                    cropBox.height = Math.max(minSize, initialCropBox.height + dy);
+                    break;
+            }
+            
+            // 确保裁剪框在画布内
+            cropBox.x = Math.max(0, Math.min(canvas.width - cropBox.width, cropBox.x));
+            cropBox.y = Math.max(0, Math.min(canvas.height - cropBox.height, cropBox.y));
+        }
+
+        // 绘制裁剪覆盖层
+        function drawCropOverlay() {
+            const cropOverlay = document.getElementById('cropOverlay');
+            const ctx = cropOverlay.getContext('2d');
+            
+            // 清空覆盖层
+            ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
+            
+            // 绘制半透明遮罩
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(0, 0, cropOverlay.width, cropOverlay.height);
+            
+            // 清除裁剪框区域的遮罩
+            ctx.clearRect(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
+            
+            // 绘制裁剪框边框
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
+            ctx.setLineDash([]);
+            
+            // 绘制三分线
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            
+            // 垂直线
+            for (let i = 1; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(cropBox.x + (cropBox.width / 3) * i, cropBox.y);
+                ctx.lineTo(cropBox.x + (cropBox.width / 3) * i, cropBox.y + cropBox.height);
+                ctx.stroke();
+            }
+            
+            // 水平线
+            for (let i = 1; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(cropBox.x, cropBox.y + (cropBox.height / 3) * i);
+                ctx.lineTo(cropBox.x + cropBox.width, cropBox.y + (cropBox.height / 3) * i);
+                ctx.stroke();
+            }
+            
+            // 绘制调整手柄
+            const handleSize = 8;
+            ctx.fillStyle = '#fff';
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            
+            // 四角
+            ctx.fillRect(cropBox.x - handleSize/2, cropBox.y - handleSize/2, handleSize, handleSize);
+            ctx.strokeRect(cropBox.x - handleSize/2, cropBox.y - handleSize/2, handleSize, handleSize);
+            
+            ctx.fillRect(cropBox.x + cropBox.width - handleSize/2, cropBox.y - handleSize/2, handleSize, handleSize);
+            ctx.strokeRect(cropBox.x + cropBox.width - handleSize/2, cropBox.y - handleSize/2, handleSize, handleSize);
+            
+            ctx.fillRect(cropBox.x - handleSize/2, cropBox.y + cropBox.height - handleSize/2, handleSize, handleSize);
+            ctx.strokeRect(cropBox.x - handleSize/2, cropBox.y + cropBox.height - handleSize/2, handleSize, handleSize);
+            
+            ctx.fillRect(cropBox.x + cropBox.width - handleSize/2, cropBox.y + cropBox.height - handleSize/2, handleSize, handleSize);
+            ctx.strokeRect(cropBox.x + cropBox.width - handleSize/2, cropBox.y + cropBox.height - handleSize/2, handleSize, handleSize);
+        }
+
+        // 应用裁剪
+        window.applyCrop = function() {
+            if (!processor || !isCropMode) return;
+            
+            saveToHistory();
+            
+            showLoading(true);
+            try {
+                const x1 = Math.floor(cropBox.x);
+                const y1 = Math.floor(cropBox.y);
+                const x2 = Math.floor(cropBox.x + cropBox.width);
+                const y2 = Math.floor(cropBox.y + cropBox.height);
+                
+                processor.crop(x1, y1, x2, y2);
+                updateCanvas();
+                cancelCrop();
+            } catch (error) {
+                console.error('Crop error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 取消裁剪
+        window.cancelCrop = function() {
+            isCropMode = false;
+            document.getElementById('cropOverlay').style.display = 'none';
+            document.getElementById('cropControls').style.display = 'none';
+            document.getElementById('imageCanvas').style.cursor = 'default';
         };
 
         // 格式转换
