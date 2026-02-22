@@ -52,6 +52,18 @@ export class ImageProcessor {
     apply_contrast(level) {
         wasm.imageprocessor_apply_contrast(this.__wbg_ptr, level);
     }
+    apply_detect_135_deg_lines() {
+        wasm.imageprocessor_apply_detect_135_deg_lines(this.__wbg_ptr);
+    }
+    apply_detect_45_deg_lines() {
+        wasm.imageprocessor_apply_detect_45_deg_lines(this.__wbg_ptr);
+    }
+    apply_detect_horizontal_lines() {
+        wasm.imageprocessor_apply_detect_horizontal_lines(this.__wbg_ptr);
+    }
+    apply_detect_vertical_lines() {
+        wasm.imageprocessor_apply_detect_vertical_lines(this.__wbg_ptr);
+    }
     /**
      * @param {number} depth
      */

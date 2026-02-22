@@ -424,6 +424,16 @@
                 </div>
 
                 <div class="section">
+                    <h3>线条检测</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="applyDetectHorizontalLines()" disabled>水平线</button>
+                        <button class="btn" onclick="applyDetectVerticalLines()" disabled>垂直线</button>
+                        <button class="btn" onclick="applyDetect45DegLines()" disabled>45度线</button>
+                        <button class="btn" onclick="applyDetect135DegLines()" disabled>135度线</button>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>特殊效果</h3>
                     <div class="btn-group" style="grid-template-columns: repeat(3, 1fr);">
                         <button class="btn" onclick="applyPixelate()" disabled>像素化</button>
@@ -579,7 +589,7 @@
     </div>
 
     <script type="module">
-        import init, { ImageProcessor } from './photon-wasm/pkg/photon_wasm.js?v=4';
+        import init, { ImageProcessor } from './photon-wasm/pkg/photon_wasm.js?v=5';
 
         let wasmModule = null;
         let processor = null;
@@ -1053,6 +1063,62 @@
                 updateCanvas();
             } catch (error) {
                 console.error('Edge detection error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 检测水平线
+        window.applyDetectHorizontalLines = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_detect_horizontal_lines();
+                updateCanvas();
+            } catch (error) {
+                console.error('Detect horizontal lines error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 检测垂直线
+        window.applyDetectVerticalLines = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_detect_vertical_lines();
+                updateCanvas();
+            } catch (error) {
+                console.error('Detect vertical lines error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 检测 45 度线
+        window.applyDetect45DegLines = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_detect_45_deg_lines();
+                updateCanvas();
+            } catch (error) {
+                console.error('Detect 45 degree lines error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 检测 135 度线
+        window.applyDetect135DegLines = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_detect_135_deg_lines();
+                updateCanvas();
+            } catch (error) {
+                console.error('Detect 135 degree lines error:', error);
             }
             showLoading(false);
         };

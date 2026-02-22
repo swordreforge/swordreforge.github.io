@@ -8,6 +8,10 @@ export class ImageProcessor {
     apply_box_blur(): void;
     apply_brightness(level: number): void;
     apply_contrast(level: number): void;
+    apply_detect_135_deg_lines(): void;
+    apply_detect_45_deg_lines(): void;
+    apply_detect_horizontal_lines(): void;
+    apply_detect_vertical_lines(): void;
     apply_dither(depth: number): void;
     apply_duotone(r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): void;
     apply_edge_detection(): void;
@@ -3144,6 +3148,10 @@ export interface InitOutput {
     readonly imageprocessor_apply_box_blur: (a: number) => void;
     readonly imageprocessor_apply_brightness: (a: number, b: number) => void;
     readonly imageprocessor_apply_contrast: (a: number, b: number) => void;
+    readonly imageprocessor_apply_detect_135_deg_lines: (a: number) => void;
+    readonly imageprocessor_apply_detect_45_deg_lines: (a: number) => void;
+    readonly imageprocessor_apply_detect_horizontal_lines: (a: number) => void;
+    readonly imageprocessor_apply_detect_vertical_lines: (a: number) => void;
     readonly imageprocessor_apply_dither: (a: number, b: number) => void;
     readonly imageprocessor_apply_duotone: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly imageprocessor_apply_edge_detection: (a: number) => void;

@@ -6,6 +6,10 @@ export const imageprocessor_apply_all_adjustments: (a: number, b: number, c: num
 export const imageprocessor_apply_box_blur: (a: number) => void;
 export const imageprocessor_apply_brightness: (a: number, b: number) => void;
 export const imageprocessor_apply_contrast: (a: number, b: number) => void;
+export const imageprocessor_apply_detect_135_deg_lines: (a: number) => void;
+export const imageprocessor_apply_detect_45_deg_lines: (a: number) => void;
+export const imageprocessor_apply_detect_horizontal_lines: (a: number) => void;
+export const imageprocessor_apply_detect_vertical_lines: (a: number) => void;
 export const imageprocessor_apply_dither: (a: number, b: number) => void;
 export const imageprocessor_apply_duotone: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
 export const imageprocessor_apply_edge_detection: (a: number) => void;
