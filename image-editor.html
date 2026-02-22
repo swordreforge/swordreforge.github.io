@@ -353,9 +353,24 @@
                 </div>
 
                 <div class="section">
-                    <h3>预设滤镜</h3>
+                    <h3>色调滤镜</h3>
                     <div class="btn-group">
                         <button class="btn" onclick="applyPresetFilter('oceanic')" disabled>海洋</button>
+                        <button class="btn" onclick="applyPresetFilter('islands')" disabled>岛屿</button>
+                        <button class="btn" onclick="applyPresetFilter('marine')" disabled>深海</button>
+                        <button class="btn" onclick="applyPresetFilter('seagreen')" disabled>海绿</button>
+                        <button class="btn" onclick="applyPresetFilter('flagblue')" disabled>皇家蓝</button>
+                        <button class="btn" onclick="applyPresetFilter('diamante')" disabled>钻石</button>
+                        <button class="btn" onclick="applyPresetFilter('liquid')" disabled>液态</button>
+                        <button class="btn" onclick="applyPresetFilter('bluechrome')" disabled>蓝铬</button>
+                        <button class="btn" onclick="applyPresetFilter('perfume')" disabled>香水</button>
+                        <button class="btn" onclick="applyPresetFilter('serenity')" disabled>宁静</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>复古滤镜</h3>
+                    <div class="btn-group">
                         <button class="btn" onclick="applyPresetFilter('lofi')" disabled>复古风</button>
                         <button class="btn" onclick="applyPresetFilter('vintage')" disabled>怀旧</button>
                         <button class="btn" onclick="applyPresetFilter('dramatic')" disabled>戏剧</button>
@@ -363,12 +378,36 @@
                         <button class="btn" onclick="applyPresetFilter('cali')" disabled>加州</button>
                         <button class="btn" onclick="applyPresetFilter('firenze')" disabled>佛罗伦萨</button>
                         <button class="btn" onclick="applyPresetFilter('obsidian')" disabled>黑曜</button>
+                        <button class="btn" onclick="applyPresetFilter('golden')" disabled>金色</button>
+                        <button class="btn" onclick="applyPresetFilter('radio')" disabled>广播</button>
+                        <button class="btn" onclick="applyPresetFilter('twenties')" disabled>二十年代</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>单色调滤镜</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="applyPresetFilter('rosetint')" disabled>玫瑰</button>
+                        <button class="btn" onclick="applyPresetFilter('mauve')" disabled>紫罗兰</button>
+                        <button class="btn" onclick="applyPresetFilter('duotone_violette')" disabled>紫双色</button>
+                        <button class="btn" onclick="applyPresetFilter('duotone_horizon')" disabled>地平线</button>
+                        <button class="btn" onclick="applyPresetFilter('duotone_lilac')" disabled>丁香</button>
+                        <button class="btn" onclick="applyPresetFilter('duotone_ochre')" disabled>赭石</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>特效滤镜</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="applyPresetFilter('neue')" disabled>霓虹蓝</button>
+                        <button class="btn" onclick="applyPresetFilter('lix')" disabled>霓虹黄</button>
+                        <button class="btn" onclick="applyPresetFilter('ryo')" disabled>霓虹洋红</button>
                     </div>
                 </div>
 
                 <div class="section">
                     <h3>特殊效果</h3>
-                    <div class="btn-group">
+                    <div class="btn-group" style="grid-template-columns: repeat(3, 1fr);">
                         <button class="btn" onclick="applyPixelate()" disabled>像素化</button>
                         <button class="btn" onclick="applyHalftone()" disabled>半色调</button>
                         <button class="btn" onclick="applySolarize()" disabled>曝光</button>
