@@ -874,24 +874,30 @@
                     const uint8Array = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
                     processor = ImageProcessor.new_from_bytes(uint8Array);
                     
-                    // 应用亮度
-                    if (brightness !== 0) {
-                        processor.apply_brightness(brightness);
+                    // 应用亮度 (-255 到 255)
+                    const adjustedBrightness = Math.max(-255, Math.min(255, brightness));
+                    if (adjustedBrightness !== 0) {
+                        processor.apply_brightness(adjustedBrightness);
                     }
                     
-                    // 应用对比度
-                    if (contrast !== 100) {
-                        processor.apply_contrast(contrast);
+                    // 应用对比度 (-255 到 255，从 0-200 转换)
+                    const adjustedContrast = (contrast - 100) * 2.55; // 转换为 -255 到 255
+                    const clampedContrast = Math.max(-255, Math.min(255, adjustedContrast));
+                    if (clampedContrast !== 0) {
+                        processor.apply_contrast(clampedContrast);
                     }
                     
-                    // 应用饱和度
-                    if (saturation !== 100) {
-                        processor.apply_saturation(saturation);
+                    // 应用饱和度 (-1 到 1，从 0-200 转换)
+                    const adjustedSaturation = (saturation - 100) / 100; // 转换为 -1 到 1
+                    const clampedSaturation = Math.max(-1, Math.min(1, adjustedSaturation));
+                    if (clampedSaturation !== 0) {
+                        processor.apply_saturation(clampedSaturation);
                     }
                     
-                    // 应用色相
-                    if (hue !== 0) {
-                        processor.apply_hue(hue);
+                    // 应用色相 (-360 到 360)
+                    const adjustedHue = Math.max(-360, Math.min(360, hue));
+                    if (adjustedHue !== 0) {
+                        processor.apply_hue(adjustedHue);
                     }
                 }
                 
