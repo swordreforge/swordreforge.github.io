@@ -69,6 +69,9 @@ export class ImageProcessor {
     apply_duotone(r1, g1, b1, r2, g2, b2) {
         wasm.imageprocessor_apply_duotone(this.__wbg_ptr, r1, g1, b1, r2, g2, b2);
     }
+    apply_edge_detection() {
+        wasm.imageprocessor_apply_edge_detection(this.__wbg_ptr);
+    }
     /**
      * @param {number} red
      * @param {number} green
@@ -154,6 +157,15 @@ export class ImageProcessor {
      */
     apply_sharpen(strength) {
         wasm.imageprocessor_apply_sharpen(this.__wbg_ptr, strength);
+    }
+    apply_sobel_global() {
+        wasm.imageprocessor_apply_sobel_global(this.__wbg_ptr);
+    }
+    apply_sobel_horizontal() {
+        wasm.imageprocessor_apply_sobel_horizontal(this.__wbg_ptr);
+    }
+    apply_sobel_vertical() {
+        wasm.imageprocessor_apply_sobel_vertical(this.__wbg_ptr);
     }
     apply_solarize() {
         wasm.imageprocessor_apply_solarize(this.__wbg_ptr);

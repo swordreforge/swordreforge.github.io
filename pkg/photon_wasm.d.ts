@@ -10,6 +10,7 @@ export class ImageProcessor {
     apply_contrast(level: number): void;
     apply_dither(depth: number): void;
     apply_duotone(r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): void;
+    apply_edge_detection(): void;
     apply_gamma(red: number, green: number, blue: number): void;
     apply_gaussian_blur(radius: number): void;
     apply_grayscale(): void;
@@ -25,6 +26,9 @@ export class ImageProcessor {
     apply_saturation(level: number): void;
     apply_sepia(): void;
     apply_sharpen(strength: number): void;
+    apply_sobel_global(): void;
+    apply_sobel_horizontal(): void;
+    apply_sobel_vertical(): void;
     apply_solarize(): void;
     apply_threshold(threshold: number): void;
     crop(x1: number, y1: number, x2: number, y2: number): void;
@@ -3142,6 +3146,7 @@ export interface InitOutput {
     readonly imageprocessor_apply_contrast: (a: number, b: number) => void;
     readonly imageprocessor_apply_dither: (a: number, b: number) => void;
     readonly imageprocessor_apply_duotone: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+    readonly imageprocessor_apply_edge_detection: (a: number) => void;
     readonly imageprocessor_apply_gamma: (a: number, b: number, c: number, d: number) => void;
     readonly imageprocessor_apply_gaussian_blur: (a: number, b: number) => void;
     readonly imageprocessor_apply_grayscale: (a: number) => void;
@@ -3157,6 +3162,9 @@ export interface InitOutput {
     readonly imageprocessor_apply_saturation: (a: number, b: number) => void;
     readonly imageprocessor_apply_sepia: (a: number) => void;
     readonly imageprocessor_apply_sharpen: (a: number, b: number) => void;
+    readonly imageprocessor_apply_sobel_global: (a: number) => void;
+    readonly imageprocessor_apply_sobel_horizontal: (a: number) => void;
+    readonly imageprocessor_apply_sobel_vertical: (a: number) => void;
     readonly imageprocessor_apply_solarize: (a: number) => void;
     readonly imageprocessor_apply_threshold: (a: number, b: number) => void;
     readonly imageprocessor_crop: (a: number, b: number, c: number, d: number, e: number) => void;

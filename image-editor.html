@@ -414,6 +414,16 @@
                 </div>
 
                 <div class="section">
+                    <h3>边缘检测</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="applySobelHorizontal()" disabled>Sobel 水平</button>
+                        <button class="btn" onclick="applySobelVertical()" disabled>Sobel 垂直</button>
+                        <button class="btn" onclick="applySobelGlobal()" disabled>Sobel 全局</button>
+                        <button class="btn" onclick="applyEdgeDetection()" disabled>基础边缘</button>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>特殊效果</h3>
                     <div class="btn-group" style="grid-template-columns: repeat(3, 1fr);">
                         <button class="btn" onclick="applyPixelate()" disabled>像素化</button>
@@ -569,7 +579,7 @@
     </div>
 
     <script type="module">
-        import init, { ImageProcessor } from './photon-wasm/pkg/photon_wasm.js?v=3';
+        import init, { ImageProcessor } from './photon-wasm/pkg/photon_wasm.js?v=4';
 
         let wasmModule = null;
         let processor = null;
@@ -989,6 +999,62 @@
                 }
                 showLoading(false);
             }
+        };
+
+        // Sobel 水平边缘检测
+        window.applySobelHorizontal = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_sobel_horizontal();
+                updateCanvas();
+            } catch (error) {
+                console.error('Sobel horizontal error:', error);
+            }
+            showLoading(false);
+        };
+
+        // Sobel 垂直边缘检测
+        window.applySobelVertical = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_sobel_vertical();
+                updateCanvas();
+            } catch (error) {
+                console.error('Sobel vertical error:', error);
+            }
+            showLoading(false);
+        };
+
+        // Sobel 全局边缘检测
+        window.applySobelGlobal = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_sobel_global();
+                updateCanvas();
+            } catch (error) {
+                console.error('Sobel global error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 基础边缘检测
+        window.applyEdgeDetection = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_edge_detection();
+                updateCanvas();
+            } catch (error) {
+                console.error('Edge detection error:', error);
+            }
+            showLoading(false);
         };
 
         // 应用无级调节

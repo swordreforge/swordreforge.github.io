@@ -8,6 +8,7 @@ export const imageprocessor_apply_brightness: (a: number, b: number) => void;
 export const imageprocessor_apply_contrast: (a: number, b: number) => void;
 export const imageprocessor_apply_dither: (a: number, b: number) => void;
 export const imageprocessor_apply_duotone: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+export const imageprocessor_apply_edge_detection: (a: number) => void;
 export const imageprocessor_apply_gamma: (a: number, b: number, c: number, d: number) => void;
 export const imageprocessor_apply_gaussian_blur: (a: number, b: number) => void;
 export const imageprocessor_apply_grayscale: (a: number) => void;
@@ -23,6 +24,9 @@ export const imageprocessor_apply_preset_filter: (a: number, b: number, c: numbe
 export const imageprocessor_apply_saturation: (a: number, b: number) => void;
 export const imageprocessor_apply_sepia: (a: number) => void;
 export const imageprocessor_apply_sharpen: (a: number, b: number) => void;
+export const imageprocessor_apply_sobel_global: (a: number) => void;
+export const imageprocessor_apply_sobel_horizontal: (a: number) => void;
+export const imageprocessor_apply_sobel_vertical: (a: number) => void;
 export const imageprocessor_apply_solarize: (a: number) => void;
 export const imageprocessor_apply_threshold: (a: number, b: number) => void;
 export const imageprocessor_crop: (a: number, b: number, c: number, d: number, e: number) => void;
