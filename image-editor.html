@@ -898,6 +898,10 @@
             const canvas = document.getElementById('imageCanvas');
             const ctx = canvas.getContext('2d');
 
+            // 更新画布尺寸
+            canvas.width = width;
+            canvas.height = height;
+
             // 创建图像对象
             const img = new Image();
             img.onload = () => {
