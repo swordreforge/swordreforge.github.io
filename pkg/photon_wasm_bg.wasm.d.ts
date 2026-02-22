@@ -2,7 +2,7 @@
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
 export const __wbg_imageprocessor_free: (a: number, b: number) => void;
-export const imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number) => void;
+export const imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number) => void;
 export const imageprocessor_apply_box_blur: (a: number) => void;
 export const imageprocessor_apply_brightness: (a: number, b: number) => void;
 export const imageprocessor_apply_contrast: (a: number, b: number) => void;
@@ -46,6 +46,11 @@ export const imageprocessor_get_height: (a: number) => number;
 export const imageprocessor_get_width: (a: number) => number;
 export const imageprocessor_new: (a: number, b: number, c: number, d: number) => [number, number, number];
 export const imageprocessor_new_from_bytes: (a: number, b: number) => [number, number, number];
+export const imageprocessor_offset_blue: (a: number, b: number) => void;
+export const imageprocessor_offset_channel: (a: number, b: number, c: number) => void;
+export const imageprocessor_offset_channels: (a: number, b: number, c: number, d: number) => void;
+export const imageprocessor_offset_green: (a: number, b: number) => void;
+export const imageprocessor_offset_red: (a: number, b: number) => void;
 export const imageprocessor_reset: (a: number) => void;
 export const imageprocessor_resize: (a: number, b: number, c: number) => void;
 export const imageprocessor_rotate_90: (a: number) => void;

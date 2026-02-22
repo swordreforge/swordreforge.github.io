@@ -31,11 +31,14 @@ export class ImageProcessor {
      * @param {number} sharpen_strength
      * @param {number} noise_reduction_strength
      * @param {number} noise_strength
+     * @param {number} r_offset
+     * @param {number} g_offset
+     * @param {number} b_offset
      */
-    apply_all_adjustments(brightness, contrast, saturation, hue, lightness, lightness_color_space, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength, noise_strength) {
+    apply_all_adjustments(brightness, contrast, saturation, hue, lightness, lightness_color_space, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength, noise_strength, r_offset, g_offset, b_offset) {
         const ptr0 = passStringToWasm0(lightness_color_space, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.imageprocessor_apply_all_adjustments(this.__wbg_ptr, brightness, contrast, saturation, hue, lightness, ptr0, len0, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength, noise_strength);
+        wasm.imageprocessor_apply_all_adjustments(this.__wbg_ptr, brightness, contrast, saturation, hue, lightness, ptr0, len0, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength, noise_strength, r_offset, g_offset, b_offset);
     }
     apply_box_blur() {
         wasm.imageprocessor_apply_box_blur(this.__wbg_ptr);
@@ -269,6 +272,39 @@ export class ImageProcessor {
             throw takeFromExternrefTable0(ret[1]);
         }
         return ImageProcessor.__wrap(ret[0]);
+    }
+    /**
+     * @param {number} offset
+     */
+    offset_blue(offset) {
+        wasm.imageprocessor_offset_blue(this.__wbg_ptr, offset);
+    }
+    /**
+     * @param {number} channel_index
+     * @param {number} offset
+     */
+    offset_channel(channel_index, offset) {
+        wasm.imageprocessor_offset_channel(this.__wbg_ptr, channel_index, offset);
+    }
+    /**
+     * @param {number} r_offset
+     * @param {number} g_offset
+     * @param {number} b_offset
+     */
+    offset_channels(r_offset, g_offset, b_offset) {
+        wasm.imageprocessor_offset_channels(this.__wbg_ptr, r_offset, g_offset, b_offset);
+    }
+    /**
+     * @param {number} offset
+     */
+    offset_green(offset) {
+        wasm.imageprocessor_offset_green(this.__wbg_ptr, offset);
+    }
+    /**
+     * @param {number} offset
+     */
+    offset_red(offset) {
+        wasm.imageprocessor_offset_red(this.__wbg_ptr, offset);
     }
     reset() {
         wasm.imageprocessor_reset(this.__wbg_ptr);

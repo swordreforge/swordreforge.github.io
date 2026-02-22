@@ -4,7 +4,7 @@
 export class ImageProcessor {
     free(): void;
     [Symbol.dispose](): void;
-    apply_all_adjustments(brightness: number, contrast: number, saturation: number, hue: number, lightness: number, lightness_color_space: string, gamma_red: number, gamma_green: number, gamma_blue: number, sharpen_strength: number, noise_reduction_strength: number, noise_strength: number): void;
+    apply_all_adjustments(brightness: number, contrast: number, saturation: number, hue: number, lightness: number, lightness_color_space: string, gamma_red: number, gamma_green: number, gamma_blue: number, sharpen_strength: number, noise_reduction_strength: number, noise_strength: number, r_offset: number, g_offset: number, b_offset: number): void;
     apply_box_blur(): void;
     apply_brightness(level: number): void;
     apply_contrast(level: number): void;
@@ -48,6 +48,11 @@ export class ImageProcessor {
     get_width(): number;
     constructor(width: number, height: number, data: Uint8Array);
     static new_from_bytes(bytes: Uint8Array): ImageProcessor;
+    offset_blue(offset: number): void;
+    offset_channel(channel_index: number, offset: number): void;
+    offset_channels(r_offset: number, g_offset: number, b_offset: number): void;
+    offset_green(offset: number): void;
+    offset_red(offset: number): void;
     reset(): void;
     resize(new_width: number, new_height: number): void;
     rotate_90(): void;
@@ -3149,7 +3154,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_imageprocessor_free: (a: number, b: number) => void;
-    readonly imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number) => void;
+    readonly imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number) => void;
     readonly imageprocessor_apply_box_blur: (a: number) => void;
     readonly imageprocessor_apply_brightness: (a: number, b: number) => void;
     readonly imageprocessor_apply_contrast: (a: number, b: number) => void;
@@ -3193,6 +3198,11 @@ export interface InitOutput {
     readonly imageprocessor_get_width: (a: number) => number;
     readonly imageprocessor_new: (a: number, b: number, c: number, d: number) => [number, number, number];
     readonly imageprocessor_new_from_bytes: (a: number, b: number) => [number, number, number];
+    readonly imageprocessor_offset_blue: (a: number, b: number) => void;
+    readonly imageprocessor_offset_channel: (a: number, b: number, c: number) => void;
+    readonly imageprocessor_offset_channels: (a: number, b: number, c: number, d: number) => void;
+    readonly imageprocessor_offset_green: (a: number, b: number) => void;
+    readonly imageprocessor_offset_red: (a: number, b: number) => void;
     readonly imageprocessor_reset: (a: number) => void;
     readonly imageprocessor_resize: (a: number, b: number, c: number) => void;
     readonly imageprocessor_rotate_90: (a: number) => void;

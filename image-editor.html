@@ -542,6 +542,25 @@
                 </div>
 
                 <div class="section">
+                    <h3>通道调整</h3>
+                    <div class="slider-container">
+                        <label>红色通道 (-255 ~ 255)</label>
+                        <input type="range" id="redChannelSlider" min="-255" max="255" value="0" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="redChannelValue">0</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>绿色通道 (-255 ~ 255)</label>
+                        <input type="range" id="greenChannelSlider" min="-255" max="255" value="0" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="greenChannelValue">0</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>蓝色通道 (-255 ~ 255)</label>
+                        <input type="range" id="blueChannelSlider" min="-255" max="255" value="0" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="blueChannelValue">0</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>变换操作</h3>
                     <div class="btn-group">
                         <button class="btn" onclick="rotateImage()" disabled>旋转 90°</button>
@@ -1223,6 +1242,9 @@
             const sharpenStrength = parseFloat(document.getElementById('sharpenSlider').value) / 10;
             const noiseReductionStrength = parseFloat(document.getElementById('noiseReductionSlider').value) / 10;
             const noiseStrength = parseFloat(document.getElementById('noiseSlider').value) / 10;
+            const redChannelOffset = parseInt(document.getElementById('redChannelSlider').value);
+            const greenChannelOffset = parseInt(document.getElementById('greenChannelSlider').value);
+            const blueChannelOffset = parseInt(document.getElementById('blueChannelSlider').value);
 
             // 更新显示值
             document.getElementById('brightnessValue').textContent = brightness;
@@ -1236,6 +1258,9 @@
             document.getElementById('sharpenValue').textContent = sharpenStrength.toFixed(1);
             document.getElementById('noiseReductionValue').textContent = noiseReductionStrength.toFixed(1);
             document.getElementById('noiseValue').textContent = noiseStrength.toFixed(1);
+            document.getElementById('redChannelValue').textContent = redChannelOffset;
+            document.getElementById('greenChannelValue').textContent = greenChannelOffset;
+            document.getElementById('blueChannelValue').textContent = blueChannelOffset;
 
             // 应用调整
             try {
@@ -1304,6 +1329,11 @@
                     // 应用噪点 (0.0 到 10.0)
                     if (noiseStrength !== 0.0) {
                         processor.apply_noise(noiseStrength);
+                    }
+
+                    // 应用通道调整 (-255 到 255)
+                    if (redChannelOffset !== 0 || greenChannelOffset !== 0 || blueChannelOffset !== 0) {
+                        processor.offset_channels(redChannelOffset, greenChannelOffset, blueChannelOffset);
                     }
                 }
                 
