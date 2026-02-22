@@ -4,7 +4,7 @@
 export class ImageProcessor {
     free(): void;
     [Symbol.dispose](): void;
-    apply_all_adjustments(brightness: number, contrast: number, saturation: number, hue: number, lightness: number, lightness_color_space: string, gamma_red: number, gamma_green: number, gamma_blue: number, sharpen_strength: number): void;
+    apply_all_adjustments(brightness: number, contrast: number, saturation: number, hue: number, lightness: number, lightness_color_space: string, gamma_red: number, gamma_green: number, gamma_blue: number, sharpen_strength: number, noise_reduction_strength: number): void;
     apply_brightness(level: number): void;
     apply_contrast(level: number): void;
     apply_dither(depth: number): void;
@@ -15,6 +15,7 @@ export class ImageProcessor {
     apply_hue(level: number): void;
     apply_invert(): void;
     apply_lightness(level: number, color_space: string): void;
+    apply_noise_reduction(strength: number): void;
     apply_oil(radius: number, intensity: number): void;
     apply_pixelate(pixel_size: number): void;
     apply_preset_filter(filter_name: string): void;
@@ -1936,6 +1937,30 @@ export function neue(photon_image: PhotonImage): void;
 export function noise_reduction(photon_image: PhotonImage): void;
 
 /**
+ * Noise reduction with adjustable strength.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `strength` - Noise reduction strength. Range: 0.0 to 10.0.
+ *   - 0.0: No noise reduction
+ *   - 1.0: Standard noise reduction (equivalent to noise_reduction())
+ *   - >1.0: Stronger noise reduction (more smoothing)
+ *   - <1.0: Subtle noise reduction (preserves more detail)
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply noise reduction with strength 2.0:
+ * use photon_rs::conv::noise_reduction_with_strength;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * noise_reduction_with_strength(&mut img, 2.0);
+ * ```
+ */
+export function noise_reduction_with_strength(photon_image: PhotonImage, strength: number): void;
+
+/**
  * Normalizes an image by remapping its range of pixels values. Only RGB
  * channels are processed and each channel is stretched to \[0, 255\] range
  * independently. This process is also known as contrast stretching.
@@ -3082,7 +3107,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_imageprocessor_free: (a: number, b: number) => void;
-    readonly imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => void;
+    readonly imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => void;
     readonly imageprocessor_apply_brightness: (a: number, b: number) => void;
     readonly imageprocessor_apply_contrast: (a: number, b: number) => void;
     readonly imageprocessor_apply_dither: (a: number, b: number) => void;
@@ -3093,6 +3118,7 @@ export interface InitOutput {
     readonly imageprocessor_apply_hue: (a: number, b: number) => void;
     readonly imageprocessor_apply_invert: (a: number) => void;
     readonly imageprocessor_apply_lightness: (a: number, b: number, c: number, d: number) => void;
+    readonly imageprocessor_apply_noise_reduction: (a: number, b: number) => void;
     readonly imageprocessor_apply_oil: (a: number, b: number, c: number) => void;
     readonly imageprocessor_apply_pixelate: (a: number, b: number) => void;
     readonly imageprocessor_apply_preset_filter: (a: number, b: number, c: number) => void;
@@ -3135,6 +3161,35 @@ export interface InitOutput {
     readonly seam_carve: (a: number, b: number, c: number) => number;
     readonly shearx: (a: number, b: number) => number;
     readonly sheary: (a: number, b: number) => number;
+    readonly adjust_brightness: (a: number, b: number) => void;
+    readonly adjust_contrast: (a: number, b: number) => void;
+    readonly color_horizontal_strips: (a: number, b: number, c: number) => void;
+    readonly color_vertical_strips: (a: number, b: number, c: number) => void;
+    readonly colorize: (a: number) => void;
+    readonly dec_brightness: (a: number, b: number) => void;
+    readonly dither: (a: number, b: number) => void;
+    readonly duotone: (a: number, b: number, c: number) => void;
+    readonly frosted_glass: (a: number) => void;
+    readonly halftone: (a: number) => void;
+    readonly horizontal_strips: (a: number, b: number) => void;
+    readonly inc_brightness: (a: number, b: number) => void;
+    readonly multiple_offsets: (a: number, b: number, c: number, d: number) => void;
+    readonly normalize: (a: number) => void;
+    readonly offset: (a: number, b: number, c: number) => void;
+    readonly offset_blue: (a: number, b: number) => void;
+    readonly offset_green: (a: number, b: number) => void;
+    readonly offset_red: (a: number, b: number) => void;
+    readonly oil: (a: number, b: number, c: number) => void;
+    readonly pixelize: (a: number, b: number) => void;
+    readonly primary: (a: number) => void;
+    readonly solarize: (a: number) => void;
+    readonly solarize_retimg: (a: number) => number;
+    readonly tint: (a: number, b: number, c: number, d: number) => void;
+    readonly vertical_strips: (a: number, b: number) => void;
+    readonly apply_gradient: (a: number) => void;
+    readonly blend: (a: number, b: number, c: number, d: number) => void;
+    readonly create_gradient: (a: number, b: number) => number;
+    readonly watermark: (a: number, b: number, c: bigint, d: bigint) => void;
     readonly box_blur: (a: number) => void;
     readonly detect_135_deg_lines: (a: number) => void;
     readonly detect_45_deg_lines: (a: number) => void;
@@ -3147,6 +3202,7 @@ export interface InitOutput {
     readonly identity: (a: number) => void;
     readonly laplace: (a: number) => void;
     readonly noise_reduction: (a: number) => void;
+    readonly noise_reduction_with_strength: (a: number, b: number) => void;
     readonly prewitt_horizontal: (a: number) => void;
     readonly sharpen: (a: number) => void;
     readonly sharpen_with_strength: (a: number, b: number) => void;
@@ -3221,54 +3277,6 @@ export interface InitOutput {
     readonly rgba_get_blue: (a: number) => number;
     readonly rgba_get_green: (a: number) => number;
     readonly rgba_get_red: (a: number) => number;
-    readonly cali: (a: number) => void;
-    readonly dramatic: (a: number) => void;
-    readonly draw_text: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-    readonly draw_text_with_border: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-    readonly duotone_horizon: (a: number) => void;
-    readonly duotone_lilac: (a: number) => void;
-    readonly duotone_ochre: (a: number) => void;
-    readonly duotone_tint: (a: number, b: number) => void;
-    readonly duotone_violette: (a: number) => void;
-    readonly filter: (a: number, b: number, c: number) => void;
-    readonly firenze: (a: number) => void;
-    readonly golden: (a: number) => void;
-    readonly lix: (a: number) => void;
-    readonly lofi: (a: number) => void;
-    readonly monochrome_tint: (a: number, b: number) => void;
-    readonly neue: (a: number) => void;
-    readonly obsidian: (a: number) => void;
-    readonly pastel_pink: (a: number) => void;
-    readonly ryo: (a: number) => void;
-    readonly apply_gradient: (a: number) => void;
-    readonly blend: (a: number, b: number, c: number, d: number) => void;
-    readonly create_gradient: (a: number, b: number) => number;
-    readonly watermark: (a: number, b: number, c: bigint, d: bigint) => void;
-    readonly adjust_brightness: (a: number, b: number) => void;
-    readonly adjust_contrast: (a: number, b: number) => void;
-    readonly color_horizontal_strips: (a: number, b: number, c: number) => void;
-    readonly color_vertical_strips: (a: number, b: number, c: number) => void;
-    readonly colorize: (a: number) => void;
-    readonly dec_brightness: (a: number, b: number) => void;
-    readonly dither: (a: number, b: number) => void;
-    readonly duotone: (a: number, b: number, c: number) => void;
-    readonly frosted_glass: (a: number) => void;
-    readonly halftone: (a: number) => void;
-    readonly horizontal_strips: (a: number, b: number) => void;
-    readonly inc_brightness: (a: number, b: number) => void;
-    readonly multiple_offsets: (a: number, b: number, c: number, d: number) => void;
-    readonly normalize: (a: number) => void;
-    readonly offset: (a: number, b: number, c: number) => void;
-    readonly offset_blue: (a: number, b: number) => void;
-    readonly offset_green: (a: number, b: number) => void;
-    readonly offset_red: (a: number, b: number) => void;
-    readonly oil: (a: number, b: number, c: number) => void;
-    readonly pixelize: (a: number, b: number) => void;
-    readonly primary: (a: number) => void;
-    readonly solarize: (a: number) => void;
-    readonly solarize_retimg: (a: number) => number;
-    readonly tint: (a: number, b: number, c: number, d: number) => void;
-    readonly vertical_strips: (a: number, b: number) => void;
     readonly alter_blue_channel: (a: number, b: number) => void;
     readonly alter_channel: (a: number, b: number, c: number) => void;
     readonly alter_channels: (a: number, b: number, c: number, d: number) => void;
@@ -3300,6 +3308,25 @@ export interface InitOutput {
     readonly single_channel_grayscale: (a: number, b: number) => void;
     readonly swap_channels: (a: number, b: number, c: number) => void;
     readonly threshold: (a: number, b: number) => void;
+    readonly cali: (a: number) => void;
+    readonly dramatic: (a: number) => void;
+    readonly draw_text: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly draw_text_with_border: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly duotone_horizon: (a: number) => void;
+    readonly duotone_lilac: (a: number) => void;
+    readonly duotone_ochre: (a: number) => void;
+    readonly duotone_tint: (a: number, b: number) => void;
+    readonly duotone_violette: (a: number) => void;
+    readonly filter: (a: number, b: number, c: number) => void;
+    readonly firenze: (a: number) => void;
+    readonly golden: (a: number) => void;
+    readonly lix: (a: number) => void;
+    readonly lofi: (a: number) => void;
+    readonly monochrome_tint: (a: number, b: number) => void;
+    readonly neue: (a: number) => void;
+    readonly obsidian: (a: number) => void;
+    readonly pastel_pink: (a: number) => void;
+    readonly ryo: (a: number) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_exn_store: (a: number) => void;

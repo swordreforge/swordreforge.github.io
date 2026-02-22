@@ -29,11 +29,12 @@ export class ImageProcessor {
      * @param {number} gamma_green
      * @param {number} gamma_blue
      * @param {number} sharpen_strength
+     * @param {number} noise_reduction_strength
      */
-    apply_all_adjustments(brightness, contrast, saturation, hue, lightness, lightness_color_space, gamma_red, gamma_green, gamma_blue, sharpen_strength) {
+    apply_all_adjustments(brightness, contrast, saturation, hue, lightness, lightness_color_space, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength) {
         const ptr0 = passStringToWasm0(lightness_color_space, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.imageprocessor_apply_all_adjustments(this.__wbg_ptr, brightness, contrast, saturation, hue, lightness, ptr0, len0, gamma_red, gamma_green, gamma_blue, sharpen_strength);
+        wasm.imageprocessor_apply_all_adjustments(this.__wbg_ptr, brightness, contrast, saturation, hue, lightness, ptr0, len0, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength);
     }
     /**
      * @param {number} level
@@ -95,6 +96,12 @@ export class ImageProcessor {
         const ptr0 = passStringToWasm0(color_space, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
         wasm.imageprocessor_apply_lightness(this.__wbg_ptr, level, ptr0, len0);
+    }
+    /**
+     * @param {number} strength
+     */
+    apply_noise_reduction(strength) {
+        wasm.imageprocessor_apply_noise_reduction(this.__wbg_ptr, strength);
     }
     /**
      * @param {number} radius
@@ -2868,6 +2875,35 @@ export function neue(photon_image) {
 export function noise_reduction(photon_image) {
     _assertClass(photon_image, PhotonImage);
     wasm.noise_reduction(photon_image.__wbg_ptr);
+}
+
+/**
+ * Noise reduction with adjustable strength.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `strength` - Noise reduction strength. Range: 0.0 to 10.0.
+ *   - 0.0: No noise reduction
+ *   - 1.0: Standard noise reduction (equivalent to noise_reduction())
+ *   - >1.0: Stronger noise reduction (more smoothing)
+ *   - <1.0: Subtle noise reduction (preserves more detail)
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply noise reduction with strength 2.0:
+ * use photon_rs::conv::noise_reduction_with_strength;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * noise_reduction_with_strength(&mut img, 2.0);
+ * ```
+ * @param {PhotonImage} photon_image
+ * @param {number} strength
+ */
+export function noise_reduction_with_strength(photon_image, strength) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.noise_reduction_with_strength(photon_image.__wbg_ptr, strength);
 }
 
 /**
