@@ -266,6 +266,30 @@
                 </div>
 
                 <div class="section">
+                    <h3>🎨 无级调节</h3>
+                    <div class="slider-container">
+                        <label>亮度 (-100 ~ 100)</label>
+                        <input type="range" id="brightnessSlider" min="-100" max="100" value="0" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="brightnessValue">0</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>对比度 (0 ~ 200)</label>
+                        <input type="range" id="contrastSlider" min="0" max="200" value="100" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="contrastValue">100</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>饱和度 (0 ~ 200)</label>
+                        <input type="range" id="saturationSlider" min="0" max="200" value="100" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="saturationValue">100</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>色相 (-180 ~ 180)</label>
+                        <input type="range" id="hueSlider" min="-180" max="180" value="0" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="hueValue">0</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>🔄 变换操作</h3>
                     <div class="btn-group">
                         <button class="btn" onclick="rotateImage()" disabled>旋转 90°</button>
@@ -342,6 +366,12 @@
                 if (!btn.classList.contains('btn-danger')) {
                     btn.disabled = !currentImage;
                 }
+            });
+
+            // 启用滑块
+            const sliders = document.querySelectorAll('input[type="range"]');
+            sliders.forEach(slider => {
+                slider.disabled = !currentImage;
             });
         }
 
@@ -464,6 +494,47 @@
             showLoading(false);
         };
 
+        // 应用无级调节
+        window.applyAdjustments = function() {
+            if (!processor) return;
+
+            // 获取滑块值
+            const brightness = parseInt(document.getElementById('brightnessSlider').value);
+            const contrast = parseInt(document.getElementById('contrastSlider').value);
+            const saturation = parseInt(document.getElementById('saturationSlider').value);
+            const hue = parseInt(document.getElementById('hueSlider').value);
+
+            // 更新显示值
+            document.getElementById('brightnessValue').textContent = brightness;
+            document.getElementById('contrastValue').textContent = contrast;
+            document.getElementById('saturationValue').textContent = saturation;
+            document.getElementById('hueValue').textContent = hue;
+
+            // 应用调整
+            try {
+                // 重置到原始图像
+                processor.reset();
+
+                // 应用各项调整
+                if (brightness !== 0) {
+                    processor.apply_brightness(brightness);
+                }
+                if (contrast !== 100) {
+                    processor.apply_contrast(contrast);
+                }
+                if (saturation !== 100) {
+                    processor.apply_saturation(saturation);
+                }
+                if (hue !== 0) {
+                    processor.apply_hue(hue);
+                }
+
+                updateCanvas();
+            } catch (error) {
+                console.error('Adjustments error:', error);
+            }
+        };
+
         // 旋转图片
         window.rotateImage = function() {
             if (!processor) return;
@@ -522,14 +593,25 @@
 
         // 重置图片
         window.resetImage = function() {
-            if (!originalImageData) return;
-            const canvas = document.getElementById('imageCanvas');
-            const ctx = canvas.getContext('2d');
-            ctx.putImageData(originalImageData, 0, 0);
+            if (!processor) return;
 
-            // 重新创建处理器
-            const bytes = new Uint8Array(originalImageData.data.buffer);
-            processor = new ImageProcessor(originalImageData.width, originalImageData.height, bytes);
+            // 重置 WebAssembly 处理器
+            processor.reset();
+
+            // 重置滑块
+            document.getElementById('brightnessSlider').value = 0;
+            document.getElementById('contrastSlider').value = 100;
+            document.getElementById('saturationSlider').value = 100;
+            document.getElementById('hueSlider').value = 0;
+
+            // 重置显示值
+            document.getElementById('brightnessValue').textContent = '0';
+            document.getElementById('contrastValue').textContent = '100';
+            document.getElementById('saturationValue').textContent = '100';
+            document.getElementById('hueValue').textContent = '0';
+
+            // 更新画布
+            updateCanvas();
         };
 
         // 下载图片
