@@ -449,7 +449,7 @@
                         console.error('Failed to load image from base64');
                         alert('图片显示失败');
                     };
-                    img.src = `data:image/png;base64,${base64}`;
+                    img.src = base64;
                 }
             } catch (error) {
                 console.error('Failed to load image:', error);
@@ -625,7 +625,7 @@
             img.onload = () => {
                 ctx.drawImage(img, 0, 0);
             };
-            img.src = `data:image/png;base64,${base64}`;
+            img.src = base64;
         }
 
         // 初始化
