@@ -23,9 +23,16 @@ export class ImageProcessor {
      * @param {number} contrast
      * @param {number} saturation
      * @param {number} hue
+     * @param {number} lightness
+     * @param {string} lightness_color_space
+     * @param {number} gamma_red
+     * @param {number} gamma_green
+     * @param {number} gamma_blue
      */
-    apply_all_adjustments(brightness, contrast, saturation, hue) {
-        wasm.imageprocessor_apply_all_adjustments(this.__wbg_ptr, brightness, contrast, saturation, hue);
+    apply_all_adjustments(brightness, contrast, saturation, hue, lightness, lightness_color_space, gamma_red, gamma_green, gamma_blue) {
+        const ptr0 = passStringToWasm0(lightness_color_space, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_apply_all_adjustments(this.__wbg_ptr, brightness, contrast, saturation, hue, lightness, ptr0, len0, gamma_red, gamma_green, gamma_blue);
     }
     /**
      * @param {number} level
@@ -56,6 +63,14 @@ export class ImageProcessor {
     apply_duotone(r1, g1, b1, r2, g2, b2) {
         wasm.imageprocessor_apply_duotone(this.__wbg_ptr, r1, g1, b1, r2, g2, b2);
     }
+    /**
+     * @param {number} red
+     * @param {number} green
+     * @param {number} blue
+     */
+    apply_gamma(red, green, blue) {
+        wasm.imageprocessor_apply_gamma(this.__wbg_ptr, red, green, blue);
+    }
     apply_grayscale() {
         wasm.imageprocessor_apply_grayscale(this.__wbg_ptr);
     }
@@ -70,6 +85,15 @@ export class ImageProcessor {
     }
     apply_invert() {
         wasm.imageprocessor_apply_invert(this.__wbg_ptr);
+    }
+    /**
+     * @param {number} level
+     * @param {string} color_space
+     */
+    apply_lightness(level, color_space) {
+        const ptr0 = passStringToWasm0(color_space, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_apply_lightness(this.__wbg_ptr, level, ptr0, len0);
     }
     /**
      * @param {number} radius

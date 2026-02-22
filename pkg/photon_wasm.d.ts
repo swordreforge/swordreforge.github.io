@@ -4,15 +4,17 @@
 export class ImageProcessor {
     free(): void;
     [Symbol.dispose](): void;
-    apply_all_adjustments(brightness: number, contrast: number, saturation: number, hue: number): void;
+    apply_all_adjustments(brightness: number, contrast: number, saturation: number, hue: number, lightness: number, lightness_color_space: string, gamma_red: number, gamma_green: number, gamma_blue: number): void;
     apply_brightness(level: number): void;
     apply_contrast(level: number): void;
     apply_dither(depth: number): void;
     apply_duotone(r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): void;
+    apply_gamma(red: number, green: number, blue: number): void;
     apply_grayscale(): void;
     apply_halftone(): void;
     apply_hue(level: number): void;
     apply_invert(): void;
+    apply_lightness(level: number, color_space: string): void;
     apply_oil(radius: number, intensity: number): void;
     apply_pixelate(pixel_size: number): void;
     apply_preset_filter(filter_name: string): void;
@@ -3055,15 +3057,17 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_imageprocessor_free: (a: number, b: number) => void;
-    readonly imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => void;
     readonly imageprocessor_apply_brightness: (a: number, b: number) => void;
     readonly imageprocessor_apply_contrast: (a: number, b: number) => void;
     readonly imageprocessor_apply_dither: (a: number, b: number) => void;
     readonly imageprocessor_apply_duotone: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+    readonly imageprocessor_apply_gamma: (a: number, b: number, c: number, d: number) => void;
     readonly imageprocessor_apply_grayscale: (a: number) => void;
     readonly imageprocessor_apply_halftone: (a: number) => void;
     readonly imageprocessor_apply_hue: (a: number, b: number) => void;
     readonly imageprocessor_apply_invert: (a: number) => void;
+    readonly imageprocessor_apply_lightness: (a: number, b: number, c: number, d: number) => void;
     readonly imageprocessor_apply_oil: (a: number, b: number, c: number) => void;
     readonly imageprocessor_apply_pixelate: (a: number, b: number) => void;
     readonly imageprocessor_apply_preset_filter: (a: number, b: number, c: number) => void;

@@ -2,15 +2,17 @@
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
 export const __wbg_imageprocessor_free: (a: number, b: number) => void;
-export const imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number) => void;
+export const imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => void;
 export const imageprocessor_apply_brightness: (a: number, b: number) => void;
 export const imageprocessor_apply_contrast: (a: number, b: number) => void;
 export const imageprocessor_apply_dither: (a: number, b: number) => void;
 export const imageprocessor_apply_duotone: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+export const imageprocessor_apply_gamma: (a: number, b: number, c: number, d: number) => void;
 export const imageprocessor_apply_grayscale: (a: number) => void;
 export const imageprocessor_apply_halftone: (a: number) => void;
 export const imageprocessor_apply_hue: (a: number, b: number) => void;
 export const imageprocessor_apply_invert: (a: number) => void;
+export const imageprocessor_apply_lightness: (a: number, b: number, c: number, d: number) => void;
 export const imageprocessor_apply_oil: (a: number, b: number, c: number) => void;
 export const imageprocessor_apply_pixelate: (a: number, b: number) => void;
 export const imageprocessor_apply_preset_filter: (a: number, b: number, c: number) => void;

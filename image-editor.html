@@ -403,6 +403,40 @@
                 </div>
 
                 <div class="section">
+                    <h3>明度与伽马</h3>
+                    <div class="slider-container">
+                        <label>明度 (0 ~ 200)</label>
+                        <input type="range" id="lightnessSlider" min="0" max="200" value="100" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="lightnessValue">100</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>色彩空间</label>
+                        <select id="colorSpaceSelect" onchange="applyAdjustments()" disabled style="width: 100%; padding: 8px; background: #444; color: #e0e0e0; border: 1px solid #555; border-radius: 6px;">
+                            <option value="hsl">HSL (默认)</option>
+                            <option value="lch">LCh</option>
+                            <option value="hsv">HSV</option>
+                            <option value="hsluv">HSLuv</option>
+                            <option value="auto">智能识别</option>
+                        </select>
+                    </div>
+                    <div class="slider-container">
+                        <label>伽马 R (0.1 ~ 10)</label>
+                        <input type="range" id="gammaRedSlider" min="1" max="100" value="10" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="gammaRedValue">1.0</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>伽马 G (0.1 ~ 10)</label>
+                        <input type="range" id="gammaGreenSlider" min="1" max="100" value="10" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="gammaGreenValue">1.0</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>伽马 B (0.1 ~ 10)</label>
+                        <input type="range" id="gammaBlueSlider" min="1" max="100" value="10" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="gammaBlueValue">1.0</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>变换操作</h3>
                     <div class="btn-group">
                         <button class="btn" onclick="rotateImage()" disabled>旋转 90°</button>
@@ -857,12 +891,21 @@
             const contrast = parseFloat(document.getElementById('contrastSlider').value);
             const saturation = parseFloat(document.getElementById('saturationSlider').value);
             const hue = parseInt(document.getElementById('hueSlider').value);
+            const lightness = parseFloat(document.getElementById('lightnessSlider').value);
+            const colorSpace = document.getElementById('colorSpaceSelect').value;
+            const gammaRed = parseFloat(document.getElementById('gammaRedSlider').value) / 10;
+            const gammaGreen = parseFloat(document.getElementById('gammaGreenSlider').value) / 10;
+            const gammaBlue = parseFloat(document.getElementById('gammaBlueSlider').value) / 10;
 
             // 更新显示值
             document.getElementById('brightnessValue').textContent = brightness;
             document.getElementById('contrastValue').textContent = contrast;
             document.getElementById('saturationValue').textContent = saturation;
             document.getElementById('hueValue').textContent = hue;
+            document.getElementById('lightnessValue').textContent = lightness;
+            document.getElementById('gammaRedValue').textContent = gammaRed.toFixed(1);
+            document.getElementById('gammaGreenValue').textContent = gammaGreen.toFixed(1);
+            document.getElementById('gammaBlueValue').textContent = gammaBlue.toFixed(1);
 
             // 应用调整
             try {
@@ -899,6 +942,24 @@
                     if (adjustedHue !== 0) {
                         processor.apply_hue(adjustedHue);
                     }
+
+                    // 应用明度 (-1 到 1，从 0-200 转换)
+                    const adjustedLightness = (lightness - 100) / 100; // 转换为 -1 到 1
+                    const clampedLightness = Math.max(-1, Math.min(1, adjustedLightness));
+                    if (clampedLightness !== 0) {
+                        // 智能识别色彩空间
+                        let selectedColorSpace = colorSpace;
+                        if (colorSpace === 'auto') {
+                            // 根据图像特征自动选择色彩空间
+                            selectedColorSpace = autoDetectColorSpace();
+                        }
+                        processor.apply_lightness(clampedLightness, selectedColorSpace);
+                    }
+
+                    // 应用伽马校正 (0.1 到 10)
+                    if (gammaRed !== 1.0 || gammaGreen !== 1.0 || gammaBlue !== 1.0) {
+                        processor.apply_gamma(gammaRed, gammaGreen, gammaBlue);
+                    }
                 }
                 
                 updateCanvas();
@@ -912,6 +973,18 @@
                 console.error('Adjustments error:', error);
             }
         };
+
+        // 智能检测最佳色彩空间
+        function autoDetectColorSpace() {
+            // 简单的启发式规则：
+            // - 对于大多数照片，HSL 通常是最佳选择
+            // - 对于需要感知均匀性的场景，LCh 更好
+            // - HSV 适用于饱和度优先的场景
+            // - HSLuv 适用于需要色彩均匀性的场景
+            
+            // 这里使用 HSL 作为默认选择，因为它是应用最广泛的
+            return 'hsl';
+        }
 
         // 旋转图片
         window.rotateImage = function() {
@@ -1274,12 +1347,21 @@
             document.getElementById('contrastSlider').value = 100;
             document.getElementById('saturationSlider').value = 100;
             document.getElementById('hueSlider').value = 0;
+            document.getElementById('lightnessSlider').value = 100;
+            document.getElementById('colorSpaceSelect').value = 'hsl';
+            document.getElementById('gammaRedSlider').value = 10;
+            document.getElementById('gammaGreenSlider').value = 10;
+            document.getElementById('gammaBlueSlider').value = 10;
 
             // 重置显示值
             document.getElementById('brightnessValue').textContent = '0';
             document.getElementById('contrastValue').textContent = '100';
             document.getElementById('saturationValue').textContent = '100';
             document.getElementById('hueValue').textContent = '0';
+            document.getElementById('lightnessValue').textContent = '100';
+            document.getElementById('gammaRedValue').textContent = '1.0';
+            document.getElementById('gammaGreenValue').textContent = '1.0';
+            document.getElementById('gammaBlueValue').textContent = '1.0';
 
             // 更新画布
             updateCanvas();
@@ -1313,12 +1395,21 @@
             document.getElementById('contrastSlider').value = 100;
             document.getElementById('saturationSlider').value = 100;
             document.getElementById('hueSlider').value = 0;
+            document.getElementById('lightnessSlider').value = 100;
+            document.getElementById('colorSpaceSelect').value = 'hsl';
+            document.getElementById('gammaRedSlider').value = 10;
+            document.getElementById('gammaGreenSlider').value = 10;
+            document.getElementById('gammaBlueSlider').value = 10;
 
             // 重置显示值
             document.getElementById('brightnessValue').textContent = '0';
             document.getElementById('contrastValue').textContent = '100';
             document.getElementById('saturationValue').textContent = '100';
             document.getElementById('hueValue').textContent = '0';
+            document.getElementById('lightnessValue').textContent = '100';
+            document.getElementById('gammaRedValue').textContent = '1.0';
+            document.getElementById('gammaGreenValue').textContent = '1.0';
+            document.getElementById('gammaBlueValue').textContent = '1.0';
 
             // 禁用所有按钮
             enableButtons();
