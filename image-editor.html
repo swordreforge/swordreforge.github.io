@@ -406,6 +406,14 @@
                 </div>
 
                 <div class="section">
+                    <h3>模糊效果</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="applyBoxBlur()" disabled>盒式模糊</button>
+                        <button class="btn" onclick="applyGaussianBlur()" disabled>高斯模糊</button>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>特殊效果</h3>
                     <div class="btn-group" style="grid-template-columns: repeat(3, 1fr);">
                         <button class="btn" onclick="applyPixelate()" disabled>像素化</button>
@@ -561,7 +569,7 @@
     </div>
 
     <script type="module">
-        import init, { ImageProcessor } from './photon-wasm/pkg/photon_wasm.js?v=2';
+        import init, { ImageProcessor } from './photon-wasm/pkg/photon_wasm.js?v=3';
 
         let wasmModule = null;
         let processor = null;
@@ -949,6 +957,37 @@
                     }
                     showLoading(false);
                 }
+            }
+        };
+
+        // 盒式模糊
+        window.applyBoxBlur = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_box_blur();
+                updateCanvas();
+            } catch (error) {
+                console.error('Box blur error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 高斯模糊
+        window.applyGaussianBlur = function() {
+            if (!processor) return;
+            const radius = prompt('请输入模糊半径 (建议 1-10):', '3');
+            if (radius && !isNaN(radius)) {
+                showLoading(true);
+                saveToHistory();
+                try {
+                    processor.apply_gaussian_blur(parseInt(radius));
+                    updateCanvas();
+                } catch (error) {
+                    console.error('Gaussian blur error:', error);
+                }
+                showLoading(false);
             }
         };
 
