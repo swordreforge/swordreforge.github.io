@@ -84,6 +84,9 @@ export class ImageProcessor {
     apply_edge_detection() {
         wasm.imageprocessor_apply_edge_detection(this.__wbg_ptr);
     }
+    apply_emboss() {
+        wasm.imageprocessor_apply_emboss(this.__wbg_ptr);
+    }
     /**
      * @param {number} red
      * @param {number} green
@@ -112,6 +115,9 @@ export class ImageProcessor {
     }
     apply_invert() {
         wasm.imageprocessor_apply_invert(this.__wbg_ptr);
+    }
+    apply_laplace() {
+        wasm.imageprocessor_apply_laplace(this.__wbg_ptr);
     }
     /**
      * @param {number} level
@@ -154,6 +160,9 @@ export class ImageProcessor {
         const ptr0 = passStringToWasm0(filter_name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
         wasm.imageprocessor_apply_preset_filter(this.__wbg_ptr, ptr0, len0);
+    }
+    apply_prewitt_horizontal() {
+        wasm.imageprocessor_apply_prewitt_horizontal(this.__wbg_ptr);
     }
     /**
      * @param {number} level

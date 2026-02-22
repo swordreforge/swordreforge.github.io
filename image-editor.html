@@ -419,7 +419,16 @@
                         <button class="btn" onclick="applySobelHorizontal()" disabled>Sobel 水平</button>
                         <button class="btn" onclick="applySobelVertical()" disabled>Sobel 垂直</button>
                         <button class="btn" onclick="applySobelGlobal()" disabled>Sobel 全局</button>
+                        <button class="btn" onclick="applyPrewittHorizontal()" disabled>Prewitt 水平</button>
                         <button class="btn" onclick="applyEdgeDetection()" disabled>基础边缘</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>卷积效果</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="applyLaplace()" disabled>Laplace</button>
+                        <button class="btn" onclick="applyEmboss()" disabled>浮雕</button>
                     </div>
                 </div>
 
@@ -589,7 +598,7 @@
     </div>
 
     <script type="module">
-        import init, { ImageProcessor } from './photon-wasm/pkg/photon_wasm.js?v=5';
+        import init, { ImageProcessor } from './photon-wasm/pkg/photon_wasm.js?v=6';
 
         let wasmModule = null;
         let processor = null;
@@ -1049,6 +1058,48 @@
                 updateCanvas();
             } catch (error) {
                 console.error('Sobel global error:', error);
+            }
+            showLoading(false);
+        };
+
+        // Prewitt 水平边缘检测
+        window.applyPrewittHorizontal = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_prewitt_horizontal();
+                updateCanvas();
+            } catch (error) {
+                console.error('Prewitt horizontal error:', error);
+            }
+            showLoading(false);
+        };
+
+        // Laplace 效果
+        window.applyLaplace = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_laplace();
+                updateCanvas();
+            } catch (error) {
+                console.error('Laplace error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 浮雕效果
+        window.applyEmboss = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_emboss();
+                updateCanvas();
+            } catch (error) {
+                console.error('Emboss error:', error);
             }
             showLoading(false);
         };
