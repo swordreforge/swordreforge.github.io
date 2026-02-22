@@ -652,6 +652,9 @@
                     const width = processor.get_width();
                     const height = processor.get_height();
 
+                    // 保存原始处理器用于无级调节
+                    originalProcessor = ImageProcessor.new_from_bytes(uint8Array);
+
                     // 使用 get_base64() 获取图像数据并绘制到 Canvas
                     const base64 = processor.to_base64();
 
@@ -845,6 +848,7 @@
 
         // 应用无级调节
         let adjustmentTimeout = null;
+        let originalProcessor = null; // 保存原始处理器用于无级调节
         window.applyAdjustments = function() {
             if (!processor) return;
 
@@ -862,8 +866,35 @@
 
             // 应用调整
             try {
-                // 使用批量应用方法，避免重复重置
-                processor.apply_all_adjustments(brightness, contrast, saturation, hue);
+                // 基于原始图像应用所有调整
+                if (originalProcessor) {
+                    // 创建新的处理器实例（基于原始图像）
+                    const base64 = originalProcessor.to_base64();
+                    const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
+                    const uint8Array = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+                    processor = ImageProcessor.new_from_bytes(uint8Array);
+                    
+                    // 应用亮度
+                    if (brightness !== 0) {
+                        processor.apply_brightness(brightness);
+                    }
+                    
+                    // 应用对比度
+                    if (contrast !== 100) {
+                        processor.apply_contrast(contrast);
+                    }
+                    
+                    // 应用饱和度
+                    if (saturation !== 100) {
+                        processor.apply_saturation(saturation);
+                    }
+                    
+                    // 应用色相
+                    if (hue !== 0) {
+                        processor.apply_hue(hue);
+                    }
+                }
+                
                 updateCanvas();
                 
                 // 防抖动保存历史记录（用户停止调节 500ms 后保存）
@@ -1254,6 +1285,7 @@
 
             // 清空处理器
             processor = null;
+            originalProcessor = null;
             currentImage = null;
             originalImageData = null;
 
