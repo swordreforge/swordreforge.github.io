@@ -632,6 +632,34 @@
                         </label>
                     </div>
                     <div style="margin-bottom: 10px;">
+                        <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: #e0e0e0; font-size: 0.9em;">
+                            <span>字体样式</span>
+                            <select id="fontSelect" style="padding: 4px; background: #444; color: #e0e0e0; border: 1px solid #555; border-radius: 4px; max-width: 150px;" disabled>
+                                <optgroup label="Roboto 英文">
+                                    <option value="0">Roboto 常规</option>
+                                    <option value="1">Roboto 粗体</option>
+                                </optgroup>
+                                <optgroup label="阿里普惠体">
+                                    <option value="2">普惠体 细体</option>
+                                    <option value="3">普惠体 常规</option>
+                                    <option value="4">普惠体 常规 L3</option>
+                                    <option value="5">普惠体 中等</option>
+                                    <option value="6">普惠体 半粗</option>
+                                    <option value="7">普惠体 粗体</option>
+                                    <option value="8">普惠体 特粗</option>
+                                    <option value="9">普惠体 重体</option>
+                                    <option value="10">普惠体 黑体</option>
+                                </optgroup>
+                                <optgroup label="其他字体">
+                                    <option value="11">FreeSerif 衬线</option>
+                                    <option value="12">鸿雷小纸条青春体</option>
+                                    <option value="13">南西新圆体 简繁</option>
+                                    <option value="14">毛楷笔书体</option>
+                                </optgroup>
+                            </select>
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 10px;">
                         <label style="display: flex; align-items: center; cursor: pointer; color: #e0e0e0; font-size: 0.9em;">
                             <input type="checkbox" id="shadowCheckbox" style="margin-right: 8px;" disabled>
                             带阴影效果
@@ -863,6 +891,7 @@
             document.getElementById('textInput').disabled = !currentImage;
             document.getElementById('fontSizeSlider').disabled = !currentImage;
             document.getElementById('textColorPicker').disabled = !currentImage;
+            document.getElementById('fontSelect').disabled = !currentImage;
             document.getElementById('shadowCheckbox').disabled = !currentImage;
         }
 
@@ -2351,6 +2380,7 @@
                 const fontSize = parseInt(document.getElementById('fontSizeSlider').value);
                 const colorHex = document.getElementById('textColorPicker').value;
                 const withShadow = document.getElementById('shadowCheckbox').checked;
+                const fontType = parseInt(document.getElementById('fontSelect').value);
 
                 // 转换颜色
                 const r = parseInt(colorHex.slice(1, 3), 16);
@@ -2362,9 +2392,9 @@
                 const drawY = Math.floor(textBox.y + fontSize * 0.75);
 
                 if (withShadow) {
-                    processor.draw_text_with_shadow_and_color(text, drawX, drawY, fontSize, r, g, b);
+                    processor.draw_text_with_shadow_and_color_and_font(text, drawX, drawY, fontSize, r, g, b, fontType);
                 } else {
-                    processor.draw_text_with_color(text, drawX, drawY, fontSize, r, g, b);
+                    processor.draw_text_with_color_and_font(text, drawX, drawY, fontSize, r, g, b, fontType);
                 }
 
                 updateCanvas();

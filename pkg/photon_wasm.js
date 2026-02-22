@@ -1,5 +1,72 @@
 /* @ts-self-types="./photon_wasm.d.ts" */
 
+/**
+ * 字体类型枚举
+ * @enum {0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14}
+ */
+export const FontType = Object.freeze({
+    /**
+     * Roboto 常规字体（默认）
+     */
+    RobotoRegular: 0, "0": "RobotoRegular",
+    /**
+     * Roboto 粗体字体
+     */
+    RobotoBlack: 1, "1": "RobotoBlack",
+    /**
+     * 阿里普惠体 细体
+     */
+    AlibabaThin: 2, "2": "AlibabaThin",
+    /**
+     * 阿里普惠体 常规
+     */
+    AlibabaRegular: 3, "3": "AlibabaRegular",
+    /**
+     * 阿里普惠体 常规 L3
+     */
+    AlibabaRegularL3: 4, "4": "AlibabaRegularL3",
+    /**
+     * 阿里普惠体 中等
+     */
+    AlibabaMedium: 5, "5": "AlibabaMedium",
+    /**
+     * 阿里普惠体 半粗
+     */
+    AlibabaSemiBold: 6, "6": "AlibabaSemiBold",
+    /**
+     * 阿里普惠体 粗体
+     */
+    AlibabaBold: 7, "7": "AlibabaBold",
+    /**
+     * 阿里普惠体 特粗
+     */
+    AlibabaExtraBold: 8, "8": "AlibabaExtraBold",
+    /**
+     * 阿里普惠体 重体
+     */
+    AlibabaHeavy: 9, "9": "AlibabaHeavy",
+    /**
+     * 阿里普惠体 黑体
+     */
+    AlibabaBlack: 10, "10": "AlibabaBlack",
+    /**
+     * FreeSerif 衬线字体
+     */
+    FreeSerif: 11, "11": "FreeSerif",
+    /**
+     * 鸿雷小纸条青春体
+     */
+    HongLeiXiaoZhiTiao: 12, "12": "HongLeiXiaoZhiTiao",
+    /**
+     * 南西新圆体 简繁
+     */
+    NanXiXinYuanTi: 13, "13": "NanXiXinYuanTi",
+    /**
+     * 毛楷笔书体
+     */
+    MaoKenYingBiKaiShu: 14, "14": "MaoKenYingBiKaiShu",
+});
+
 export class ImageProcessor {
     static __wrap(ptr) {
         ptr = ptr >>> 0;
@@ -183,6 +250,37 @@ export class ImageProcessor {
         wasm.imageprocessor_draw_text_with_color(this.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b);
     }
     /**
+     * 绘制带颜色的文本，支持选择字体类型
+     * font_type: 0-14, 对应不同的字体
+     * @param {string} text
+     * @param {number} x
+     * @param {number} y
+     * @param {number} font_size
+     * @param {number} r
+     * @param {number} g
+     * @param {number} b
+     * @param {number} font_type
+     */
+    draw_text_with_color_and_font(text, x, y, font_size, r, g, b, font_type) {
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_draw_text_with_color_and_font(this.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b, font_type);
+    }
+    /**
+     * 绘制文本，支持选择字体类型
+     * font_type: 0-14, 对应不同的字体
+     * @param {string} text
+     * @param {number} x
+     * @param {number} y
+     * @param {number} font_size
+     * @param {number} font_type
+     */
+    draw_text_with_font(text, x, y, font_size, font_type) {
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_draw_text_with_font(this.__wbg_ptr, ptr0, len0, x, y, font_size, font_type);
+    }
+    /**
      * @param {string} text
      * @param {number} x
      * @param {number} y
@@ -206,6 +304,37 @@ export class ImageProcessor {
         const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
         wasm.imageprocessor_draw_text_with_shadow_and_color(this.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b);
+    }
+    /**
+     * 绘制带阴影和颜色的文本，支持选择字体类型
+     * font_type: 0-14, 对应不同的字体
+     * @param {string} text
+     * @param {number} x
+     * @param {number} y
+     * @param {number} font_size
+     * @param {number} r
+     * @param {number} g
+     * @param {number} b
+     * @param {number} font_type
+     */
+    draw_text_with_shadow_and_color_and_font(text, x, y, font_size, r, g, b, font_type) {
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_draw_text_with_shadow_and_color_and_font(this.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b, font_type);
+    }
+    /**
+     * 绘制带阴影的文本，支持选择字体类型
+     * font_type: 0-14, 对应不同的字体
+     * @param {string} text
+     * @param {number} x
+     * @param {number} y
+     * @param {number} font_size
+     * @param {number} font_type
+     */
+    draw_text_with_shadow_and_font(text, x, y, font_size, font_type) {
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_draw_text_with_shadow_and_font(this.__wbg_ptr, ptr0, len0, x, y, font_size, font_type);
     }
     flip_horizontal() {
         wasm.imageprocessor_flip_horizontal(this.__wbg_ptr);
@@ -1836,6 +1965,41 @@ export function draw_text_with_border_and_color(photon_img, text, x, y, font_siz
 }
 
 /**
+ * Add bordered-text to an image with custom color and specified font type.
+ * @param {PhotonImage} photon_img
+ * @param {string} text
+ * @param {number} x
+ * @param {number} y
+ * @param {number} font_size
+ * @param {number} r
+ * @param {number} g
+ * @param {number} b
+ * @param {FontType} font_type
+ */
+export function draw_text_with_border_and_color_and_font(photon_img, text, x, y, font_size, r, g, b, font_type) {
+    _assertClass(photon_img, PhotonImage);
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.draw_text_with_border_and_color_and_font(photon_img.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b, font_type);
+}
+
+/**
+ * Add bordered-text to an image with specified font type.
+ * @param {PhotonImage} photon_img
+ * @param {string} text
+ * @param {number} x
+ * @param {number} y
+ * @param {number} font_size
+ * @param {FontType} font_type
+ */
+export function draw_text_with_border_with_font(photon_img, text, x, y, font_size, font_type) {
+    _assertClass(photon_img, PhotonImage);
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.draw_text_with_border_with_font(photon_img.__wbg_ptr, ptr0, len0, x, y, font_size, font_type);
+}
+
+/**
  * Add text to an image with custom color.
  * The only font available as of now is Roboto.
  *
@@ -1873,6 +2037,41 @@ export function draw_text_with_color(photon_img, text, x, y, font_size, r, g, b)
     const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     wasm.draw_text_with_color(photon_img.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b);
+}
+
+/**
+ * Add text to an image with custom color and specified font type.
+ * @param {PhotonImage} photon_img
+ * @param {string} text
+ * @param {number} x
+ * @param {number} y
+ * @param {number} font_size
+ * @param {number} r
+ * @param {number} g
+ * @param {number} b
+ * @param {FontType} font_type
+ */
+export function draw_text_with_color_and_font(photon_img, text, x, y, font_size, r, g, b, font_type) {
+    _assertClass(photon_img, PhotonImage);
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.draw_text_with_color_and_font(photon_img.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b, font_type);
+}
+
+/**
+ * Add text to an image with specified font type.
+ * @param {PhotonImage} photon_img
+ * @param {string} text
+ * @param {number} x
+ * @param {number} y
+ * @param {number} font_size
+ * @param {FontType} font_type
+ */
+export function draw_text_with_font(photon_img, text, x, y, font_size, font_type) {
+    _assertClass(photon_img, PhotonImage);
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.draw_text_with_font(photon_img.__wbg_ptr, ptr0, len0, x, y, font_size, font_type);
 }
 
 /**

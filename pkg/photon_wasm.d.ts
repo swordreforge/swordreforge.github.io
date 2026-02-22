@@ -1,6 +1,72 @@
 /* tslint:disable */
 /* eslint-disable */
 
+/**
+ * 字体类型枚举
+ */
+export enum FontType {
+    /**
+     * Roboto 常规字体（默认）
+     */
+    RobotoRegular = 0,
+    /**
+     * Roboto 粗体字体
+     */
+    RobotoBlack = 1,
+    /**
+     * 阿里普惠体 细体
+     */
+    AlibabaThin = 2,
+    /**
+     * 阿里普惠体 常规
+     */
+    AlibabaRegular = 3,
+    /**
+     * 阿里普惠体 常规 L3
+     */
+    AlibabaRegularL3 = 4,
+    /**
+     * 阿里普惠体 中等
+     */
+    AlibabaMedium = 5,
+    /**
+     * 阿里普惠体 半粗
+     */
+    AlibabaSemiBold = 6,
+    /**
+     * 阿里普惠体 粗体
+     */
+    AlibabaBold = 7,
+    /**
+     * 阿里普惠体 特粗
+     */
+    AlibabaExtraBold = 8,
+    /**
+     * 阿里普惠体 重体
+     */
+    AlibabaHeavy = 9,
+    /**
+     * 阿里普惠体 黑体
+     */
+    AlibabaBlack = 10,
+    /**
+     * FreeSerif 衬线字体
+     */
+    FreeSerif = 11,
+    /**
+     * 鸿雷小纸条青春体
+     */
+    HongLeiXiaoZhiTiao = 12,
+    /**
+     * 南西新圆体 简繁
+     */
+    NanXiXinYuanTi = 13,
+    /**
+     * 毛楷笔书体
+     */
+    MaoKenYingBiKaiShu = 14,
+}
+
 export class ImageProcessor {
     free(): void;
     [Symbol.dispose](): void;
@@ -27,8 +93,28 @@ export class ImageProcessor {
     crop(x1: number, y1: number, x2: number, y2: number): void;
     draw_text(text: string, x: number, y: number, font_size: number): void;
     draw_text_with_color(text: string, x: number, y: number, font_size: number, r: number, g: number, b: number): void;
+    /**
+     * 绘制带颜色的文本，支持选择字体类型
+     * font_type: 0-14, 对应不同的字体
+     */
+    draw_text_with_color_and_font(text: string, x: number, y: number, font_size: number, r: number, g: number, b: number, font_type: number): void;
+    /**
+     * 绘制文本，支持选择字体类型
+     * font_type: 0-14, 对应不同的字体
+     */
+    draw_text_with_font(text: string, x: number, y: number, font_size: number, font_type: number): void;
     draw_text_with_shadow(text: string, x: number, y: number, font_size: number): void;
     draw_text_with_shadow_and_color(text: string, x: number, y: number, font_size: number, r: number, g: number, b: number): void;
+    /**
+     * 绘制带阴影和颜色的文本，支持选择字体类型
+     * font_type: 0-14, 对应不同的字体
+     */
+    draw_text_with_shadow_and_color_and_font(text: string, x: number, y: number, font_size: number, r: number, g: number, b: number, font_type: number): void;
+    /**
+     * 绘制带阴影的文本，支持选择字体类型
+     * font_type: 0-14, 对应不同的字体
+     */
+    draw_text_with_shadow_and_font(text: string, x: number, y: number, font_size: number, font_type: number): void;
     flip_horizontal(): void;
     flip_vertical(): void;
     get_bytes(): Uint8Array;
@@ -1072,6 +1158,16 @@ export function draw_text_with_border(photon_img: PhotonImage, text: string, x: 
 export function draw_text_with_border_and_color(photon_img: PhotonImage, text: string, x: number, y: number, font_size: number, r: number, g: number, b: number): void;
 
 /**
+ * Add bordered-text to an image with custom color and specified font type.
+ */
+export function draw_text_with_border_and_color_and_font(photon_img: PhotonImage, text: string, x: number, y: number, font_size: number, r: number, g: number, b: number, font_type: FontType): void;
+
+/**
+ * Add bordered-text to an image with specified font type.
+ */
+export function draw_text_with_border_with_font(photon_img: PhotonImage, text: string, x: number, y: number, font_size: number, font_type: FontType): void;
+
+/**
  * Add text to an image with custom color.
  * The only font available as of now is Roboto.
  *
@@ -1097,6 +1193,16 @@ export function draw_text_with_border_and_color(photon_img: PhotonImage, text: s
  * ```
  */
 export function draw_text_with_color(photon_img: PhotonImage, text: string, x: number, y: number, font_size: number, r: number, g: number, b: number): void;
+
+/**
+ * Add text to an image with custom color and specified font type.
+ */
+export function draw_text_with_color_and_font(photon_img: PhotonImage, text: string, x: number, y: number, font_size: number, r: number, g: number, b: number, font_type: FontType): void;
+
+/**
+ * Add text to an image with specified font type.
+ */
+export function draw_text_with_font(photon_img: PhotonImage, text: string, x: number, y: number, font_size: number, font_type: FontType): void;
 
 export function duotone(photon_image: PhotonImage, color_a: Rgb, color_b: Rgb): void;
 
@@ -3227,8 +3333,12 @@ export interface InitOutput {
     readonly imageprocessor_crop: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly imageprocessor_draw_text: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
     readonly imageprocessor_draw_text_with_color: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
+    readonly imageprocessor_draw_text_with_color_and_font: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => void;
+    readonly imageprocessor_draw_text_with_font: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly imageprocessor_draw_text_with_shadow: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
     readonly imageprocessor_draw_text_with_shadow_and_color: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
+    readonly imageprocessor_draw_text_with_shadow_and_color_and_font: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => void;
+    readonly imageprocessor_draw_text_with_shadow_and_font: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly imageprocessor_flip_horizontal: (a: number) => void;
     readonly imageprocessor_flip_vertical: (a: number) => void;
     readonly imageprocessor_get_bytes: (a: number) => [number, number];
@@ -3249,31 +3359,107 @@ export interface InitOutput {
     readonly blend: (a: number, b: number, c: number, d: number) => void;
     readonly create_gradient: (a: number, b: number) => number;
     readonly watermark: (a: number, b: number, c: bigint, d: bigint) => void;
-    readonly adjust_brightness: (a: number, b: number) => void;
-    readonly adjust_contrast: (a: number, b: number) => void;
-    readonly color_horizontal_strips: (a: number, b: number, c: number) => void;
-    readonly color_vertical_strips: (a: number, b: number, c: number) => void;
-    readonly colorize: (a: number) => void;
-    readonly dec_brightness: (a: number, b: number) => void;
-    readonly dither: (a: number, b: number) => void;
-    readonly duotone: (a: number, b: number, c: number) => void;
-    readonly frosted_glass: (a: number) => void;
-    readonly halftone: (a: number) => void;
-    readonly horizontal_strips: (a: number, b: number) => void;
-    readonly inc_brightness: (a: number, b: number) => void;
-    readonly multiple_offsets: (a: number, b: number, c: number, d: number) => void;
-    readonly normalize: (a: number) => void;
-    readonly offset: (a: number, b: number, c: number) => void;
-    readonly offset_blue: (a: number, b: number) => void;
-    readonly offset_green: (a: number, b: number) => void;
-    readonly offset_red: (a: number, b: number) => void;
-    readonly oil: (a: number, b: number, c: number) => void;
-    readonly pixelize: (a: number, b: number) => void;
-    readonly primary: (a: number) => void;
-    readonly solarize: (a: number) => void;
-    readonly solarize_retimg: (a: number) => number;
-    readonly tint: (a: number, b: number, c: number, d: number) => void;
-    readonly vertical_strips: (a: number, b: number) => void;
+    readonly add_noise_rand: (a: number) => void;
+    readonly add_noise_rand_with_strength: (a: number, b: number) => void;
+    readonly darken_hsl: (a: number, b: number) => void;
+    readonly darken_hsluv: (a: number, b: number) => void;
+    readonly darken_hsv: (a: number, b: number) => void;
+    readonly darken_lch: (a: number, b: number) => void;
+    readonly desaturate_hsl: (a: number, b: number) => void;
+    readonly desaturate_hsluv: (a: number, b: number) => void;
+    readonly desaturate_hsv: (a: number, b: number) => void;
+    readonly desaturate_lch: (a: number, b: number) => void;
+    readonly gamma_correction: (a: number, b: number, c: number, d: number) => void;
+    readonly hsl: (a: number, b: number, c: number, d: number) => void;
+    readonly hsluv: (a: number, b: number, c: number, d: number) => void;
+    readonly hsv: (a: number, b: number, c: number, d: number) => void;
+    readonly hue_rotate_hsl: (a: number, b: number) => void;
+    readonly hue_rotate_hsluv: (a: number, b: number) => void;
+    readonly hue_rotate_hsv: (a: number, b: number) => void;
+    readonly hue_rotate_lch: (a: number, b: number) => void;
+    readonly lch: (a: number, b: number, c: number, d: number) => void;
+    readonly lighten_hsl: (a: number, b: number) => void;
+    readonly lighten_hsluv: (a: number, b: number) => void;
+    readonly lighten_hsv: (a: number, b: number) => void;
+    readonly lighten_lch: (a: number, b: number) => void;
+    readonly mix_with_colour: (a: number, b: number, c: number) => void;
+    readonly pink_noise: (a: number) => void;
+    readonly saturate_hsl: (a: number, b: number) => void;
+    readonly saturate_hsluv: (a: number, b: number) => void;
+    readonly saturate_hsv: (a: number, b: number) => void;
+    readonly saturate_lch: (a: number, b: number) => void;
+    readonly draw_text: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly draw_text_with_border: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly draw_text_with_border_and_color: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
+    readonly draw_text_with_border_and_color_and_font: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => void;
+    readonly draw_text_with_border_with_font: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+    readonly draw_text_with_color: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
+    readonly draw_text_with_color_and_font: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => void;
+    readonly draw_text_with_font: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+    readonly cali: (a: number) => void;
+    readonly crop: (a: number, b: number, c: number, d: number, e: number) => number;
+    readonly crop_img_browser: (a: any, b: number, c: number, d: number, e: number) => any;
+    readonly dramatic: (a: number) => void;
+    readonly duotone_horizon: (a: number) => void;
+    readonly duotone_lilac: (a: number) => void;
+    readonly duotone_ochre: (a: number) => void;
+    readonly duotone_tint: (a: number, b: number) => void;
+    readonly duotone_violette: (a: number) => void;
+    readonly filter: (a: number, b: number, c: number) => void;
+    readonly firenze: (a: number) => void;
+    readonly fliph: (a: number) => void;
+    readonly flipv: (a: number) => void;
+    readonly golden: (a: number) => void;
+    readonly lix: (a: number) => void;
+    readonly lofi: (a: number) => void;
+    readonly monochrome_tint: (a: number, b: number) => void;
+    readonly neue: (a: number) => void;
+    readonly obsidian: (a: number) => void;
+    readonly padding_bottom: (a: number, b: number, c: number) => number;
+    readonly padding_left: (a: number, b: number, c: number) => number;
+    readonly padding_right: (a: number, b: number, c: number) => number;
+    readonly padding_top: (a: number, b: number, c: number) => number;
+    readonly padding_uniform: (a: number, b: number, c: number) => number;
+    readonly pastel_pink: (a: number) => void;
+    readonly resample: (a: number, b: number, c: number) => number;
+    readonly resize: (a: number, b: number, c: number, d: number) => number;
+    readonly resize_img_browser: (a: number, b: number, c: number, d: number) => any;
+    readonly rotate: (a: number, b: number) => number;
+    readonly ryo: (a: number) => void;
+    readonly seam_carve: (a: number, b: number, c: number) => number;
+    readonly shearx: (a: number, b: number) => number;
+    readonly sheary: (a: number, b: number) => number;
+    readonly alter_blue_channel: (a: number, b: number) => void;
+    readonly alter_channel: (a: number, b: number, c: number) => void;
+    readonly alter_channels: (a: number, b: number, c: number, d: number) => void;
+    readonly alter_green_channel: (a: number, b: number) => void;
+    readonly alter_red_channel: (a: number, b: number) => void;
+    readonly alter_two_channels: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly b_grayscale: (a: number) => void;
+    readonly decompose_max: (a: number) => void;
+    readonly decompose_min: (a: number) => void;
+    readonly desaturate: (a: number) => void;
+    readonly g_grayscale: (a: number) => void;
+    readonly grayscale: (a: number) => void;
+    readonly grayscale_human_corrected: (a: number) => void;
+    readonly grayscale_shades: (a: number, b: number) => void;
+    readonly invert: (a: number) => void;
+    readonly monochrome: (a: number, b: number, c: number, d: number) => void;
+    readonly r_grayscale: (a: number) => void;
+    readonly remove_blue_channel: (a: number, b: number) => void;
+    readonly remove_channel: (a: number, b: number, c: number) => void;
+    readonly remove_green_channel: (a: number, b: number) => void;
+    readonly remove_red_channel: (a: number, b: number) => void;
+    readonly selective_color_convert: (a: number, b: number, c: number, d: number) => void;
+    readonly selective_desaturate: (a: number, b: number, c: number) => void;
+    readonly selective_greyscale: (a: number, b: number) => void;
+    readonly selective_hue_rotate: (a: number, b: number, c: number) => void;
+    readonly selective_lighten: (a: number, b: number, c: number) => void;
+    readonly selective_saturate: (a: number, b: number, c: number) => void;
+    readonly sepia: (a: number) => void;
+    readonly single_channel_grayscale: (a: number, b: number) => void;
+    readonly swap_channels: (a: number, b: number, c: number) => void;
+    readonly threshold: (a: number, b: number) => void;
     readonly __wbg_photonimage_free: (a: number, b: number) => void;
     readonly __wbg_rgb_free: (a: number, b: number) => void;
     readonly __wbg_rgba_free: (a: number, b: number) => void;
@@ -3317,82 +3503,6 @@ export interface InitOutput {
     readonly rgba_get_blue: (a: number) => number;
     readonly rgba_get_green: (a: number) => number;
     readonly rgba_get_red: (a: number) => number;
-    readonly add_noise_rand: (a: number) => void;
-    readonly add_noise_rand_with_strength: (a: number, b: number) => void;
-    readonly darken_hsl: (a: number, b: number) => void;
-    readonly darken_hsluv: (a: number, b: number) => void;
-    readonly darken_hsv: (a: number, b: number) => void;
-    readonly darken_lch: (a: number, b: number) => void;
-    readonly desaturate_hsl: (a: number, b: number) => void;
-    readonly desaturate_hsluv: (a: number, b: number) => void;
-    readonly desaturate_hsv: (a: number, b: number) => void;
-    readonly desaturate_lch: (a: number, b: number) => void;
-    readonly gamma_correction: (a: number, b: number, c: number, d: number) => void;
-    readonly hsl: (a: number, b: number, c: number, d: number) => void;
-    readonly hsluv: (a: number, b: number, c: number, d: number) => void;
-    readonly hsv: (a: number, b: number, c: number, d: number) => void;
-    readonly hue_rotate_hsl: (a: number, b: number) => void;
-    readonly hue_rotate_hsluv: (a: number, b: number) => void;
-    readonly hue_rotate_hsv: (a: number, b: number) => void;
-    readonly hue_rotate_lch: (a: number, b: number) => void;
-    readonly lch: (a: number, b: number, c: number, d: number) => void;
-    readonly lighten_hsl: (a: number, b: number) => void;
-    readonly lighten_hsluv: (a: number, b: number) => void;
-    readonly lighten_hsv: (a: number, b: number) => void;
-    readonly lighten_lch: (a: number, b: number) => void;
-    readonly mix_with_colour: (a: number, b: number, c: number) => void;
-    readonly pink_noise: (a: number) => void;
-    readonly saturate_hsl: (a: number, b: number) => void;
-    readonly saturate_hsluv: (a: number, b: number) => void;
-    readonly saturate_hsv: (a: number, b: number) => void;
-    readonly saturate_lch: (a: number, b: number) => void;
-    readonly alter_blue_channel: (a: number, b: number) => void;
-    readonly alter_channel: (a: number, b: number, c: number) => void;
-    readonly alter_channels: (a: number, b: number, c: number, d: number) => void;
-    readonly alter_green_channel: (a: number, b: number) => void;
-    readonly alter_red_channel: (a: number, b: number) => void;
-    readonly alter_two_channels: (a: number, b: number, c: number, d: number, e: number) => void;
-    readonly b_grayscale: (a: number) => void;
-    readonly decompose_max: (a: number) => void;
-    readonly decompose_min: (a: number) => void;
-    readonly desaturate: (a: number) => void;
-    readonly g_grayscale: (a: number) => void;
-    readonly grayscale: (a: number) => void;
-    readonly grayscale_human_corrected: (a: number) => void;
-    readonly grayscale_shades: (a: number, b: number) => void;
-    readonly invert: (a: number) => void;
-    readonly monochrome: (a: number, b: number, c: number, d: number) => void;
-    readonly r_grayscale: (a: number) => void;
-    readonly remove_blue_channel: (a: number, b: number) => void;
-    readonly remove_channel: (a: number, b: number, c: number) => void;
-    readonly remove_green_channel: (a: number, b: number) => void;
-    readonly remove_red_channel: (a: number, b: number) => void;
-    readonly selective_color_convert: (a: number, b: number, c: number, d: number) => void;
-    readonly selective_desaturate: (a: number, b: number, c: number) => void;
-    readonly selective_greyscale: (a: number, b: number) => void;
-    readonly selective_hue_rotate: (a: number, b: number, c: number) => void;
-    readonly selective_lighten: (a: number, b: number, c: number) => void;
-    readonly selective_saturate: (a: number, b: number, c: number) => void;
-    readonly sepia: (a: number) => void;
-    readonly single_channel_grayscale: (a: number, b: number) => void;
-    readonly swap_channels: (a: number, b: number, c: number) => void;
-    readonly threshold: (a: number, b: number) => void;
-    readonly crop: (a: number, b: number, c: number, d: number, e: number) => number;
-    readonly crop_img_browser: (a: any, b: number, c: number, d: number, e: number) => any;
-    readonly fliph: (a: number) => void;
-    readonly flipv: (a: number) => void;
-    readonly padding_bottom: (a: number, b: number, c: number) => number;
-    readonly padding_left: (a: number, b: number, c: number) => number;
-    readonly padding_right: (a: number, b: number, c: number) => number;
-    readonly padding_top: (a: number, b: number, c: number) => number;
-    readonly padding_uniform: (a: number, b: number, c: number) => number;
-    readonly resample: (a: number, b: number, c: number) => number;
-    readonly resize: (a: number, b: number, c: number, d: number) => number;
-    readonly resize_img_browser: (a: number, b: number, c: number, d: number) => any;
-    readonly rotate: (a: number, b: number) => number;
-    readonly seam_carve: (a: number, b: number, c: number) => number;
-    readonly shearx: (a: number, b: number) => number;
-    readonly sheary: (a: number, b: number) => number;
     readonly box_blur: (a: number) => void;
     readonly detect_135_deg_lines: (a: number) => void;
     readonly detect_45_deg_lines: (a: number) => void;
@@ -3412,27 +3522,31 @@ export interface InitOutput {
     readonly sobel_global: (a: number) => void;
     readonly sobel_horizontal: (a: number) => void;
     readonly sobel_vertical: (a: number) => void;
-    readonly cali: (a: number) => void;
-    readonly dramatic: (a: number) => void;
-    readonly draw_text: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-    readonly draw_text_with_border: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-    readonly draw_text_with_border_and_color: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
-    readonly draw_text_with_color: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
-    readonly duotone_horizon: (a: number) => void;
-    readonly duotone_lilac: (a: number) => void;
-    readonly duotone_ochre: (a: number) => void;
-    readonly duotone_tint: (a: number, b: number) => void;
-    readonly duotone_violette: (a: number) => void;
-    readonly filter: (a: number, b: number, c: number) => void;
-    readonly firenze: (a: number) => void;
-    readonly golden: (a: number) => void;
-    readonly lix: (a: number) => void;
-    readonly lofi: (a: number) => void;
-    readonly monochrome_tint: (a: number, b: number) => void;
-    readonly neue: (a: number) => void;
-    readonly obsidian: (a: number) => void;
-    readonly pastel_pink: (a: number) => void;
-    readonly ryo: (a: number) => void;
+    readonly adjust_brightness: (a: number, b: number) => void;
+    readonly adjust_contrast: (a: number, b: number) => void;
+    readonly color_horizontal_strips: (a: number, b: number, c: number) => void;
+    readonly color_vertical_strips: (a: number, b: number, c: number) => void;
+    readonly colorize: (a: number) => void;
+    readonly dec_brightness: (a: number, b: number) => void;
+    readonly dither: (a: number, b: number) => void;
+    readonly duotone: (a: number, b: number, c: number) => void;
+    readonly frosted_glass: (a: number) => void;
+    readonly halftone: (a: number) => void;
+    readonly horizontal_strips: (a: number, b: number) => void;
+    readonly inc_brightness: (a: number, b: number) => void;
+    readonly multiple_offsets: (a: number, b: number, c: number, d: number) => void;
+    readonly normalize: (a: number) => void;
+    readonly offset: (a: number, b: number, c: number) => void;
+    readonly offset_blue: (a: number, b: number) => void;
+    readonly offset_green: (a: number, b: number) => void;
+    readonly offset_red: (a: number, b: number) => void;
+    readonly oil: (a: number, b: number, c: number) => void;
+    readonly pixelize: (a: number, b: number) => void;
+    readonly primary: (a: number) => void;
+    readonly solarize: (a: number) => void;
+    readonly solarize_retimg: (a: number) => number;
+    readonly tint: (a: number, b: number, c: number, d: number) => void;
+    readonly vertical_strips: (a: number, b: number) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_exn_store: (a: number) => void;
