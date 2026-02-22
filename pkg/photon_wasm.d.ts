@@ -4,7 +4,7 @@
 export class ImageProcessor {
     free(): void;
     [Symbol.dispose](): void;
-    apply_all_adjustments(brightness: number, contrast: number, saturation: number, hue: number, lightness: number, lightness_color_space: string, gamma_red: number, gamma_green: number, gamma_blue: number, sharpen_strength: number, noise_reduction_strength: number): void;
+    apply_all_adjustments(brightness: number, contrast: number, saturation: number, hue: number, lightness: number, lightness_color_space: string, gamma_red: number, gamma_green: number, gamma_blue: number, sharpen_strength: number, noise_reduction_strength: number, noise_strength: number): void;
     apply_brightness(level: number): void;
     apply_contrast(level: number): void;
     apply_dither(depth: number): void;
@@ -15,6 +15,7 @@ export class ImageProcessor {
     apply_hue(level: number): void;
     apply_invert(): void;
     apply_lightness(level: number, color_space: string): void;
+    apply_noise(strength: number): void;
     apply_noise_reduction(strength: number): void;
     apply_oil(radius: number, intensity: number): void;
     apply_pixelate(pixel_size: number): void;
@@ -220,6 +221,32 @@ export enum SamplingFilter {
  * ```
  */
 export function add_noise_rand(photon_image: PhotonImage): void;
+
+/**
+ * Add randomized noise to an image with adjustable strength.
+ * This function adds Gaussian noise to each pixel by incrementing each channel by a randomized offset.
+ * The maximum offset is controlled by the strength parameter.
+ * **[WASM SUPPORT IS AVAILABLE]**
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `strength` - Noise strength. Range: 0.0 to 10.0.
+ *   - 0.0: No noise
+ *   - 1.0: Subtle noise (max offset 0-15)
+ *   - 5.0: Moderate noise (max offset 0-75)
+ *   - 10.0: Strong noise (max offset 0-150, equivalent to add_noise_rand)
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to add noise with strength 2.0:
+ * use photon_rs::native::open_image;
+ * use photon_rs::noise::add_noise_rand_with_strength;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * add_noise_rand_with_strength(&mut img, 2.0);
+ * ```
+ */
+export function add_noise_rand_with_strength(photon_image: PhotonImage, strength: number): void;
 
 /**
  * Adjust the brightness of an image by a factor.
@@ -3107,7 +3134,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_imageprocessor_free: (a: number, b: number) => void;
-    readonly imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => void;
+    readonly imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number) => void;
     readonly imageprocessor_apply_brightness: (a: number, b: number) => void;
     readonly imageprocessor_apply_contrast: (a: number, b: number) => void;
     readonly imageprocessor_apply_dither: (a: number, b: number) => void;
@@ -3118,6 +3145,7 @@ export interface InitOutput {
     readonly imageprocessor_apply_hue: (a: number, b: number) => void;
     readonly imageprocessor_apply_invert: (a: number) => void;
     readonly imageprocessor_apply_lightness: (a: number, b: number, c: number, d: number) => void;
+    readonly imageprocessor_apply_noise: (a: number, b: number) => void;
     readonly imageprocessor_apply_noise_reduction: (a: number, b: number) => void;
     readonly imageprocessor_apply_oil: (a: number, b: number, c: number) => void;
     readonly imageprocessor_apply_pixelate: (a: number, b: number) => void;
@@ -3143,7 +3171,29 @@ export interface InitOutput {
     readonly imageprocessor_to_png: (a: number) => [number, number];
     readonly init: () => void;
     readonly imageprocessor_to_webp: (a: number, b: number) => [number, number];
-    readonly add_noise_rand: (a: number) => void;
+    readonly apply_gradient: (a: number) => void;
+    readonly blend: (a: number, b: number, c: number, d: number) => void;
+    readonly create_gradient: (a: number, b: number) => number;
+    readonly watermark: (a: number, b: number, c: bigint, d: bigint) => void;
+    readonly box_blur: (a: number) => void;
+    readonly detect_135_deg_lines: (a: number) => void;
+    readonly detect_45_deg_lines: (a: number) => void;
+    readonly detect_horizontal_lines: (a: number) => void;
+    readonly detect_vertical_lines: (a: number) => void;
+    readonly edge_detection: (a: number) => void;
+    readonly edge_one: (a: number) => void;
+    readonly emboss: (a: number) => void;
+    readonly gaussian_blur: (a: number, b: number) => void;
+    readonly identity: (a: number) => void;
+    readonly laplace: (a: number) => void;
+    readonly noise_reduction: (a: number) => void;
+    readonly noise_reduction_with_strength: (a: number, b: number) => void;
+    readonly prewitt_horizontal: (a: number) => void;
+    readonly sharpen: (a: number) => void;
+    readonly sharpen_with_strength: (a: number, b: number) => void;
+    readonly sobel_global: (a: number) => void;
+    readonly sobel_horizontal: (a: number) => void;
+    readonly sobel_vertical: (a: number) => void;
     readonly crop: (a: number, b: number, c: number, d: number, e: number) => number;
     readonly crop_img_browser: (a: any, b: number, c: number, d: number, e: number) => any;
     readonly fliph: (a: number) => void;
@@ -3153,7 +3203,6 @@ export interface InitOutput {
     readonly padding_right: (a: number, b: number, c: number) => number;
     readonly padding_top: (a: number, b: number, c: number) => number;
     readonly padding_uniform: (a: number, b: number, c: number) => number;
-    readonly pink_noise: (a: number) => void;
     readonly resample: (a: number, b: number, c: number) => number;
     readonly resize: (a: number, b: number, c: number, d: number) => number;
     readonly resize_img_browser: (a: number, b: number, c: number, d: number) => any;
@@ -3186,55 +3235,6 @@ export interface InitOutput {
     readonly solarize_retimg: (a: number) => number;
     readonly tint: (a: number, b: number, c: number, d: number) => void;
     readonly vertical_strips: (a: number, b: number) => void;
-    readonly apply_gradient: (a: number) => void;
-    readonly blend: (a: number, b: number, c: number, d: number) => void;
-    readonly create_gradient: (a: number, b: number) => number;
-    readonly watermark: (a: number, b: number, c: bigint, d: bigint) => void;
-    readonly box_blur: (a: number) => void;
-    readonly detect_135_deg_lines: (a: number) => void;
-    readonly detect_45_deg_lines: (a: number) => void;
-    readonly detect_horizontal_lines: (a: number) => void;
-    readonly detect_vertical_lines: (a: number) => void;
-    readonly edge_detection: (a: number) => void;
-    readonly edge_one: (a: number) => void;
-    readonly emboss: (a: number) => void;
-    readonly gaussian_blur: (a: number, b: number) => void;
-    readonly identity: (a: number) => void;
-    readonly laplace: (a: number) => void;
-    readonly noise_reduction: (a: number) => void;
-    readonly noise_reduction_with_strength: (a: number, b: number) => void;
-    readonly prewitt_horizontal: (a: number) => void;
-    readonly sharpen: (a: number) => void;
-    readonly sharpen_with_strength: (a: number, b: number) => void;
-    readonly sobel_global: (a: number) => void;
-    readonly sobel_horizontal: (a: number) => void;
-    readonly sobel_vertical: (a: number) => void;
-    readonly darken_hsl: (a: number, b: number) => void;
-    readonly darken_hsluv: (a: number, b: number) => void;
-    readonly darken_hsv: (a: number, b: number) => void;
-    readonly darken_lch: (a: number, b: number) => void;
-    readonly desaturate_hsl: (a: number, b: number) => void;
-    readonly desaturate_hsluv: (a: number, b: number) => void;
-    readonly desaturate_hsv: (a: number, b: number) => void;
-    readonly desaturate_lch: (a: number, b: number) => void;
-    readonly gamma_correction: (a: number, b: number, c: number, d: number) => void;
-    readonly hsl: (a: number, b: number, c: number, d: number) => void;
-    readonly hsluv: (a: number, b: number, c: number, d: number) => void;
-    readonly hsv: (a: number, b: number, c: number, d: number) => void;
-    readonly hue_rotate_hsl: (a: number, b: number) => void;
-    readonly hue_rotate_hsluv: (a: number, b: number) => void;
-    readonly hue_rotate_hsv: (a: number, b: number) => void;
-    readonly hue_rotate_lch: (a: number, b: number) => void;
-    readonly lch: (a: number, b: number, c: number, d: number) => void;
-    readonly lighten_hsl: (a: number, b: number) => void;
-    readonly lighten_hsluv: (a: number, b: number) => void;
-    readonly lighten_hsv: (a: number, b: number) => void;
-    readonly lighten_lch: (a: number, b: number) => void;
-    readonly mix_with_colour: (a: number, b: number, c: number) => void;
-    readonly saturate_hsl: (a: number, b: number) => void;
-    readonly saturate_hsluv: (a: number, b: number) => void;
-    readonly saturate_hsv: (a: number, b: number) => void;
-    readonly saturate_lch: (a: number, b: number) => void;
     readonly __wbg_photonimage_free: (a: number, b: number) => void;
     readonly __wbg_rgb_free: (a: number, b: number) => void;
     readonly __wbg_rgba_free: (a: number, b: number) => void;
@@ -3327,6 +3327,35 @@ export interface InitOutput {
     readonly obsidian: (a: number) => void;
     readonly pastel_pink: (a: number) => void;
     readonly ryo: (a: number) => void;
+    readonly add_noise_rand: (a: number) => void;
+    readonly add_noise_rand_with_strength: (a: number, b: number) => void;
+    readonly darken_hsl: (a: number, b: number) => void;
+    readonly darken_hsluv: (a: number, b: number) => void;
+    readonly darken_hsv: (a: number, b: number) => void;
+    readonly darken_lch: (a: number, b: number) => void;
+    readonly desaturate_hsl: (a: number, b: number) => void;
+    readonly desaturate_hsluv: (a: number, b: number) => void;
+    readonly desaturate_hsv: (a: number, b: number) => void;
+    readonly desaturate_lch: (a: number, b: number) => void;
+    readonly gamma_correction: (a: number, b: number, c: number, d: number) => void;
+    readonly hsl: (a: number, b: number, c: number, d: number) => void;
+    readonly hsluv: (a: number, b: number, c: number, d: number) => void;
+    readonly hsv: (a: number, b: number, c: number, d: number) => void;
+    readonly hue_rotate_hsl: (a: number, b: number) => void;
+    readonly hue_rotate_hsluv: (a: number, b: number) => void;
+    readonly hue_rotate_hsv: (a: number, b: number) => void;
+    readonly hue_rotate_lch: (a: number, b: number) => void;
+    readonly lch: (a: number, b: number, c: number, d: number) => void;
+    readonly lighten_hsl: (a: number, b: number) => void;
+    readonly lighten_hsluv: (a: number, b: number) => void;
+    readonly lighten_hsv: (a: number, b: number) => void;
+    readonly lighten_lch: (a: number, b: number) => void;
+    readonly mix_with_colour: (a: number, b: number, c: number) => void;
+    readonly pink_noise: (a: number) => void;
+    readonly saturate_hsl: (a: number, b: number) => void;
+    readonly saturate_hsluv: (a: number, b: number) => void;
+    readonly saturate_hsv: (a: number, b: number) => void;
+    readonly saturate_lch: (a: number, b: number) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_exn_store: (a: number) => void;

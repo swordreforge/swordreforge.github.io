@@ -449,8 +449,17 @@
                     <h3>降噪</h3>
                     <div class="slider-container">
                         <label>降噪强度 (0 ~ 10)</label>
-                        <input type="range" id="noiseReductionSlider" min="0" max="100" value="0" oninput="applyAdjustments()" disabled>
+                        <input type="range" id="noiseReductionSlider" min="0" max="10" value="0" step="0.1" oninput="applyAdjustments()" disabled>
                         <div class="slider-value"><span id="noiseReductionValue">0.0</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>噪点</h3>
+                    <div class="slider-container">
+                        <label>噪点强度 (0 ~ 10)</label>
+                        <input type="range" id="noiseSlider" min="0" max="10" value="0" step="0.1" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="noiseValue">0.0</span></div>
                     </div>
                 </div>
 
@@ -922,6 +931,7 @@
             const gammaBlue = parseFloat(document.getElementById('gammaBlueSlider').value) / 10;
             const sharpenStrength = parseFloat(document.getElementById('sharpenSlider').value) / 10;
             const noiseReductionStrength = parseFloat(document.getElementById('noiseReductionSlider').value) / 10;
+            const noiseStrength = parseFloat(document.getElementById('noiseSlider').value) / 10;
 
             // 更新显示值
             document.getElementById('brightnessValue').textContent = brightness;
@@ -934,6 +944,7 @@
             document.getElementById('gammaBlueValue').textContent = gammaBlue.toFixed(1);
             document.getElementById('sharpenValue').textContent = sharpenStrength.toFixed(1);
             document.getElementById('noiseReductionValue').textContent = noiseReductionStrength.toFixed(1);
+            document.getElementById('noiseValue').textContent = noiseStrength.toFixed(1);
 
             // 应用调整
             try {
@@ -997,6 +1008,11 @@
                     // 应用降噪 (0.0 到 10.0)
                     if (noiseReductionStrength !== 0.0) {
                         processor.apply_noise_reduction(noiseReductionStrength);
+                    }
+
+                    // 应用噪点 (0.0 到 10.0)
+                    if (noiseStrength !== 0.0) {
+                        processor.apply_noise(noiseStrength);
                     }
                 }
                 
@@ -1392,6 +1408,7 @@
             document.getElementById('gammaBlueSlider').value = 10;
             document.getElementById('sharpenSlider').value = 0;
             document.getElementById('noiseReductionSlider').value = 0;
+            document.getElementById('noiseSlider').value = 0;
 
             // 重置显示值
             document.getElementById('brightnessValue').textContent = '0';
@@ -1404,6 +1421,7 @@
             document.getElementById('gammaBlueValue').textContent = '1.0';
             document.getElementById('sharpenValue').textContent = '0.0';
             document.getElementById('noiseReductionValue').textContent = '0.0';
+            document.getElementById('noiseValue').textContent = '0.0';
 
             // 更新画布
             updateCanvas();

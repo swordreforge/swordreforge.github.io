@@ -30,11 +30,12 @@ export class ImageProcessor {
      * @param {number} gamma_blue
      * @param {number} sharpen_strength
      * @param {number} noise_reduction_strength
+     * @param {number} noise_strength
      */
-    apply_all_adjustments(brightness, contrast, saturation, hue, lightness, lightness_color_space, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength) {
+    apply_all_adjustments(brightness, contrast, saturation, hue, lightness, lightness_color_space, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength, noise_strength) {
         const ptr0 = passStringToWasm0(lightness_color_space, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.imageprocessor_apply_all_adjustments(this.__wbg_ptr, brightness, contrast, saturation, hue, lightness, ptr0, len0, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength);
+        wasm.imageprocessor_apply_all_adjustments(this.__wbg_ptr, brightness, contrast, saturation, hue, lightness, ptr0, len0, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength, noise_strength);
     }
     /**
      * @param {number} level
@@ -96,6 +97,12 @@ export class ImageProcessor {
         const ptr0 = passStringToWasm0(color_space, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
         wasm.imageprocessor_apply_lightness(this.__wbg_ptr, level, ptr0, len0);
+    }
+    /**
+     * @param {number} strength
+     */
+    apply_noise(strength) {
+        wasm.imageprocessor_apply_noise(this.__wbg_ptr, strength);
     }
     /**
      * @param {number} strength
@@ -668,6 +675,37 @@ export const SamplingFilter = Object.freeze({
 export function add_noise_rand(photon_image) {
     _assertClass(photon_image, PhotonImage);
     wasm.add_noise_rand(photon_image.__wbg_ptr);
+}
+
+/**
+ * Add randomized noise to an image with adjustable strength.
+ * This function adds Gaussian noise to each pixel by incrementing each channel by a randomized offset.
+ * The maximum offset is controlled by the strength parameter.
+ * **[WASM SUPPORT IS AVAILABLE]**
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `strength` - Noise strength. Range: 0.0 to 10.0.
+ *   - 0.0: No noise
+ *   - 1.0: Subtle noise (max offset 0-15)
+ *   - 5.0: Moderate noise (max offset 0-75)
+ *   - 10.0: Strong noise (max offset 0-150, equivalent to add_noise_rand)
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to add noise with strength 2.0:
+ * use photon_rs::native::open_image;
+ * use photon_rs::noise::add_noise_rand_with_strength;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * add_noise_rand_with_strength(&mut img, 2.0);
+ * ```
+ * @param {PhotonImage} photon_image
+ * @param {number} strength
+ */
+export function add_noise_rand_with_strength(photon_image, strength) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.add_noise_rand_with_strength(photon_image.__wbg_ptr, strength);
 }
 
 /**
