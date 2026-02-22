@@ -40,6 +40,9 @@ export class ImageProcessor {
         const len0 = WASM_VECTOR_LEN;
         wasm.imageprocessor_apply_all_adjustments(this.__wbg_ptr, brightness, contrast, saturation, hue, lightness, ptr0, len0, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength, noise_strength, r_offset, g_offset, b_offset);
     }
+    apply_b_grayscale() {
+        wasm.imageprocessor_apply_b_grayscale(this.__wbg_ptr);
+    }
     apply_box_blur() {
         wasm.imageprocessor_apply_box_blur(this.__wbg_ptr);
     }
@@ -75,6 +78,15 @@ export class ImageProcessor {
      */
     apply_contrast(level) {
         wasm.imageprocessor_apply_contrast(this.__wbg_ptr, level);
+    }
+    apply_decompose_max() {
+        wasm.imageprocessor_apply_decompose_max(this.__wbg_ptr);
+    }
+    apply_decompose_min() {
+        wasm.imageprocessor_apply_decompose_min(this.__wbg_ptr);
+    }
+    apply_desaturate() {
+        wasm.imageprocessor_apply_desaturate(this.__wbg_ptr);
     }
     apply_detect_135_deg_lines() {
         wasm.imageprocessor_apply_detect_135_deg_lines(this.__wbg_ptr);
@@ -133,6 +145,15 @@ export class ImageProcessor {
     }
     apply_grayscale() {
         wasm.imageprocessor_apply_grayscale(this.__wbg_ptr);
+    }
+    apply_grayscale_human_corrected() {
+        wasm.imageprocessor_apply_grayscale_human_corrected(this.__wbg_ptr);
+    }
+    /**
+     * @param {number} num_shades
+     */
+    apply_grayscale_shades(num_shades) {
+        wasm.imageprocessor_apply_grayscale_shades(this.__wbg_ptr, num_shades);
     }
     apply_halftone() {
         wasm.imageprocessor_apply_halftone(this.__wbg_ptr);

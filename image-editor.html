@@ -353,6 +353,18 @@
                 </div>
 
                 <div class="section">
+                    <h3>单色效果</h3>
+                    <div class="btn-group" style="grid-template-columns: repeat(2, 1fr);">
+                        <button class="btn" onclick="applyGrayscaleShades()" disabled>灰度着色</button>
+                        <button class="btn" onclick="applyGrayscaleHumanCorrected()" disabled>人类感知</button>
+                        <button class="btn" onclick="applyBGrayscale()" disabled>蓝色灰度</button>
+                        <button class="btn" onclick="applyDesaturate()" disabled>去饱和</button>
+                        <button class="btn" onclick="applyDecomposeMax()" disabled>最大分解</button>
+                        <button class="btn" onclick="applyDecomposeMin()" disabled>最小分解</button>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>色调滤镜</h3>
                     <div class="btn-group">
                         <button class="btn" onclick="applyPresetFilter('oceanic')" disabled>海洋</button>
@@ -916,6 +928,93 @@
                 updateCanvas();
             } catch (error) {
                 console.error('Threshold error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 灰度着色
+        window.applyGrayscaleShades = function() {
+            if (!processor) return;
+            const numShades = prompt('请输入灰度级别数 (建议 2-16):', '4');
+            if (numShades && !isNaN(numShades)) {
+                showLoading(true);
+                saveToHistory();
+                try {
+                    processor.apply_grayscale_shades(parseInt(numShades));
+                    updateCanvas();
+                } catch (error) {
+                    console.error('Grayscale shades error:', error);
+                }
+                showLoading(false);
+            }
+        };
+
+        // 人类感知灰度
+        window.applyGrayscaleHumanCorrected = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_grayscale_human_corrected();
+                updateCanvas();
+            } catch (error) {
+                console.error('Grayscale human corrected error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 蓝色灰度
+        window.applyBGrayscale = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_b_grayscale();
+                updateCanvas();
+            } catch (error) {
+                console.error('B grayscale error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 去饱和
+        window.applyDesaturate = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_desaturate();
+                updateCanvas();
+            } catch (error) {
+                console.error('Desaturate error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 最大分解
+        window.applyDecomposeMax = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_decompose_max();
+                updateCanvas();
+            } catch (error) {
+                console.error('Decompose max error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 最小分解
+        window.applyDecomposeMin = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_decompose_min();
+                updateCanvas();
+            } catch (error) {
+                console.error('Decompose min error:', error);
             }
             showLoading(false);
         };
