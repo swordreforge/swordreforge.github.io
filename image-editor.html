@@ -437,6 +437,15 @@
                 </div>
 
                 <div class="section">
+                    <h3>锐化</h3>
+                    <div class="slider-container">
+                        <label>锐度 (0 ~ 10)</label>
+                        <input type="range" id="sharpenSlider" min="0" max="100" value="0" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="sharpenValue">0.0</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>变换操作</h3>
                     <div class="btn-group">
                         <button class="btn" onclick="rotateImage()" disabled>旋转 90°</button>
@@ -902,6 +911,7 @@
             const gammaRed = parseFloat(document.getElementById('gammaRedSlider').value) / 10;
             const gammaGreen = parseFloat(document.getElementById('gammaGreenSlider').value) / 10;
             const gammaBlue = parseFloat(document.getElementById('gammaBlueSlider').value) / 10;
+            const sharpenStrength = parseFloat(document.getElementById('sharpenSlider').value) / 10;
 
             // 更新显示值
             document.getElementById('brightnessValue').textContent = brightness;
@@ -912,6 +922,7 @@
             document.getElementById('gammaRedValue').textContent = gammaRed.toFixed(1);
             document.getElementById('gammaGreenValue').textContent = gammaGreen.toFixed(1);
             document.getElementById('gammaBlueValue').textContent = gammaBlue.toFixed(1);
+            document.getElementById('sharpenValue').textContent = sharpenStrength.toFixed(1);
 
             // 应用调整
             try {
@@ -965,6 +976,11 @@
                     // 应用伽马校正 (0.1 到 10)
                     if (gammaRed !== 1.0 || gammaGreen !== 1.0 || gammaBlue !== 1.0) {
                         processor.apply_gamma(gammaRed, gammaGreen, gammaBlue);
+                    }
+
+                    // 应用锐化 (0.0 到 10.0)
+                    if (sharpenStrength !== 0.0) {
+                        processor.apply_sharpen(sharpenStrength);
                     }
                 }
                 
@@ -1358,6 +1374,7 @@
             document.getElementById('gammaRedSlider').value = 10;
             document.getElementById('gammaGreenSlider').value = 10;
             document.getElementById('gammaBlueSlider').value = 10;
+            document.getElementById('sharpenSlider').value = 0;
 
             // 重置显示值
             document.getElementById('brightnessValue').textContent = '0';
@@ -1368,6 +1385,7 @@
             document.getElementById('gammaRedValue').textContent = '1.0';
             document.getElementById('gammaGreenValue').textContent = '1.0';
             document.getElementById('gammaBlueValue').textContent = '1.0';
+            document.getElementById('sharpenValue').textContent = '0.0';
 
             // 更新画布
             updateCanvas();
@@ -1406,6 +1424,7 @@
             document.getElementById('gammaRedSlider').value = 10;
             document.getElementById('gammaGreenSlider').value = 10;
             document.getElementById('gammaBlueSlider').value = 10;
+            document.getElementById('sharpenSlider').value = 0;
 
             // 重置显示值
             document.getElementById('brightnessValue').textContent = '0';
@@ -1416,6 +1435,7 @@
             document.getElementById('gammaRedValue').textContent = '1.0';
             document.getElementById('gammaGreenValue').textContent = '1.0';
             document.getElementById('gammaBlueValue').textContent = '1.0';
+            document.getElementById('sharpenValue').textContent = '0.0';
 
             // 禁用所有按钮
             enableButtons();
