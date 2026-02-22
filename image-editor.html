@@ -331,6 +331,28 @@
         .crop-controls .btn {
             min-width: 80px;
         }
+
+        /* 文本框样式 */
+        .text-box {
+            position: absolute;
+            border: 2px dashed #fff;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            pointer-events: auto;
+        }
+
+        .text-box.dragging {
+            border-style: solid;
+            background: rgba(255, 255, 255, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -594,6 +616,35 @@
                 </div>
 
                 <div class="section">
+                    <h3>文本绘制</h3>
+                    <div style="margin-bottom: 10px;">
+                        <input type="text" id="textInput" placeholder="输入文本..." style="width: 100%; padding: 8px; background: #444; color: #e0e0e0; border: 1px solid #555; border-radius: 6px;" disabled>
+                    </div>
+                    <div class="slider-container">
+                        <label>字体大小 (10 ~ 200)</label>
+                        <input type="range" id="fontSizeSlider" min="10" max="200" value="60" disabled>
+                        <div class="slider-value"><span id="fontSizeValue">60</span></div>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: #e0e0e0; font-size: 0.9em;">
+                            <span>文本颜色</span>
+                            <input type="color" id="textColorPicker" value="#ffffff" style="width: 50px; height: 30px; cursor: pointer;" disabled>
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: flex; align-items: center; cursor: pointer; color: #e0e0e0; font-size: 0.9em;">
+                            <input type="checkbox" id="shadowCheckbox" style="margin-right: 8px;" disabled>
+                            带阴影效果
+                        </label>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn" onclick="addTextMode()" id="addTextBtn" disabled>添加文本</button>
+                        <button class="btn btn-success" onclick="applyText()" id="applyTextBtn" style="display: none;">确认</button>
+                        <button class="btn btn-danger" onclick="cancelTextMode()" id="cancelTextBtn" style="display: none;">取消</button>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>变换操作</h3>
                     <div class="btn-group">
                         <button class="btn" onclick="rotateImage()" disabled>旋转 90°</button>
@@ -649,6 +700,7 @@
                         <button class="btn btn-success" onclick="applyCrop()">✓ 确认裁剪</button>
                         <button class="btn btn-danger" onclick="cancelCrop()">✕ 取消</button>
                     </div>
+                    <div id="textBox" class="text-box" style="display: none;"></div>
                 </div>
             </div>
     </div>
@@ -665,6 +717,13 @@
         let historyStack = [];
         let redoStack = [];
         const MAX_HISTORY = 30;
+
+        // 文本绘制相关变量
+        let isTextMode = false;
+        let isTextDragging = false;
+        let textBox = { x: 0, y: 0, text: '', fontSize: 60, color: '#ffffff', withShadow: false };
+        let textDragStart = { x: 0, y: 0 };
+        let initialTextBox = { x: 0, y: 0 };
 
         // 保存当前状态到历史记录
         function saveToHistory() {
@@ -738,6 +797,22 @@
             document.getElementById('redoBtn').disabled = redoStack.length === 0;
         }
 
+        // 更新字体大小显示和文本框预览
+        document.getElementById('fontSizeSlider').addEventListener('input', function() {
+            document.getElementById('fontSizeValue').textContent = this.value;
+            updateTextBoxPreview();
+        });
+
+        // 文本输入框实时更新预览
+        document.getElementById('textInput').addEventListener('input', function() {
+            updateTextBoxPreview();
+        });
+
+        // 颜色选择器实时更新预览
+        document.getElementById('textColorPicker').addEventListener('input', function() {
+            updateTextBoxPreview();
+        });
+
         // 初始化 WASM 模块
         async function initWasm() {
             showLoading(true);
@@ -783,6 +858,12 @@
             selects.forEach(select => {
                 select.disabled = !currentImage;
             });
+
+            // 启用文本绘制控件
+            document.getElementById('textInput').disabled = !currentImage;
+            document.getElementById('fontSizeSlider').disabled = !currentImage;
+            document.getElementById('textColorPicker').disabled = !currentImage;
+            document.getElementById('shadowCheckbox').disabled = !currentImage;
         }
 
         // 切换侧边栏
@@ -2134,6 +2215,183 @@
             link.click();
         };
 
+        // 进入文本添加模式
+        window.addTextMode = function() {
+            if (!processor) return;
+
+            const text = document.getElementById('textInput').value.trim();
+            if (!text) {
+                alert('请输入文本');
+                return;
+            }
+
+            isTextMode = true;
+            textBox.text = text;
+            textBox.fontSize = parseInt(document.getElementById('fontSizeSlider').value);
+            textBox.color = document.getElementById('textColorPicker').value;
+            textBox.withShadow = document.getElementById('shadowCheckbox').checked;
+
+            // 计算初始位置（居中）
+            const canvas = document.getElementById('imageCanvas');
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            const textWidth = text.length * textBox.fontSize * 0.6;
+            const textHeight = textBox.fontSize;
+
+            textBox.x = (canvasWidth - textWidth) / 2;
+            textBox.y = (canvasHeight - textHeight) / 2;
+
+            // 显示文本框
+            const textBoxEl = document.getElementById('textBox');
+            textBoxEl.style.display = 'flex';
+            textBoxEl.style.left = textBox.x + 'px';
+            textBoxEl.style.top = textBox.y + 'px';
+            textBoxEl.style.fontSize = textBox.fontSize + 'px';
+            textBoxEl.style.color = textBox.color;
+            textBoxEl.textContent = text;
+
+            // 更新按钮显示
+            document.getElementById('addTextBtn').style.display = 'none';
+            document.getElementById('applyTextBtn').style.display = 'inline-block';
+            document.getElementById('cancelTextBtn').style.display = 'inline-block';
+
+            // 设置文本框事件
+            setupTextBoxEvents();
+        };
+
+        // 设置文本框事件
+        function setupTextBoxEvents() {
+            const textBoxEl = document.getElementById('textBox');
+            const canvas = document.getElementById('imageCanvas');
+            const canvasContainer = document.getElementById('canvasContainer');
+
+            // 鼠标按下
+            textBoxEl.addEventListener('mousedown', (e) => {
+                if (!isTextMode) return;
+
+                isTextDragging = true;
+                textBoxEl.classList.add('dragging');
+
+                const rect = canvasContainer.getBoundingClientRect();
+                textDragStart = {
+                    x: e.clientX - rect.left - textBox.x,
+                    y: e.clientY - rect.top - textBox.y
+                };
+
+                initialTextBox = { x: textBox.x, y: textBox.y };
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            // 鼠标移动（在 canvas-container 上）
+            canvasContainer.addEventListener('mousemove', (e) => {
+                if (!isTextMode || !isTextDragging) return;
+
+                const rect = canvasContainer.getBoundingClientRect();
+                const canvas = document.getElementById('imageCanvas');
+
+                // 计算新的文本框位置
+                let newX = e.clientX - rect.left - textDragStart.x;
+                let newY = e.clientY - rect.top - textDragStart.y;
+
+                // 限制在画布范围内
+                const textBoxEl = document.getElementById('textBox');
+                const textWidth = textBoxEl.offsetWidth;
+                const textHeight = textBoxEl.offsetHeight;
+
+                newX = Math.max(0, Math.min(canvas.width - textWidth, newX));
+                newY = Math.max(0, Math.min(canvas.height - textHeight, newY));
+
+                textBox.x = newX;
+                textBox.y = newY;
+
+                textBoxEl.style.left = newX + 'px';
+                textBoxEl.style.top = newY + 'px';
+            });
+
+            // 鼠标释放
+            canvasContainer.addEventListener('mouseup', () => {
+                isTextDragging = false;
+                const textBoxEl = document.getElementById('textBox');
+                if (textBoxEl) textBoxEl.classList.remove('dragging');
+            });
+
+            // 鼠标离开
+            canvasContainer.addEventListener('mouseleave', () => {
+                isTextDragging = false;
+                const textBoxEl = document.getElementById('textBox');
+                if (textBoxEl) textBoxEl.classList.remove('dragging');
+            });
+        }
+
+        // 更新文本框预览
+        function updateTextBoxPreview() {
+            if (!isTextMode) return;
+
+            const textBoxEl = document.getElementById('textBox');
+            textBoxEl.textContent = document.getElementById('textInput').value;
+            textBoxEl.style.fontSize = document.getElementById('fontSizeSlider').value + 'px';
+            textBoxEl.style.color = document.getElementById('textColorPicker').value;
+        }
+
+        // 应用文本绘制
+        window.applyText = function() {
+            if (!processor || !isTextMode) return;
+
+            const text = document.getElementById('textInput').value.trim();
+            if (!text) {
+                alert('请输入文本');
+                return;
+            }
+
+            showLoading(true);
+            try {
+                saveToHistory();
+
+                const fontSize = parseInt(document.getElementById('fontSizeSlider').value);
+                const colorHex = document.getElementById('textColorPicker').value;
+                const withShadow = document.getElementById('shadowCheckbox').checked;
+
+                // 转换颜色
+                const r = parseInt(colorHex.slice(1, 3), 16);
+                const g = parseInt(colorHex.slice(3, 5), 16);
+                const b = parseInt(colorHex.slice(5, 7), 16);
+
+                // 计算绘制位置（考虑字体基线）
+                const drawX = Math.floor(textBox.x + 10);
+                const drawY = Math.floor(textBox.y + fontSize * 0.75);
+
+                if (withShadow) {
+                    processor.draw_text_with_shadow_and_color(text, drawX, drawY, fontSize, r, g, b);
+                } else {
+                    processor.draw_text_with_color(text, drawX, drawY, fontSize, r, g, b);
+                }
+
+                updateCanvas();
+                cancelTextMode();
+            } catch (error) {
+                console.error('Text draw error:', error);
+                alert(`文本绘制失败: ${error.message}`);
+            }
+            showLoading(false);
+        };
+
+        // 取消文本模式
+        window.cancelTextMode = function() {
+            isTextMode = false;
+            isTextDragging = false;
+
+            // 隐藏文本框
+            const textBoxEl = document.getElementById('textBox');
+            textBoxEl.style.display = 'none';
+            textBoxEl.classList.remove('dragging');
+
+            // 恢复按钮显示
+            document.getElementById('addTextBtn').style.display = 'inline-block';
+            document.getElementById('applyTextBtn').style.display = 'none';
+            document.getElementById('cancelTextBtn').style.display = 'none';
+        };
+
         // 更新画布
         function updateCanvas() {
             if (!processor) return;
@@ -2158,11 +2416,11 @@
             img.src = base64;
 
             // 更新文件大小显示
-            const fileSize = processor.get_file_size();
+            const fileSize = Number(processor.get_estimated_filesize());
             const fileSizeKB = (fileSize / 1024).toFixed(2);
             const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
-            const fileSizeStr = fileSize > 1024 * 1024 
-                ? `${fileSizeMB} MB` 
+            const fileSizeStr = fileSize > 1024 * 1024
+                ? `${fileSizeMB} MB`
                 : `${fileSizeKB} KB`;
             document.getElementById('fileSize').textContent = fileSizeStr;
         }

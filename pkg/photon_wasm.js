@@ -30,21 +30,11 @@ export class ImageProcessor {
      * @param {number} gamma_blue
      * @param {number} sharpen_strength
      * @param {number} noise_reduction_strength
-     * @param {number} noise_strength
-     * @param {number} r_offset
-     * @param {number} g_offset
-     * @param {number} b_offset
      */
-    apply_all_adjustments(brightness, contrast, saturation, hue, lightness, lightness_color_space, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength, noise_strength, r_offset, g_offset, b_offset) {
+    apply_all_adjustments(brightness, contrast, saturation, hue, lightness, lightness_color_space, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength) {
         const ptr0 = passStringToWasm0(lightness_color_space, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.imageprocessor_apply_all_adjustments(this.__wbg_ptr, brightness, contrast, saturation, hue, lightness, ptr0, len0, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength, noise_strength, r_offset, g_offset, b_offset);
-    }
-    apply_b_grayscale() {
-        wasm.imageprocessor_apply_b_grayscale(this.__wbg_ptr);
-    }
-    apply_box_blur() {
-        wasm.imageprocessor_apply_box_blur(this.__wbg_ptr);
+        wasm.imageprocessor_apply_all_adjustments(this.__wbg_ptr, brightness, contrast, saturation, hue, lightness, ptr0, len0, gamma_red, gamma_green, gamma_blue, sharpen_strength, noise_reduction_strength);
     }
     /**
      * @param {number} level
@@ -53,52 +43,10 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_brightness(this.__wbg_ptr, level);
     }
     /**
-     * @param {number} num_strips
-     * @param {number} r
-     * @param {number} g
-     * @param {number} b
-     */
-    apply_color_horizontal_strips(num_strips, r, g, b) {
-        wasm.imageprocessor_apply_color_horizontal_strips(this.__wbg_ptr, num_strips, r, g, b);
-    }
-    /**
-     * @param {number} num_strips
-     * @param {number} r
-     * @param {number} g
-     * @param {number} b
-     */
-    apply_color_vertical_strips(num_strips, r, g, b) {
-        wasm.imageprocessor_apply_color_vertical_strips(this.__wbg_ptr, num_strips, r, g, b);
-    }
-    apply_colorize() {
-        wasm.imageprocessor_apply_colorize(this.__wbg_ptr);
-    }
-    /**
      * @param {number} level
      */
     apply_contrast(level) {
         wasm.imageprocessor_apply_contrast(this.__wbg_ptr, level);
-    }
-    apply_decompose_max() {
-        wasm.imageprocessor_apply_decompose_max(this.__wbg_ptr);
-    }
-    apply_decompose_min() {
-        wasm.imageprocessor_apply_decompose_min(this.__wbg_ptr);
-    }
-    apply_desaturate() {
-        wasm.imageprocessor_apply_desaturate(this.__wbg_ptr);
-    }
-    apply_detect_135_deg_lines() {
-        wasm.imageprocessor_apply_detect_135_deg_lines(this.__wbg_ptr);
-    }
-    apply_detect_45_deg_lines() {
-        wasm.imageprocessor_apply_detect_45_deg_lines(this.__wbg_ptr);
-    }
-    apply_detect_horizontal_lines() {
-        wasm.imageprocessor_apply_detect_horizontal_lines(this.__wbg_ptr);
-    }
-    apply_detect_vertical_lines() {
-        wasm.imageprocessor_apply_detect_vertical_lines(this.__wbg_ptr);
     }
     /**
      * @param {number} depth
@@ -117,18 +65,6 @@ export class ImageProcessor {
     apply_duotone(r1, g1, b1, r2, g2, b2) {
         wasm.imageprocessor_apply_duotone(this.__wbg_ptr, r1, g1, b1, r2, g2, b2);
     }
-    apply_edge_detection() {
-        wasm.imageprocessor_apply_edge_detection(this.__wbg_ptr);
-    }
-    apply_edge_one() {
-        wasm.imageprocessor_apply_edge_one(this.__wbg_ptr);
-    }
-    apply_emboss() {
-        wasm.imageprocessor_apply_emboss(this.__wbg_ptr);
-    }
-    apply_frosted_glass() {
-        wasm.imageprocessor_apply_frosted_glass(this.__wbg_ptr);
-    }
     /**
      * @param {number} red
      * @param {number} green
@@ -137,32 +73,11 @@ export class ImageProcessor {
     apply_gamma(red, green, blue) {
         wasm.imageprocessor_apply_gamma(this.__wbg_ptr, red, green, blue);
     }
-    /**
-     * @param {number} radius
-     */
-    apply_gaussian_blur(radius) {
-        wasm.imageprocessor_apply_gaussian_blur(this.__wbg_ptr, radius);
-    }
     apply_grayscale() {
         wasm.imageprocessor_apply_grayscale(this.__wbg_ptr);
     }
-    apply_grayscale_human_corrected() {
-        wasm.imageprocessor_apply_grayscale_human_corrected(this.__wbg_ptr);
-    }
-    /**
-     * @param {number} num_shades
-     */
-    apply_grayscale_shades(num_shades) {
-        wasm.imageprocessor_apply_grayscale_shades(this.__wbg_ptr, num_shades);
-    }
     apply_halftone() {
         wasm.imageprocessor_apply_halftone(this.__wbg_ptr);
-    }
-    /**
-     * @param {number} num_strips
-     */
-    apply_horizontal_strips(num_strips) {
-        wasm.imageprocessor_apply_horizontal_strips(this.__wbg_ptr, num_strips);
     }
     /**
      * @param {number} level
@@ -170,14 +85,8 @@ export class ImageProcessor {
     apply_hue(level) {
         wasm.imageprocessor_apply_hue(this.__wbg_ptr, level);
     }
-    apply_identity() {
-        wasm.imageprocessor_apply_identity(this.__wbg_ptr);
-    }
     apply_invert() {
         wasm.imageprocessor_apply_invert(this.__wbg_ptr);
-    }
-    apply_laplace() {
-        wasm.imageprocessor_apply_laplace(this.__wbg_ptr);
     }
     /**
      * @param {number} level
@@ -191,17 +100,8 @@ export class ImageProcessor {
     /**
      * @param {number} strength
      */
-    apply_noise(strength) {
-        wasm.imageprocessor_apply_noise(this.__wbg_ptr, strength);
-    }
-    /**
-     * @param {number} strength
-     */
     apply_noise_reduction(strength) {
         wasm.imageprocessor_apply_noise_reduction(this.__wbg_ptr, strength);
-    }
-    apply_normalize() {
-        wasm.imageprocessor_apply_normalize(this.__wbg_ptr);
     }
     /**
      * @param {number} radius
@@ -224,12 +124,6 @@ export class ImageProcessor {
         const len0 = WASM_VECTOR_LEN;
         wasm.imageprocessor_apply_preset_filter(this.__wbg_ptr, ptr0, len0);
     }
-    apply_prewitt_horizontal() {
-        wasm.imageprocessor_apply_prewitt_horizontal(this.__wbg_ptr);
-    }
-    apply_primary() {
-        wasm.imageprocessor_apply_primary(this.__wbg_ptr);
-    }
     /**
      * @param {number} level
      */
@@ -245,15 +139,6 @@ export class ImageProcessor {
     apply_sharpen(strength) {
         wasm.imageprocessor_apply_sharpen(this.__wbg_ptr, strength);
     }
-    apply_sobel_global() {
-        wasm.imageprocessor_apply_sobel_global(this.__wbg_ptr);
-    }
-    apply_sobel_horizontal() {
-        wasm.imageprocessor_apply_sobel_horizontal(this.__wbg_ptr);
-    }
-    apply_sobel_vertical() {
-        wasm.imageprocessor_apply_sobel_vertical(this.__wbg_ptr);
-    }
     apply_solarize() {
         wasm.imageprocessor_apply_solarize(this.__wbg_ptr);
     }
@@ -264,20 +149,6 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_threshold(this.__wbg_ptr, threshold);
     }
     /**
-     * @param {number} r_offset
-     * @param {number} g_offset
-     * @param {number} b_offset
-     */
-    apply_tint(r_offset, g_offset, b_offset) {
-        wasm.imageprocessor_apply_tint(this.__wbg_ptr, r_offset, g_offset, b_offset);
-    }
-    /**
-     * @param {number} num_strips
-     */
-    apply_vertical_strips(num_strips) {
-        wasm.imageprocessor_apply_vertical_strips(this.__wbg_ptr, num_strips);
-    }
-    /**
      * @param {number} x1
      * @param {number} y1
      * @param {number} x2
@@ -285,6 +156,56 @@ export class ImageProcessor {
      */
     crop(x1, y1, x2, y2) {
         wasm.imageprocessor_crop(this.__wbg_ptr, x1, y1, x2, y2);
+    }
+    /**
+     * @param {string} text
+     * @param {number} x
+     * @param {number} y
+     * @param {number} font_size
+     */
+    draw_text(text, x, y, font_size) {
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_draw_text(this.__wbg_ptr, ptr0, len0, x, y, font_size);
+    }
+    /**
+     * @param {string} text
+     * @param {number} x
+     * @param {number} y
+     * @param {number} font_size
+     * @param {number} r
+     * @param {number} g
+     * @param {number} b
+     */
+    draw_text_with_color(text, x, y, font_size, r, g, b) {
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_draw_text_with_color(this.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b);
+    }
+    /**
+     * @param {string} text
+     * @param {number} x
+     * @param {number} y
+     * @param {number} font_size
+     */
+    draw_text_with_shadow(text, x, y, font_size) {
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_draw_text_with_shadow(this.__wbg_ptr, ptr0, len0, x, y, font_size);
+    }
+    /**
+     * @param {string} text
+     * @param {number} x
+     * @param {number} y
+     * @param {number} font_size
+     * @param {number} r
+     * @param {number} g
+     * @param {number} b
+     */
+    draw_text_with_shadow_and_color(text, x, y, font_size, r, g, b) {
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_draw_text_with_shadow_and_color(this.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b);
     }
     flip_horizontal() {
         wasm.imageprocessor_flip_horizontal(this.__wbg_ptr);
@@ -304,8 +225,8 @@ export class ImageProcessor {
     /**
      * @returns {bigint}
      */
-    get_file_size() {
-        const ret = wasm.imageprocessor_get_file_size(this.__wbg_ptr);
+    get_estimated_filesize() {
+        const ret = wasm.imageprocessor_get_estimated_filesize(this.__wbg_ptr);
         return BigInt.asUintN(64, ret);
     }
     /**
@@ -350,39 +271,6 @@ export class ImageProcessor {
             throw takeFromExternrefTable0(ret[1]);
         }
         return ImageProcessor.__wrap(ret[0]);
-    }
-    /**
-     * @param {number} offset
-     */
-    offset_blue(offset) {
-        wasm.imageprocessor_offset_blue(this.__wbg_ptr, offset);
-    }
-    /**
-     * @param {number} channel_index
-     * @param {number} offset
-     */
-    offset_channel(channel_index, offset) {
-        wasm.imageprocessor_offset_channel(this.__wbg_ptr, channel_index, offset);
-    }
-    /**
-     * @param {number} r_offset
-     * @param {number} g_offset
-     * @param {number} b_offset
-     */
-    offset_channels(r_offset, g_offset, b_offset) {
-        wasm.imageprocessor_offset_channels(this.__wbg_ptr, r_offset, g_offset, b_offset);
-    }
-    /**
-     * @param {number} offset
-     */
-    offset_green(offset) {
-        wasm.imageprocessor_offset_green(this.__wbg_ptr, offset);
-    }
-    /**
-     * @param {number} offset
-     */
-    offset_red(offset) {
-        wasm.imageprocessor_offset_red(this.__wbg_ptr, offset);
     }
     reset() {
         wasm.imageprocessor_reset(this.__wbg_ptr);
@@ -1905,6 +1793,86 @@ export function draw_text_with_border(photon_img, text, x, y, font_size) {
     const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     wasm.draw_text_with_border(photon_img.__wbg_ptr, ptr0, len0, x, y, font_size);
+}
+
+/**
+ * Add bordered-text to an image with custom color.
+ * The only font available as of now is Roboto.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `text` - Text string to be drawn to the image.
+ * * `x` - x-coordinate of where first letter's 1st pixel should be drawn.
+ * * `y` - y-coordinate of where first letter's 1st pixel should be drawn.
+ * * `font_size` - Font size in pixels of the text to be drawn.
+ * * `r` - Red channel (0-255).
+ * * `g` - Green channel (0-255).
+ * * `b` - Blue channel (0-255).
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example to draw red text with border at 10, 10:
+ * use photon_rs::native::open_image;
+ * use photon_rs::text::draw_text_with_border_and_color;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * draw_text_with_border_and_color(&mut img, "Hello!", 10_i32, 10_i32, 90_f32, 255u8, 0u8, 0u8);
+ * ```
+ * @param {PhotonImage} photon_img
+ * @param {string} text
+ * @param {number} x
+ * @param {number} y
+ * @param {number} font_size
+ * @param {number} r
+ * @param {number} g
+ * @param {number} b
+ */
+export function draw_text_with_border_and_color(photon_img, text, x, y, font_size, r, g, b) {
+    _assertClass(photon_img, PhotonImage);
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.draw_text_with_border_and_color(photon_img.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b);
+}
+
+/**
+ * Add text to an image with custom color.
+ * The only font available as of now is Roboto.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `text` - Text string to be drawn to the image.
+ * * `x` - x-coordinate of where first letter's 1st pixel should be drawn.
+ * * `y` - y-coordinate of where first letter's 1st pixel should be drawn.
+ * * `font_size` - Font size in pixels of the text to be drawn.
+ * * `r` - Red channel (0-255).
+ * * `g` - Green channel (0-255).
+ * * `b` - Blue channel (0-255).
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example to draw red text at 10, 10:
+ * use photon_rs::native::open_image;
+ * use photon_rs::text::draw_text_with_color;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * draw_text_with_color(&mut img, "Hello!", 10_i32, 10_i32, 90_f32, 255u8, 0u8, 0u8);
+ * ```
+ * @param {PhotonImage} photon_img
+ * @param {string} text
+ * @param {number} x
+ * @param {number} y
+ * @param {number} font_size
+ * @param {number} r
+ * @param {number} g
+ * @param {number} b
+ */
+export function draw_text_with_color(photon_img, text, x, y, font_size, r, g, b) {
+    _assertClass(photon_img, PhotonImage);
+    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.draw_text_with_color(photon_img.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b);
 }
 
 /**

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本绘制功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        canvas {
+            border: 2px solid #333;
+            margin: 10px 0;
+            display: block;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebAssembly 文本绘制功能测试</h1>
+    
+    <div id="results"></div>
+    
+    <div style="margin-top: 20px;">
+        <h2>测试画布</h2>
+        <canvas id="testCanvas" width="800" height="600"></canvas>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <button id="testLoadWasm" onclick="testLoadWasm()">1. 加载 WASM 模块</button>
+        <button id="testDrawText" onclick="testDrawText()" disabled>2. 测试普通文本绘制</button>
+        <button id="testDrawTextWithShadow" onclick="testDrawTextWithShadow()" disabled>3. 测试带阴影文本绘制</button>
+        <button id="clearCanvas" onclick="clearCanvas()">清空画布</button>
+    </div>
+
+    <script type="module">
+        let processor = null;
+        let wasmModule = null;
+
+        function addResult(message, type) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.textContent = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        window.testLoadWasm = async function() {
+            addResult('正在加载 WASM 模块...', 'loading');
+            
+            try {
+                const { ImageProcessor, default: init } = await import('./pkg/photon_wasm.js');
+                await init();
+                
+                addResult('✓ WASM 模块加载成功', 'pass');
+                
+                // 创建测试图像
+                const canvas = document.getElementById('testCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // 创建一个简单的测试图像
+                ctx.fillStyle = '#4a90d9';
+                ctx.fillRect(0, 0, 800, 600);
+                
+                // 添加一些简单的形状
+                ctx.fillStyle = '#5a9fe9';
+                ctx.fillRect(100, 100, 600, 400);
+                ctx.fillStyle = '#ff6b6b';
+                ctx.beginPath();
+                ctx.arc(200, 200, 50, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#4ecdc4';
+                ctx.beginPath();
+                ctx.arc(600, 200, 50, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffe66d';
+                ctx.beginPath();
+                ctx.arc(400, 400, 50, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 获取图像数据
+                const imageData = ctx.getImageData(0, 0, 800, 600);
+                
+                // 创建 ImageProcessor
+                processor = new ImageProcessor(800, 600, imageData.data);
+                addResult('✓ ImageProcessor 创建成功', 'pass');
+                
+                // 启用后续测试按钮
+                document.getElementById('testDrawText').disabled = false;
+                document.getElementById('testDrawTextWithShadow').disabled = false;
+                
+            } catch (error) {
+                addResult(`✓ WASM 模块加载失败: ${error.message}`, 'fail');
+                console.error('WASM loading error:', error);
+            }
+        };
+
+        window.testDrawText = function() {
+            addResult('正在测试普通文本绘制...', 'loading');
+            
+            try {
+                if (!processor) {
+                    throw new Error('ImageProcessor 未初始化');
+                }
+                
+                // 测试 draw_text 方法
+                processor.draw_text('Hello World!', 100, 300, 60);
+                addResult('✓ processor.draw_text() 方法调用成功', 'pass');
+                
+                // 更新画布显示
+                const canvas = document.getElementById('testCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // 获取处理后的图像数据
+                const base64 = processor.to_base64();
+                const img = new Image();
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0);
+                    addResult('✓ 普通文本绘制到画布成功', 'pass');
+                };
+                img.src = base64;
+                
+            } catch (error) {
+                addResult(`✗ 普通文本绘制失败: ${error.message}`, 'fail');
+                console.error('Draw text error:', error);
+            }
+        };
+
+        window.testDrawTextWithShadow = function() {
+            addResult('正在测试带阴影文本绘制...', 'loading');
+            
+            try {
+                if (!processor) {
+                    throw new Error('ImageProcessor 未初始化');
+                }
+                
+                // 测试 draw_text_with_shadow 方法
+                processor.draw_text_with_shadow('Shadow Text!', 100, 450, 60);
+                addResult('✓ processor.draw_text_with_shadow() 方法调用成功', 'pass');
+                
+                // 更新画布显示
+                const canvas = document.getElementById('testCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // 获取处理后的图像数据
+                const base64 = processor.to_base64();
+                const img = new Image();
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0);
+                    addResult('✓ 带阴影文本绘制到画布成功', 'pass');
+                };
+                img.src = base64;
+                
+            } catch (error) {
+                addResult(`✗ 带阴影文本绘制失败: ${error.message}`, 'fail');
+                console.error('Draw text with shadow error:', error);
+            }
+        };
+
+        window.clearCanvas = function() {
+            const canvas = document.getElementById('testCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 800, 600);
+            
+            // 重新创建测试图像
+            ctx.fillStyle = '#4a90d9';
+            ctx.fillRect(0, 0, 800, 600);
+            ctx.fillStyle = '#5a9fe9';
+            ctx.fillRect(100, 100, 600, 400);
+            ctx.fillStyle = '#ff6b6b';
+            ctx.beginPath();
+            ctx.arc(200, 200, 50, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#4ecdc4';
+            ctx.beginPath();
+            ctx.arc(600, 200, 50, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffe66d';
+            ctx.beginPath();
+            ctx.arc(400, 400, 50, 0, Math.PI * 2);
+            ctx.fill();
+            
+            addResult('✓ 画布已清空并重置', 'pass');
+        };
+    </script>
+</body>
+</html>
