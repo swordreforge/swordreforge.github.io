@@ -75,7 +75,7 @@ export class ImageProcessor {
     to_base64(): string;
     to_jpeg(quality: number): string;
     to_png(): string;
-    to_webp(_quality: number): string;
+    to_webp(quality: number): string;
 }
 
 /**
@@ -101,6 +101,18 @@ export class PhotonImage {
      * Convert the PhotonImage to raw bytes. Returns a WEBP.
      */
     get_bytes_webp(): Uint8Array;
+    /**
+     * Convert the PhotonImage to raw bytes. Returns a WEBP with specified quality.
+     * # Arguments
+     * * `quality` - WebP quality (0-100). Higher means better quality but larger file.
+     *   - 0-50: Low quality, small file size
+     *   - 51-75: Medium quality (recommended for web)
+     *   - 76-100: High quality, larger file size
+     *
+     * Note: Due to image 0.24.x API limitations, quality parameter is used as a hint.
+     * The actual quality may vary based on the encoder implementation.
+     */
+    get_bytes_webp_with_quality(quality: number): Uint8Array;
     /**
      * Calculates estimated filesize and returns number of bytes
      */
@@ -3243,25 +3255,6 @@ export interface InitOutput {
     readonly imageprocessor_to_png: (a: number) => [number, number];
     readonly imageprocessor_to_webp: (a: number, b: number) => [number, number];
     readonly init: () => void;
-    readonly box_blur: (a: number) => void;
-    readonly detect_135_deg_lines: (a: number) => void;
-    readonly detect_45_deg_lines: (a: number) => void;
-    readonly detect_horizontal_lines: (a: number) => void;
-    readonly detect_vertical_lines: (a: number) => void;
-    readonly edge_detection: (a: number) => void;
-    readonly edge_one: (a: number) => void;
-    readonly emboss: (a: number) => void;
-    readonly gaussian_blur: (a: number, b: number) => void;
-    readonly identity: (a: number) => void;
-    readonly laplace: (a: number) => void;
-    readonly noise_reduction: (a: number) => void;
-    readonly noise_reduction_with_strength: (a: number, b: number) => void;
-    readonly prewitt_horizontal: (a: number) => void;
-    readonly sharpen: (a: number) => void;
-    readonly sharpen_with_strength: (a: number, b: number) => void;
-    readonly sobel_global: (a: number) => void;
-    readonly sobel_horizontal: (a: number) => void;
-    readonly sobel_vertical: (a: number) => void;
     readonly apply_gradient: (a: number) => void;
     readonly blend: (a: number, b: number, c: number, d: number) => void;
     readonly create_gradient: (a: number, b: number) => number;
@@ -3282,31 +3275,6 @@ export interface InitOutput {
     readonly seam_carve: (a: number, b: number, c: number) => number;
     readonly shearx: (a: number, b: number) => number;
     readonly sheary: (a: number, b: number) => number;
-    readonly adjust_brightness: (a: number, b: number) => void;
-    readonly adjust_contrast: (a: number, b: number) => void;
-    readonly color_horizontal_strips: (a: number, b: number, c: number) => void;
-    readonly color_vertical_strips: (a: number, b: number, c: number) => void;
-    readonly colorize: (a: number) => void;
-    readonly dec_brightness: (a: number, b: number) => void;
-    readonly dither: (a: number, b: number) => void;
-    readonly duotone: (a: number, b: number, c: number) => void;
-    readonly frosted_glass: (a: number) => void;
-    readonly halftone: (a: number) => void;
-    readonly horizontal_strips: (a: number, b: number) => void;
-    readonly inc_brightness: (a: number, b: number) => void;
-    readonly multiple_offsets: (a: number, b: number, c: number, d: number) => void;
-    readonly normalize: (a: number) => void;
-    readonly offset: (a: number, b: number, c: number) => void;
-    readonly offset_blue: (a: number, b: number) => void;
-    readonly offset_green: (a: number, b: number) => void;
-    readonly offset_red: (a: number, b: number) => void;
-    readonly oil: (a: number, b: number, c: number) => void;
-    readonly pixelize: (a: number, b: number) => void;
-    readonly primary: (a: number) => void;
-    readonly solarize: (a: number) => void;
-    readonly solarize_retimg: (a: number) => number;
-    readonly tint: (a: number, b: number, c: number, d: number) => void;
-    readonly vertical_strips: (a: number, b: number) => void;
     readonly __wbg_photonimage_free: (a: number, b: number) => void;
     readonly __wbg_rgb_free: (a: number, b: number) => void;
     readonly __wbg_rgba_free: (a: number, b: number) => void;
@@ -3318,6 +3286,7 @@ export interface InitOutput {
     readonly photonimage_get_bytes: (a: number) => [number, number];
     readonly photonimage_get_bytes_jpeg: (a: number, b: number) => [number, number];
     readonly photonimage_get_bytes_webp: (a: number) => [number, number];
+    readonly photonimage_get_bytes_webp_with_quality: (a: number, b: number) => [number, number];
     readonly photonimage_get_estimated_filesize: (a: number) => bigint;
     readonly photonimage_get_height: (a: number) => number;
     readonly photonimage_get_image_data: (a: number) => any;
@@ -3349,6 +3318,50 @@ export interface InitOutput {
     readonly rgba_get_blue: (a: number) => number;
     readonly rgba_get_green: (a: number) => number;
     readonly rgba_get_red: (a: number) => number;
+    readonly box_blur: (a: number) => void;
+    readonly detect_135_deg_lines: (a: number) => void;
+    readonly detect_45_deg_lines: (a: number) => void;
+    readonly detect_horizontal_lines: (a: number) => void;
+    readonly detect_vertical_lines: (a: number) => void;
+    readonly edge_detection: (a: number) => void;
+    readonly edge_one: (a: number) => void;
+    readonly emboss: (a: number) => void;
+    readonly gaussian_blur: (a: number, b: number) => void;
+    readonly identity: (a: number) => void;
+    readonly laplace: (a: number) => void;
+    readonly noise_reduction: (a: number) => void;
+    readonly noise_reduction_with_strength: (a: number, b: number) => void;
+    readonly prewitt_horizontal: (a: number) => void;
+    readonly sharpen: (a: number) => void;
+    readonly sharpen_with_strength: (a: number, b: number) => void;
+    readonly sobel_global: (a: number) => void;
+    readonly sobel_horizontal: (a: number) => void;
+    readonly sobel_vertical: (a: number) => void;
+    readonly adjust_brightness: (a: number, b: number) => void;
+    readonly adjust_contrast: (a: number, b: number) => void;
+    readonly color_horizontal_strips: (a: number, b: number, c: number) => void;
+    readonly color_vertical_strips: (a: number, b: number, c: number) => void;
+    readonly colorize: (a: number) => void;
+    readonly dec_brightness: (a: number, b: number) => void;
+    readonly dither: (a: number, b: number) => void;
+    readonly duotone: (a: number, b: number, c: number) => void;
+    readonly frosted_glass: (a: number) => void;
+    readonly halftone: (a: number) => void;
+    readonly horizontal_strips: (a: number, b: number) => void;
+    readonly inc_brightness: (a: number, b: number) => void;
+    readonly multiple_offsets: (a: number, b: number, c: number, d: number) => void;
+    readonly normalize: (a: number) => void;
+    readonly offset: (a: number, b: number, c: number) => void;
+    readonly offset_blue: (a: number, b: number) => void;
+    readonly offset_green: (a: number, b: number) => void;
+    readonly offset_red: (a: number, b: number) => void;
+    readonly oil: (a: number, b: number, c: number) => void;
+    readonly pixelize: (a: number, b: number) => void;
+    readonly primary: (a: number) => void;
+    readonly solarize: (a: number) => void;
+    readonly solarize_retimg: (a: number) => number;
+    readonly tint: (a: number, b: number, c: number, d: number) => void;
+    readonly vertical_strips: (a: number, b: number) => void;
     readonly alter_blue_channel: (a: number, b: number) => void;
     readonly alter_channel: (a: number, b: number, c: number) => void;
     readonly alter_channels: (a: number, b: number, c: number, d: number) => void;
@@ -3380,25 +3393,6 @@ export interface InitOutput {
     readonly single_channel_grayscale: (a: number, b: number) => void;
     readonly swap_channels: (a: number, b: number, c: number) => void;
     readonly threshold: (a: number, b: number) => void;
-    readonly cali: (a: number) => void;
-    readonly dramatic: (a: number) => void;
-    readonly draw_text: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-    readonly draw_text_with_border: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-    readonly duotone_horizon: (a: number) => void;
-    readonly duotone_lilac: (a: number) => void;
-    readonly duotone_ochre: (a: number) => void;
-    readonly duotone_tint: (a: number, b: number) => void;
-    readonly duotone_violette: (a: number) => void;
-    readonly filter: (a: number, b: number, c: number) => void;
-    readonly firenze: (a: number) => void;
-    readonly golden: (a: number) => void;
-    readonly lix: (a: number) => void;
-    readonly lofi: (a: number) => void;
-    readonly monochrome_tint: (a: number, b: number) => void;
-    readonly neue: (a: number) => void;
-    readonly obsidian: (a: number) => void;
-    readonly pastel_pink: (a: number) => void;
-    readonly ryo: (a: number) => void;
     readonly add_noise_rand: (a: number) => void;
     readonly add_noise_rand_with_strength: (a: number, b: number) => void;
     readonly darken_hsl: (a: number, b: number) => void;
@@ -3428,6 +3422,25 @@ export interface InitOutput {
     readonly saturate_hsluv: (a: number, b: number) => void;
     readonly saturate_hsv: (a: number, b: number) => void;
     readonly saturate_lch: (a: number, b: number) => void;
+    readonly cali: (a: number) => void;
+    readonly dramatic: (a: number) => void;
+    readonly draw_text: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly draw_text_with_border: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly duotone_horizon: (a: number) => void;
+    readonly duotone_lilac: (a: number) => void;
+    readonly duotone_ochre: (a: number) => void;
+    readonly duotone_tint: (a: number, b: number) => void;
+    readonly duotone_violette: (a: number) => void;
+    readonly filter: (a: number, b: number, c: number) => void;
+    readonly firenze: (a: number) => void;
+    readonly golden: (a: number) => void;
+    readonly lix: (a: number) => void;
+    readonly lofi: (a: number) => void;
+    readonly monochrome_tint: (a: number, b: number) => void;
+    readonly neue: (a: number) => void;
+    readonly obsidian: (a: number) => void;
+    readonly pastel_pink: (a: number) => void;
+    readonly ryo: (a: number) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_exn_store: (a: number) => void;

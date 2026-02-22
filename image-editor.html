@@ -1975,12 +1975,17 @@
             
             // JPEG 和 WebP 支持质量调整
             if (format === 'jpeg' || format === 'webp') {
+                let qualityHint = '';
+                if (format === 'webp') {
+                    qualityHint = '\n注意：WebP 使用无损编码，质量参数不会显著影响文件大小';
+                }
+                
                 const inputQuality = prompt(
                     `请输入${format === 'jpeg' ? 'JPEG' : 'WebP'}导出质量 (1-100):\n` +
                     `- 质量越高，文件越大，图像越清晰\n` +
                     `- 推荐值: 90 (高质量)\n` +
                     `- 网络传输建议: 70-85\n` +
-                    `- 存档建议: 90-100`,
+                    `- 存档建议: 90-100${qualityHint}`,
                     '90'
                 );
                 

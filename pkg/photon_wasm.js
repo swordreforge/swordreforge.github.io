@@ -444,14 +444,14 @@ export class ImageProcessor {
         }
     }
     /**
-     * @param {number} _quality
+     * @param {number} quality
      * @returns {string}
      */
-    to_webp(_quality) {
+    to_webp(quality) {
         let deferred1_0;
         let deferred1_1;
         try {
-            const ret = wasm.imageprocessor_to_webp(this.__wbg_ptr, _quality);
+            const ret = wasm.imageprocessor_to_webp(this.__wbg_ptr, quality);
             deferred1_0 = ret[0];
             deferred1_1 = ret[1];
             return getStringFromWasm0(ret[0], ret[1]);
@@ -527,6 +527,25 @@ export class PhotonImage {
      */
     get_bytes_webp() {
         const ret = wasm.photonimage_get_bytes_webp(this.__wbg_ptr);
+        var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v1;
+    }
+    /**
+     * Convert the PhotonImage to raw bytes. Returns a WEBP with specified quality.
+     * # Arguments
+     * * `quality` - WebP quality (0-100). Higher means better quality but larger file.
+     *   - 0-50: Low quality, small file size
+     *   - 51-75: Medium quality (recommended for web)
+     *   - 76-100: High quality, larger file size
+     *
+     * Note: Due to image 0.24.x API limitations, quality parameter is used as a hint.
+     * The actual quality may vary based on the encoder implementation.
+     * @param {number} quality
+     * @returns {Uint8Array}
+     */
+    get_bytes_webp_with_quality(quality) {
+        const ret = wasm.photonimage_get_bytes_webp_with_quality(this.__wbg_ptr, quality);
         var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
         wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
         return v1;
