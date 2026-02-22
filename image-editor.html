@@ -429,6 +429,8 @@
                     <div class="btn-group">
                         <button class="btn" onclick="applyLaplace()" disabled>Laplace</button>
                         <button class="btn" onclick="applyEmboss()" disabled>浮雕</button>
+                        <button class="btn" onclick="applyIdentity()" disabled>身份</button>
+                        <button class="btn" onclick="applyEdgeOne()" disabled>边缘1</button>
                     </div>
                 </div>
 
@@ -598,7 +600,7 @@
     </div>
 
     <script type="module">
-        import init, { ImageProcessor } from './photon-wasm/pkg/photon_wasm.js?v=6';
+        import init, { ImageProcessor } from './photon-wasm/pkg/photon_wasm.js?v=7';
 
         let wasmModule = null;
         let processor = null;
@@ -1100,6 +1102,34 @@
                 updateCanvas();
             } catch (error) {
                 console.error('Emboss error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 身份卷积（保持原样，用于测试）
+        window.applyIdentity = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_identity();
+                updateCanvas();
+            } catch (error) {
+                console.error('Identity error:', error);
+            }
+            showLoading(false);
+        };
+
+        // 边缘检测类型 1
+        window.applyEdgeOne = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_edge_one();
+                updateCanvas();
+            } catch (error) {
+                console.error('Edge one error:', error);
             }
             showLoading(false);
         };

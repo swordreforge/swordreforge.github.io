@@ -84,6 +84,9 @@ export class ImageProcessor {
     apply_edge_detection() {
         wasm.imageprocessor_apply_edge_detection(this.__wbg_ptr);
     }
+    apply_edge_one() {
+        wasm.imageprocessor_apply_edge_one(this.__wbg_ptr);
+    }
     apply_emboss() {
         wasm.imageprocessor_apply_emboss(this.__wbg_ptr);
     }
@@ -112,6 +115,9 @@ export class ImageProcessor {
      */
     apply_hue(level) {
         wasm.imageprocessor_apply_hue(this.__wbg_ptr, level);
+    }
+    apply_identity() {
+        wasm.imageprocessor_apply_identity(this.__wbg_ptr);
     }
     apply_invert() {
         wasm.imageprocessor_apply_invert(this.__wbg_ptr);
