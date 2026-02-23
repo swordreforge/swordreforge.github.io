@@ -791,7 +791,12 @@
 
                 <div class="section">
                     <h3>变换操作</h3>
-                    <div class="btn-group">
+                    <div class="slider-container">
+                        <label>旋转角度 (-180° ~ 180°)</label>
+                        <input type="range" id="rotationSlider" min="-180" max="180" value="0" oninput="applyRotation()" disabled>
+                        <div class="slider-value"><span id="rotationValue">0</span>°</div>
+                    </div>
+                    <div class="btn-group" style="margin-top: 10px;">
                         <button class="btn" onclick="rotateImage()" disabled>旋转 90°</button>
                         <button class="btn" onclick="flipHorizontal()" disabled>水平翻转</button>
                         <button class="btn" onclick="flipVertical()" disabled>垂直翻转</button>
@@ -1226,6 +1231,9 @@
             document.getElementById('watermarkYSlider').disabled = !currentImage;
             document.getElementById('addWatermarkBtn').disabled = !currentImage || !watermarkBytes;
             document.getElementById('clearWatermarkBtn').disabled = !currentImage;
+
+            // 启用旋转滑块
+            document.getElementById('rotationSlider').disabled = !currentImage;
         }
 
         // 切换侧边栏
@@ -2440,6 +2448,45 @@
                 console.error('Rotate error:', error);
             }
             showLoading(false);
+        };
+
+        // 任意角度旋转（带防抖和优化）
+        let rotationTimeout = null;
+        let isRotating = false;
+        window.applyRotation = function() {
+            if (!processor || isRotating) return;
+
+            const angle = parseFloat(document.getElementById('rotationSlider').value);
+            document.getElementById('rotationValue').textContent = angle;
+
+            // 防抖：用户停止调节 800ms 后才应用旋转（增加防抖时间以减少卡顿）
+            clearTimeout(rotationTimeout);
+            rotationTimeout = setTimeout(() => {
+                if (angle !== 0 && processor && !isRotating) {
+                    isRotating = true;
+                    showLoading(true);
+                    
+                    // 使用 requestAnimationFrame 让 UI 有机会更新
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            try {
+                                saveToHistory();
+                                processor.rotate_any(angle);
+                                updateCanvas();
+                                // 重置滑块
+                                document.getElementById('rotationSlider').value = 0;
+                                document.getElementById('rotationValue').textContent = '0';
+                            } catch (error) {
+                                console.error('Rotation error:', error);
+                                alert('旋转失败: ' + error.message);
+                            } finally {
+                                isRotating = false;
+                                showLoading(false);
+                            }
+                        }, 50); // 给 UI 50ms 时间显示加载动画
+                    });
+                }
+            }, 800);
         };
 
         // 水平翻转
