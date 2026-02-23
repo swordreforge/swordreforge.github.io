@@ -803,6 +803,9 @@
             updateUndoRedoButtons();
         }
 
+        // 将 saveToHistory 暴露为全局函数
+        window.saveHistory = saveToHistory;
+
         // 撤销
         window.undo = function() {
             if (historyStack.length === 0) return;
@@ -1059,8 +1062,8 @@
             const width = processor.get_width();
             const height = processor.get_height();
 
-            const x = Math.floor(width * watermarkXSlider.value / 100);
-            const y = Math.floor(height * watermarkYSlider.value / 100);
+            const x = BigInt(Math.floor(width * watermarkXSlider.value / 100));
+            const y = BigInt(Math.floor(height * watermarkYSlider.value / 100));
 
             try {
                 processor.apply_watermark(watermarkBytes, x, y);
