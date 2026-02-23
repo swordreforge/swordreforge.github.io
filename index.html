@@ -1466,8 +1466,9 @@
             
             saveHistory();
             
-            const x = BigInt(watermarkPreview.x);
-            const y = BigInt(watermarkPreview.y);
+            // 将坐标四舍五入为整数，避免 BigInt 转换错误
+            const x = BigInt(Math.round(watermarkPreview.x));
+            const y = BigInt(Math.round(watermarkPreview.y));
             
             // 直接使用滑块值作为缩放比例，避免反推误差
             const scale = watermarkScaleSlider.value / 100;
