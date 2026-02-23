@@ -1225,7 +1225,8 @@
         // 设置水印预览框事件
         function setupWatermarkPreviewEvents() {
             const watermarkPreviewEl = document.getElementById('watermarkPreview');
-            if (!watermarkPreviewEl) return;
+            const canvasContainer = document.getElementById('canvasContainer');
+            if (!watermarkPreviewEl || !canvasContainer) return;
             
             // 移除旧的事件监听器（通过克隆节点）
             const newPreviewEl = watermarkPreviewEl.cloneNode(true);
