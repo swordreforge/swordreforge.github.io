@@ -1189,6 +1189,9 @@
 
             isWatermarkMode = true;
             
+            // 设置水印预览框事件（确保事件监听器已绑定）
+            setupWatermarkPreviewEvents();
+            
             // 计算初始水印大小（基于缩放滑块）
             const scale = watermarkScaleSlider.value / 100;
             const width = processor.get_width();
@@ -1217,6 +1220,51 @@
                 document.getElementById('watermarkPreviewImg').src = url;
             };
             tempImg.src = URL.createObjectURL(new Blob([watermarkBytes]));
+        }
+
+        // 设置水印预览框事件
+        function setupWatermarkPreviewEvents() {
+            const watermarkPreviewEl = document.getElementById('watermarkPreview');
+            if (!watermarkPreviewEl) return;
+            
+            // 移除旧的事件监听器（通过克隆节点）
+            const newPreviewEl = watermarkPreviewEl.cloneNode(true);
+            watermarkPreviewEl.parentNode.replaceChild(newPreviewEl, watermarkPreviewEl);
+            
+            // 重新获取元素引用
+            const updatedWatermarkPreviewEl = document.getElementById('watermarkPreview');
+            
+            // 水印预览框鼠标按下（开始拖动）
+            updatedWatermarkPreviewEl.addEventListener('mousedown', (e) => {
+                if (!isWatermarkMode) return;
+                
+                const handle = e.target.classList.contains('watermark-handle') ? e.target : null;
+                
+                if (handle) {
+                    // 开始缩放
+                    isWatermarkResizing = true;
+                    watermarkResizeHandle = handle.className.split(' ')[1]; // nw, ne, sw, se
+                    watermarkDragStart = {
+                        x: e.clientX,
+                        y: e.clientY
+                    };
+                    initialWatermarkPreview = { ...watermarkPreview };
+                } else {
+                    // 开始拖动
+                    isWatermarkDragging = true;
+                    updatedWatermarkPreviewEl.classList.add('dragging');
+                    
+                    const rect = canvasContainer.getBoundingClientRect();
+                    watermarkDragStart = {
+                        x: e.clientX - rect.left - watermarkPreview.x,
+                        y: e.clientY - rect.top - watermarkPreview.y
+                    };
+                    initialWatermarkPreview = { ...watermarkPreview };
+                }
+                
+                e.preventDefault();
+                e.stopPropagation();
+            });
         }
 
         // 确认水印
@@ -2888,42 +2936,6 @@
                     confirmWatermark();
                 }
             });
-            
-            // 设置水印预览框事件
-            const watermarkPreviewEl = document.getElementById('watermarkPreview');
-            if (watermarkPreviewEl) {
-                // 水印预览框鼠标按下（开始拖动）
-                watermarkPreviewEl.addEventListener('mousedown', (e) => {
-                    if (!isWatermarkMode) return;
-                    
-                    const handle = e.target.classList.contains('watermark-handle') ? e.target : null;
-                    
-                    if (handle) {
-                        // 开始缩放
-                        isWatermarkResizing = true;
-                        watermarkResizeHandle = handle.className.split(' ')[1]; // nw, ne, sw, se
-                        watermarkDragStart = {
-                            x: e.clientX,
-                            y: e.clientY
-                        };
-                        initialWatermarkPreview = { ...watermarkPreview };
-                    } else {
-                        // 开始拖动
-                        isWatermarkDragging = true;
-                        watermarkPreviewEl.classList.add('dragging');
-                        
-                        const rect = canvasContainer.getBoundingClientRect();
-                        watermarkDragStart = {
-                            x: e.clientX - rect.left - watermarkPreview.x,
-                            y: e.clientY - rect.top - watermarkPreview.y
-                        };
-                        initialWatermarkPreview = { ...watermarkPreview };
-                    }
-                    
-                    e.preventDefault();
-                    e.stopPropagation();
-                });
-            }
         }
 
         // 更新文本框预览
