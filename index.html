@@ -598,7 +598,15 @@
 
                 <div class="section">
                     <h3>通道调整</h3>
-                    <div class="slider-container">
+                    <div class="btn-group">
+                        <button class="btn" onclick="alterRedChannel(50)" disabled>红+50</button>
+                        <button class="btn" onclick="alterRedChannel(-50)" disabled>红-50</button>
+                        <button class="btn" onclick="alterGreenChannel(50)" disabled>绿+50</button>
+                        <button class="btn" onclick="alterGreenChannel(-50)" disabled>绿-50</button>
+                        <button class="btn" onclick="alterBlueChannel(50)" disabled>蓝+50</button>
+                        <button class="btn" onclick="alterBlueChannel(-50)" disabled>蓝-50</button>
+                    </div>
+                    <div class="slider-container" style="margin-top: 10px;">
                         <label>红色通道 (-255 ~ 255)</label>
                         <input type="range" id="redChannelSlider" min="-255" max="255" value="0" oninput="applyAdjustments()" disabled>
                         <div class="slider-value"><span id="redChannelValue">0</span></div>
@@ -612,6 +620,18 @@
                         <label>蓝色通道 (-255 ~ 255)</label>
                         <input type="range" id="blueChannelSlider" min="-255" max="255" value="0" oninput="applyAdjustments()" disabled>
                         <div class="slider-value"><span id="blueChannelValue">0</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>色彩空间</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="hueRotateHSL(90)" disabled>色相+90°</button>
+                        <button class="btn" onclick="hueRotateHSL(-90)" disabled>色相-90°</button>
+                        <button class="btn" onclick="lightenHSL(0.2)" disabled>变亮20%</button>
+                        <button class="btn" onclick="darkenHSL(0.2)" disabled>变暗20%</button>
+                        <button class="btn" onclick="saturateHSL(0.3)" disabled>饱和+30%</button>
+                        <button class="btn" onclick="desaturateHSL(0.3)" disabled>去饱和30%</button>
                     </div>
                 </div>
 
@@ -2351,7 +2371,114 @@
         }
 
         // 应用文本绘制
-        window.applyText = function() {
+        // 通道调整快捷函数
+window.alterRedChannel = function(amt) {
+    if (!processor) return;
+    showLoading(true);
+    saveToHistory();
+    try {
+        processor.alter_red_channel(amt);
+        updateCanvas();
+    } catch (error) {
+        console.error('Alter red channel error:', error);
+    }
+    showLoading(false);
+};
+
+window.alterGreenChannel = function(amt) {
+    if (!processor) return;
+    showLoading(true);
+    saveToHistory();
+    try {
+        processor.alter_green_channel(amt);
+        updateCanvas();
+    } catch (error) {
+        console.error('Alter green channel error:', error);
+    }
+    showLoading(false);
+};
+
+window.alterBlueChannel = function(amt) {
+    if (!processor) return;
+    showLoading(true);
+    saveToHistory();
+    try {
+        processor.alter_blue_channel(amt);
+        updateCanvas();
+    } catch (error) {
+        console.error('Alter blue channel error:', error);
+    }
+    showLoading(false);
+};
+
+// 色彩空间快捷函数
+window.hueRotateHSL = function(degrees) {
+    if (!processor) return;
+    showLoading(true);
+    saveToHistory();
+    try {
+        processor.hue_rotate_hsl(degrees);
+        updateCanvas();
+    } catch (error) {
+        console.error('Hue rotate error:', error);
+    }
+    showLoading(false);
+};
+
+window.lightenHSL = function(level) {
+    if (!processor) return;
+    showLoading(true);
+    saveToHistory();
+    try {
+        processor.lighten_hsl(level);
+        updateCanvas();
+    } catch (error) {
+        console.error('Lighten error:', error);
+    }
+    showLoading(false);
+};
+
+window.darkenHSL = function(level) {
+    if (!processor) return;
+    showLoading(true);
+    saveToHistory();
+    try {
+        processor.darken_hsl(level);
+        updateCanvas();
+    } catch (error) {
+        console.error('Darken error:', error);
+    }
+    showLoading(false);
+};
+
+window.saturateHSL = function(level) {
+    if (!processor) return;
+    showLoading(true);
+    saveToHistory();
+    try {
+        processor.saturate_hsl(level);
+        updateCanvas();
+    } catch (error) {
+        console.error('Saturate error:', error);
+    }
+    showLoading(false);
+};
+
+window.desaturateHSL = function(level) {
+    if (!processor) return;
+    showLoading(true);
+    saveToHistory();
+    try {
+        processor.desaturate_hsl(level);
+        updateCanvas();
+    } catch (error) {
+        console.error('Desaturate error:', error);
+    }
+    showLoading(false);
+};
+
+// 文本绘制
+window.applyText = function() {
             if (!processor || !isTextMode) return;
 
             const text = document.getElementById('textInput').value.trim();
