@@ -95,50 +95,6 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_color_horizontal_strips(this.__wbg_ptr, num_strips, r, g, b);
     }
     /**
-     * 彩色噪点 - 支持所有颜色的噪点生成
-     *
-     * 通过控制 RGB 三个通道的随机系数，可以生成各种颜色的噪点效果：
-     * - 粉色噪点: (0.6, 0.1, 0.4)
-     * - 蓝色噪点: (0.1, 0.1, 0.6)
-     * - 绿色噪点: (0.1, 0.6, 0.1)
-     * - 红色噪点: (0.6, 0.1, 0.1)
-     * - 黄色噪点: (0.6, 0.6, 0.1)
-     * - 紫色噪点: (0.6, 0.1, 0.6)
-     * - 青色噪点: (0.1, 0.6, 0.6)
-     * - 随机噪点: (0.6, 0.6, 0.6)
-     *
-     * 参数:
-     * - r_factor: 红色通道的随机系数，范围 0.0 到 1.0
-     * - g_factor: 绿色通道的随机系数，范围 0.0 到 1.0
-     * - b_factor: 蓝色通道的随机系数，范围 0.0 到 1.0
-     * @param {number} r_factor
-     * @param {number} g_factor
-     * @param {number} b_factor
-     */
-    apply_color_noise(r_factor, g_factor, b_factor) {
-        wasm.imageprocessor_apply_color_noise(this.__wbg_ptr, r_factor, g_factor, b_factor);
-    }
-    /**
-     * 彩色噪点（带强度）- 支持所有颜色的噪点生成，可调节强度
-     *
-     * 通过控制 RGB 三个通道的随机系数和强度，可以生成各种颜色的噪点效果：
-     * - 粉色噪点: (0.6, 0.1, 0.4)
-     * - 蓝色噪点: (0.1, 0.1, 0.6)
-     * - 绿色噪点: (0.1, 0.6, 0.1)
-     * - 红色噪点: (0.6, 0.1, 0.1)
-     * - 黄色噪点: (0.6, 0.6, 0.1)
-     * - 紫色噪点: (0.6, 0.1, 0.6)
-     * - 青色噪点: (0.1, 0.6, 0.6)
-     * - 随机噪点: (0.6, 0.6, 0.6)
-     *
-     * 参数:
-     * - r_factor: 红色通道的随机系数，范围 0.0 到 1.0
-     * - g_factor: 绿色通道的随机系数，范围 0.0 到 1.0
-     * - b_factor: 蓝色通道的随机系数，范围 0.0 到 1.0
-     * - strength: 噪点强度，范围 0.0 到 10.0
-     *   - 0.0: 无噪点
-     *   - 5.0: 中等强度
-     *   - 10.0: 最大强度
      * @param {number} r_factor
      * @param {number} g_factor
      * @param {number} b_factor
@@ -311,9 +267,6 @@ export class ImageProcessor {
     apply_oil(radius, intensity) {
         wasm.imageprocessor_apply_oil(this.__wbg_ptr, radius, intensity);
     }
-    /**
-     * 粉色噪点
-     */
     apply_pink_noise() {
         wasm.imageprocessor_apply_pink_noise(this.__wbg_ptr);
     }
@@ -730,18 +683,6 @@ export class ImageProcessor {
      */
     rotate_any(angle) {
         wasm.imageprocessor_rotate_any(this.__wbg_ptr, angle);
-    }
-    /**
-     * 优化的任意角度旋转
-     * 使用优化的算法实现：
-     * - 90 度倍数使用快速内存拷贝
-     * - 任意角度使用优化的三次剪切变换
-     * - 分块处理提高缓存效率
-     * angle: 旋转角度（度），支持 -360 到 360
-     * @param {number} angle
-     */
-    rotate_optimized(angle) {
-        wasm.imageprocessor_rotate_optimized(this.__wbg_ptr, angle);
     }
     /**
      * @param {number} level
@@ -4399,25 +4340,6 @@ export function resize_img_browser(photon_img, width, height, sampling_filter) {
 export function rotate(photon_img, angle) {
     _assertClass(photon_img, PhotonImage);
     const ret = wasm.rotate(photon_img.__wbg_ptr, angle);
-    return PhotonImage.__wrap(ret);
-}
-
-/**
- * 优化的旋转函数
- *
- * # 参数
- * - `img`: 输入图像
- * - `angle`: 旋转角度（度）
- *
- * # 返回
- * 旋转后的图像
- * @param {PhotonImage} img
- * @param {number} angle
- * @returns {PhotonImage}
- */
-export function rotate_optimized(img, angle) {
-    _assertClass(img, PhotonImage);
-    const ret = wasm.rotate_optimized(img.__wbg_ptr, angle);
     return PhotonImage.__wrap(ret);
 }
 
