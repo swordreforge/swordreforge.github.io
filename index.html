@@ -433,9 +433,11 @@
                 <div class="section">
                     <h3>特效滤镜</h3>
                     <div class="btn-group">
-                        <button class="btn" onclick="applyPresetFilter('neue')" disabled>霓虹蓝</button>
-                        <button class="btn" onclick="applyPresetFilter('lix')" disabled>霓虹黄</button>
-                        <button class="btn" onclick="applyPresetFilter('ryo')" disabled>霓虹洋红</button>
+                        <button class="btn" onclick="applyLix()" disabled>霓虹黄</button>
+                        <button class="btn" onclick="applyNeue()" disabled>霓虹蓝</button>
+                        <button class="btn" onclick="applyRyo()" disabled>霓虹洋红</button>
+                        <button class="btn" onclick="applyIncBrightness()" disabled>增加亮度</button>
+                        <button class="btn" onclick="applyGradient()" disabled>渐变叠加</button>
                     </div>
                 </div>
 
@@ -1241,6 +1243,75 @@
                     showLoading(false);
                 }
             }
+        };
+
+        // 特效滤镜
+        window.applyLix = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_lix();
+                updateCanvas();
+            } catch (error) {
+                console.error('Lix error:', error);
+            }
+            showLoading(false);
+        };
+
+        window.applyNeue = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_neue();
+                updateCanvas();
+            } catch (error) {
+                console.error('Neue error:', error);
+            }
+            showLoading(false);
+        };
+
+        window.applyRyo = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_ryo();
+                updateCanvas();
+            } catch (error) {
+                console.error('Ryo error:', error);
+            }
+            showLoading(false);
+        };
+
+        window.applyIncBrightness = function() {
+            if (!processor) return;
+            const brightness = parseInt(prompt('请输入亮度增加值 (0-255):', '30'));
+            if (!isNaN(brightness)) {
+                showLoading(true);
+                saveToHistory();
+                try {
+                    processor.apply_inc_brightness(brightness);
+                    updateCanvas();
+                } catch (error) {
+                    console.error('Inc brightness error:', error);
+                }
+                showLoading(false);
+            }
+        };
+
+        window.applyGradient = function() {
+            if (!processor) return;
+            showLoading(true);
+            saveToHistory();
+            try {
+                processor.apply_gradient();
+                updateCanvas();
+            } catch (error) {
+                console.error('Gradient error:', error);
+            }
+            showLoading(false);
         };
 
         // 主色效果
