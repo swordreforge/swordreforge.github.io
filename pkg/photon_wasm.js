@@ -95,6 +95,59 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_color_horizontal_strips(this.__wbg_ptr, num_strips, r, g, b);
     }
     /**
+     * 彩色噪点 - 支持所有颜色的噪点生成
+     *
+     * 通过控制 RGB 三个通道的随机系数，可以生成各种颜色的噪点效果：
+     * - 粉色噪点: (0.6, 0.1, 0.4)
+     * - 蓝色噪点: (0.1, 0.1, 0.6)
+     * - 绿色噪点: (0.1, 0.6, 0.1)
+     * - 红色噪点: (0.6, 0.1, 0.1)
+     * - 黄色噪点: (0.6, 0.6, 0.1)
+     * - 紫色噪点: (0.6, 0.1, 0.6)
+     * - 青色噪点: (0.1, 0.6, 0.6)
+     * - 随机噪点: (0.6, 0.6, 0.6)
+     *
+     * 参数:
+     * - r_factor: 红色通道的随机系数，范围 0.0 到 1.0
+     * - g_factor: 绿色通道的随机系数，范围 0.0 到 1.0
+     * - b_factor: 蓝色通道的随机系数，范围 0.0 到 1.0
+     * @param {number} r_factor
+     * @param {number} g_factor
+     * @param {number} b_factor
+     */
+    apply_color_noise(r_factor, g_factor, b_factor) {
+        wasm.imageprocessor_apply_color_noise(this.__wbg_ptr, r_factor, g_factor, b_factor);
+    }
+    /**
+     * 彩色噪点（带强度）- 支持所有颜色的噪点生成，可调节强度
+     *
+     * 通过控制 RGB 三个通道的随机系数和强度，可以生成各种颜色的噪点效果：
+     * - 粉色噪点: (0.6, 0.1, 0.4)
+     * - 蓝色噪点: (0.1, 0.1, 0.6)
+     * - 绿色噪点: (0.1, 0.6, 0.1)
+     * - 红色噪点: (0.6, 0.1, 0.1)
+     * - 黄色噪点: (0.6, 0.6, 0.1)
+     * - 紫色噪点: (0.6, 0.1, 0.6)
+     * - 青色噪点: (0.1, 0.6, 0.6)
+     * - 随机噪点: (0.6, 0.6, 0.6)
+     *
+     * 参数:
+     * - r_factor: 红色通道的随机系数，范围 0.0 到 1.0
+     * - g_factor: 绿色通道的随机系数，范围 0.0 到 1.0
+     * - b_factor: 蓝色通道的随机系数，范围 0.0 到 1.0
+     * - strength: 噪点强度，范围 0.0 到 10.0
+     *   - 0.0: 无噪点
+     *   - 5.0: 中等强度
+     *   - 10.0: 最大强度
+     * @param {number} r_factor
+     * @param {number} g_factor
+     * @param {number} b_factor
+     * @param {number} strength
+     */
+    apply_color_noise_with_strength(r_factor, g_factor, b_factor, strength) {
+        wasm.imageprocessor_apply_color_noise_with_strength(this.__wbg_ptr, r_factor, g_factor, b_factor, strength);
+    }
+    /**
      * @param {number} num_strips
      * @param {number} r
      * @param {number} g
@@ -239,6 +292,12 @@ export class ImageProcessor {
     /**
      * @param {number} strength
      */
+    apply_noise(strength) {
+        wasm.imageprocessor_apply_noise(this.__wbg_ptr, strength);
+    }
+    /**
+     * @param {number} strength
+     */
     apply_noise_reduction(strength) {
         wasm.imageprocessor_apply_noise_reduction(this.__wbg_ptr, strength);
     }
@@ -251,6 +310,12 @@ export class ImageProcessor {
      */
     apply_oil(radius, intensity) {
         wasm.imageprocessor_apply_oil(this.__wbg_ptr, radius, intensity);
+    }
+    /**
+     * 粉色噪点
+     */
+    apply_pink_noise() {
+        wasm.imageprocessor_apply_pink_noise(this.__wbg_ptr);
     }
     /**
      * @param {number} pixel_size

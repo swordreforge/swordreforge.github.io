@@ -639,6 +639,45 @@
                         <input type="range" id="noiseSlider" min="0" max="100" value="0" oninput="applyAdjustments()" disabled>
                         <div class="slider-value"><span id="noiseValue">0.0</span></div>
                     </div>
+                    <div class="slider-container" style="margin-top: 15px;">
+                        <label style="font-size: 0.95em; font-weight: 600; color: #ccc;">彩色噪点预设</label>
+                        <div class="slider-container" style="margin-top: 8px;">
+                            <label>噪点强度 (0 ~ 10)</label>
+                            <input type="range" id="colorNoiseStrengthSlider" min="0" max="1000" value="0" oninput="updateColorNoisePreview()" disabled>
+                            <div class="slider-value"><span id="colorNoiseStrengthValue">0.0</span></div>
+                        </div>
+                        <div class="btn-group" style="margin-top: 8px;">
+                            <button class="btn" onclick="applyPinkNoise()" disabled>粉色</button>
+                            <button class="btn" onclick="applyColorNoise(0.1, 0.1, 0.6)" disabled>蓝色</button>
+                            <button class="btn" onclick="applyColorNoise(0.1, 0.6, 0.1)" disabled>绿色</button>
+                            <button class="btn" onclick="applyColorNoise(0.6, 0.1, 0.1)" disabled>红色</button>
+                            <button class="btn" onclick="applyColorNoise(0.6, 0.6, 0.1)" disabled>黄色</button>
+                            <button class="btn" onclick="applyColorNoise(0.6, 0.1, 0.6)" disabled>紫色</button>
+                            <button class="btn" onclick="applyColorNoise(0.1, 0.6, 0.6)" disabled>青色</button>
+                            <button class="btn" onclick="applyColorNoise(0.6, 0.6, 0.6)" disabled>随机</button>
+                        </div>
+                    </div>
+                    <div class="slider-container" style="margin-top: 15px;">
+                        <label style="font-size: 0.95em; font-weight: 600; color: #ccc;">自定义彩色噪点</label>
+                        <div class="slider-container">
+                            <label>红色系数 (0.0 ~ 1.0)</label>
+                            <input type="range" id="colorNoiseRSlider" min="0" max="100" value="60" oninput="updateColorNoisePreview()" disabled>
+                            <div class="slider-value"><span id="colorNoiseRValue">0.60</span></div>
+                        </div>
+                        <div class="slider-container">
+                            <label>绿色系数 (0.0 ~ 1.0)</label>
+                            <input type="range" id="colorNoiseGSlider" min="0" max="100" value="10" oninput="updateColorNoisePreview()" disabled>
+                            <div class="slider-value"><span id="colorNoiseGValue">0.10</span></div>
+                        </div>
+                        <div class="slider-container">
+                            <label>蓝色系数 (0.0 ~ 1.0)</label>
+                            <input type="range" id="colorNoiseBSlider" min="0" max="100" value="40" oninput="updateColorNoisePreview()" disabled>
+                            <div class="slider-value"><span id="colorNoiseBValue">0.40</span></div>
+                        </div>
+                        <div class="btn-group" style="margin-top: 10px;">
+                            <button class="btn btn-success" onclick="applyCustomColorNoise()" disabled>应用自定义</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="section">
@@ -863,8 +902,8 @@
     </div>
 
     <script type="module">
-        import init from './pkg/photon_wasm.js?v=11';
-        import { ImageProcessor } from './pkg/photon_wasm.js?v=11';        let wasmModule = null;
+        import init from './pkg/photon_wasm.js?v=13';
+        import { ImageProcessor } from './pkg/photon_wasm.js?v=13';        let wasmModule = null;
         let processor = null;
         let originalImageData = null;
         let currentImage = null;
@@ -2448,6 +2487,54 @@
                 console.error('Rotate error:', error);
             }
             showLoading(false);
+        };
+
+        // 彩色噪点函数
+        window.applyPinkNoise = function() {
+            if (!processor) return;
+            showLoading(true);
+            try {
+                saveToHistory();
+                processor.apply_pink_noise();
+                updateCanvas();
+            } catch (error) {
+                console.error('Pink noise error:', error);
+            }
+            showLoading(false);
+        };
+
+        window.applyColorNoise = function(rFactor, gFactor, bFactor) {
+            if (!processor) return;
+            showLoading(true);
+            try {
+                saveToHistory();
+                // 使用强度滑块的值
+                const strength = parseFloat(document.getElementById('colorNoiseStrengthSlider').value) / 100;
+                processor.apply_color_noise_with_strength(rFactor, gFactor, bFactor, strength);
+                updateCanvas();
+            } catch (error) {
+                console.error('Color noise error:', error);
+            }
+            showLoading(false);
+        };
+
+        window.updateColorNoisePreview = function() {
+            const rVal = parseFloat(document.getElementById('colorNoiseRSlider').value) / 100;
+            const gVal = parseFloat(document.getElementById('colorNoiseGSlider').value) / 100;
+            const bVal = parseFloat(document.getElementById('colorNoiseBSlider').value) / 100;
+            const strength = parseFloat(document.getElementById('colorNoiseStrengthSlider').value) / 100;
+
+            document.getElementById('colorNoiseRValue').textContent = rVal.toFixed(2);
+            document.getElementById('colorNoiseGValue').textContent = gVal.toFixed(2);
+            document.getElementById('colorNoiseBValue').textContent = bVal.toFixed(2);
+            document.getElementById('colorNoiseStrengthValue').textContent = strength.toFixed(1);
+        };
+
+        window.applyCustomColorNoise = function() {
+            const rVal = parseFloat(document.getElementById('colorNoiseRSlider').value) / 100;
+            const gVal = parseFloat(document.getElementById('colorNoiseGSlider').value) / 100;
+            const bVal = parseFloat(document.getElementById('colorNoiseBSlider').value) / 100;
+            applyColorNoise(rVal, gVal, bVal);
         };
 
         // 任意角度旋转（带防抖和优化）
