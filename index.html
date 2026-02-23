@@ -347,6 +347,9 @@
             overflow: hidden;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
             pointer-events: auto;
+            padding: 0;
+            margin: 0;
+            line-height: 1;
         }
 
         .text-box.dragging {
@@ -701,6 +704,11 @@
                                 <option value="2">鸿雷小纸条青春体</option>
                             </select>
                         </label>
+                    </div>
+                    <div class="slider-container">
+                        <label>垂直偏移 (-50 ~ 50)</label>
+                        <input type="range" id="textOffsetSlider" min="-50" max="50" value="0" oninput="updateTextBoxPreview()" disabled>
+                        <div class="slider-value"><span id="textOffsetValue">0</span></div>
                     </div>
                     <div style="margin-bottom: 10px;">
                         <label style="display: flex; align-items: center; cursor: pointer; color: #e0e0e0; font-size: 0.9em;">
@@ -1186,6 +1194,7 @@
             document.getElementById('fontSizeSlider').disabled = !currentImage;
             document.getElementById('textColorPicker').disabled = !currentImage;
             document.getElementById('fontSelect').disabled = !currentImage;
+            document.getElementById('textOffsetSlider').disabled = !currentImage;
             document.getElementById('shadowCheckbox').disabled = !currentImage;
 
             // 启用水印控件
@@ -2913,7 +2922,16 @@
             const canvas = document.getElementById('imageCanvas');
             const canvasWidth = canvas.width;
             const canvasHeight = canvas.height;
-            const textWidth = text.length * textBox.fontSize * 0.6;
+            
+            // 使用 Canvas 测量文本宽度，提高精度
+            const ctx = canvas.getContext('2d');
+            const fontType = parseInt(document.getElementById('fontSelect').value);
+            let fontName = 'Roboto';
+            if (fontType === 1) fontName = 'AlibabaPuHuiTi-3-55-Regular';
+            else if (fontType === 2) fontName = '鸿雷小纸条青春体';
+            
+            ctx.font = `${textBox.fontSize}px '${fontName}'`;
+            const textWidth = ctx.measureText(text).width;
             const textHeight = textBox.fontSize;
 
             textBox.x = (canvasWidth - textWidth) / 2;
@@ -2978,9 +2996,18 @@
             const textBoxEl = document.getElementById('textBox');
             textBoxEl.textContent = document.getElementById('textInput').value;
             const fontSize = parseInt(document.getElementById('fontSizeSlider').value);
+            const offset = parseInt(document.getElementById('textOffsetSlider').value);
+            
             // 字体大小转换为 CSS 像素
             textBoxEl.style.fontSize = (fontSize / scale.scaleY) + 'px';
             textBoxEl.style.color = document.getElementById('textColorPicker').value;
+            
+            // 更新偏移值显示
+            document.getElementById('textOffsetValue').textContent = offset;
+            
+            // 应用垂直偏移预览效果（仅视觉效果，不改变实际坐标）
+            const offsetCss = offset / scale.scaleY;
+            textBoxEl.style.transform = `translateY(${offsetCss}px)`;
         }
 
         // 应用文本绘制
@@ -3133,7 +3160,8 @@ window.applyText = function() {
 
                 // 直接使用预览框左上角坐标，根据字体基线调整 Y 坐标
                 const drawX = Math.floor(textBox.x);
-                const drawY = Math.floor(textBox.y + fontSize * 0.8);
+                const offset = parseInt(document.getElementById('textOffsetSlider').value);
+                const drawY = Math.floor(textBox.y + fontSize * 0.8 + offset);
 
                 if (withShadow) {
                     processor.draw_text_with_shadow_and_color_and_font(text, drawX, drawY, fontSize, r, g, b, fontType);
@@ -3159,6 +3187,11 @@ window.applyText = function() {
             const textBoxEl = document.getElementById('textBox');
             textBoxEl.style.display = 'none';
             textBoxEl.classList.remove('dragging');
+            textBoxEl.style.transform = ''; // 清除偏移预览效果
+
+            // 重置垂直偏移滑块
+            document.getElementById('textOffsetSlider').value = 0;
+            document.getElementById('textOffsetValue').textContent = '0';
 
             // 恢复按钮显示
             document.getElementById('addTextBtn').style.display = 'inline-block';
