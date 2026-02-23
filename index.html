@@ -1211,6 +1211,9 @@
                 document.getElementById('confirmWatermarkBtn').style.display = 'inline-block';
                 document.getElementById('cancelWatermarkBtn').style.display = 'inline-block';
                 
+                // 设置水印预览框事件
+                setupWatermarkEvents();
+                
                 // 创建 base64 图片
                 const blob = new Blob([watermarkBytes], { type: 'image/*' });
                 const url = URL.createObjectURL(blob);
@@ -2725,6 +2728,70 @@
 
             // 鼠标移动（在 canvas-container 上）
             canvasContainer.addEventListener('mousemove', (e) => {
+                // 水印模式：拖动
+                if (isWatermarkMode && isWatermarkDragging) {
+                    const rect = canvasContainer.getBoundingClientRect();
+                    const canvas = document.getElementById('imageCanvas');
+                    
+                    let newX = e.clientX - rect.left - watermarkDragStart.x;
+                    let newY = e.clientY - rect.top - watermarkDragStart.y;
+                    
+                    // 限制在画布范围内
+                    newX = Math.max(0, Math.min(canvas.width - watermarkPreview.width, newX));
+                    newY = Math.max(0, Math.min(canvas.height - watermarkPreview.height, newY));
+                    
+                    watermarkPreview.x = newX;
+                    watermarkPreview.y = newY;
+                    updateWatermarkPreview();
+                    return;
+                }
+                
+                // 水印模式：缩放
+                if (isWatermarkMode && isWatermarkResizing) {
+                    const dx = e.clientX - watermarkDragStart.x;
+                    const dy = e.clientY - watermarkDragStart.y;
+                    
+                    const canvas = document.getElementById('imageCanvas');
+                    const minSize = 20; // 最小尺寸
+                    
+                    switch(watermarkResizeHandle) {
+                        case 'nw':
+                            watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width - dx);
+                            watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height - dy);
+                            watermarkPreview.x = initialWatermarkPreview.x + initialWatermarkPreview.width - watermarkPreview.width;
+                            watermarkPreview.y = initialWatermarkPreview.y + initialWatermarkPreview.height - watermarkPreview.height;
+                            break;
+                        case 'ne':
+                            watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width + dx);
+                            watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height - dy);
+                            watermarkPreview.y = initialWatermarkPreview.y + initialWatermarkPreview.height - watermarkPreview.height;
+                            break;
+                        case 'sw':
+                            watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width - dx);
+                            watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height + dy);
+                            watermarkPreview.x = initialWatermarkPreview.x + initialWatermarkPreview.width - watermarkPreview.width;
+                            break;
+                        case 'se':
+                            watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width + dx);
+                            watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height + dy);
+                            break;
+                    }
+                    
+                    // 限制在画布范围内
+                    if (watermarkPreview.x < 0) watermarkPreview.x = 0;
+                    if (watermarkPreview.y < 0) watermarkPreview.y = 0;
+                    if (watermarkPreview.x + watermarkPreview.width > canvas.width) {
+                        watermarkPreview.width = canvas.width - watermarkPreview.x;
+                    }
+                    if (watermarkPreview.y + watermarkPreview.height > canvas.height) {
+                        watermarkPreview.height = canvas.height - watermarkPreview.y;
+                    }
+                    
+                    updateWatermarkPreview();
+                    return;
+                }
+                
+                // 文本模式
                 if (!isTextMode || !isTextDragging) return;
 
                 const rect = canvasContainer.getBoundingClientRect();
@@ -2781,11 +2848,35 @@
                 watermarkResizeHandle = null;
             });
 
-            // 水印预览框的鼠标事件
+            // 点击非水印区域确认应用
+            canvasContainer.addEventListener('click', (e) => {
+                if (!isWatermarkMode) return;
+                
+                // 检查点击是否在水印预览框内
+                const watermarkPreviewEl = document.getElementById('watermarkPreview');
+                const rect = watermarkPreviewEl.getBoundingClientRect();
+                const isInWatermark = e.clientX >= rect.left && e.clientX <= rect.right &&
+                                   e.clientY >= rect.top && e.clientY <= rect.bottom;
+                
+                if (!isInWatermark && !isWatermarkDragging && !isWatermarkResizing) {
+                    // 点击非水印区域，确认应用
+                    confirmWatermark();
+                }
+            });
+        }
+
+        // 设置水印预览框事件
+        function setupWatermarkEvents() {
             const watermarkPreviewEl = document.getElementById('watermarkPreview');
+            const canvasContainer = document.getElementById('canvasContainer');
+            
+            // 移除旧的事件监听器（如果存在）
+            const newPreviewEl = watermarkPreviewEl.cloneNode(true);
+            watermarkPreviewEl.parentNode.replaceChild(newPreviewEl, watermarkPreviewEl);
+            const updatedWatermarkPreviewEl = document.getElementById('watermarkPreview');
             
             // 水印预览框鼠标按下（开始拖动）
-            watermarkPreviewEl.addEventListener('mousedown', (e) => {
+            updatedWatermarkPreviewEl.addEventListener('mousedown', (e) => {
                 if (!isWatermarkMode) return;
                 
                 const handle = e.target.classList.contains('watermark-handle') ? e.target : null;
@@ -2802,7 +2893,7 @@
                 } else {
                     // 开始拖动
                     isWatermarkDragging = true;
-                    watermarkPreviewEl.classList.add('dragging');
+                    updatedWatermarkPreviewEl.classList.add('dragging');
                     
                     const rect = canvasContainer.getBoundingClientRect();
                     watermarkDragStart = {
@@ -2814,116 +2905,6 @@
                 
                 e.preventDefault();
                 e.stopPropagation();
-            });
-
-            // 修改鼠标移动事件，添加水印模式支持
-            const originalMouseMove = canvasContainer.onmousemove || (() => {});
-            canvasContainer.addEventListener('mousemove', (e) => {
-                // 文本模式
-                if (!isTextMode || !isTextDragging) {
-                    // 水印模式：拖动
-                    if (isWatermarkMode && isWatermarkDragging) {
-                        const rect = canvasContainer.getBoundingClientRect();
-                        const canvas = document.getElementById('imageCanvas');
-                        
-                        let newX = e.clientX - rect.left - watermarkDragStart.x;
-                        let newY = e.clientY - rect.top - watermarkDragStart.y;
-                        
-                        // 限制在画布范围内
-                        newX = Math.max(0, Math.min(canvas.width - watermarkPreview.width, newX));
-                        newY = Math.max(0, Math.min(canvas.height - watermarkPreview.height, newY));
-                        
-                        watermarkPreview.x = newX;
-                        watermarkPreview.y = newY;
-                        updateWatermarkPreview();
-                        return;
-                    }
-                    
-                    // 水印模式：缩放
-                    if (isWatermarkMode && isWatermarkResizing) {
-                        const dx = e.clientX - watermarkDragStart.x;
-                        const dy = e.clientY - watermarkDragStart.y;
-                        
-                        const canvas = document.getElementById('imageCanvas');
-                        const minSize = 20; // 最小尺寸
-                        
-                        switch(watermarkResizeHandle) {
-                            case 'nw':
-                                watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width - dx);
-                                watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height - dy);
-                                watermarkPreview.x = initialWatermarkPreview.x + initialWatermarkPreview.width - watermarkPreview.width;
-                                watermarkPreview.y = initialWatermarkPreview.y + initialWatermarkPreview.height - watermarkPreview.height;
-                                break;
-                            case 'ne':
-                                watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width + dx);
-                                watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height - dy);
-                                watermarkPreview.y = initialWatermarkPreview.y + initialWatermarkPreview.height - watermarkPreview.height;
-                                break;
-                            case 'sw':
-                                watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width - dx);
-                                watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height + dy);
-                                watermarkPreview.x = initialWatermarkPreview.x + initialWatermarkPreview.width - watermarkPreview.width;
-                                break;
-                            case 'se':
-                                watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width + dx);
-                                watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height + dy);
-                                break;
-                        }
-                        
-                        // 限制在画布范围内
-                        if (watermarkPreview.x < 0) watermarkPreview.x = 0;
-                        if (watermarkPreview.y < 0) watermarkPreview.y = 0;
-                        if (watermarkPreview.x + watermarkPreview.width > canvas.width) {
-                            watermarkPreview.width = canvas.width - watermarkPreview.x;
-                        }
-                        if (watermarkPreview.y + watermarkPreview.height > canvas.height) {
-                            watermarkPreview.height = canvas.height - watermarkPreview.y;
-                        }
-                        
-                        updateWatermarkPreview();
-                        return;
-                    }
-                    
-                    // 文本模式原始处理
-                    if (!isTextMode || !isTextDragging) return;
-                }
-
-                const rect = canvasContainer.getBoundingClientRect();
-                const canvas = document.getElementById('imageCanvas');
-
-                // 计算新的文本框位置
-                let newX = e.clientX - rect.left - textDragStart.x;
-                let newY = e.clientY - rect.top - textDragStart.y;
-
-                // 限制在画布范围内
-                const textBoxEl = document.getElementById('textBox');
-                const textWidth = textBoxEl.offsetWidth;
-                const textHeight = textBoxEl.offsetHeight;
-
-                newX = Math.max(0, Math.min(canvas.width - textWidth, newX));
-                newY = Math.max(0, Math.min(canvas.height - textHeight, newY));
-
-                textBox.x = newX;
-                textBox.y = newY;
-
-                textBoxEl.style.left = newX + 'px';
-                textBoxEl.style.top = newY + 'px';
-            });
-
-            // 点击非水印区域确认应用
-            canvasContainer.addEventListener('click', (e) => {
-                if (!isWatermarkMode) return;
-                
-                // 检查点击是否在水印预览框内
-                const watermarkPreviewEl = document.getElementById('watermarkPreview');
-                const rect = watermarkPreviewEl.getBoundingClientRect();
-                const isInWatermark = e.clientX >= rect.left && e.clientX <= rect.right &&
-                                   e.clientY >= rect.top && e.clientY <= rect.bottom;
-                
-                if (!isInWatermark && !isWatermarkDragging && !isWatermarkResizing) {
-                    // 点击非水印区域，确认应用
-                    confirmWatermark();
-                }
             });
         }
 
