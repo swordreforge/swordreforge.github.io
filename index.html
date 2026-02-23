@@ -353,6 +353,44 @@
             border-style: solid;
             background: rgba(255, 255, 255, 0.2);
         }
+
+        /* 水印预览框样式 */
+        .watermark-preview {
+            position: absolute;
+            border: 2px solid #fff;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: move;
+            pointer-events: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .watermark-preview.dragging {
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .watermark-preview img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            pointer-events: none;
+        }
+
+        /* 水印缩放手柄 */
+        .watermark-handle {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border: 2px solid #333;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .watermark-handle.nw { top: -7px; left: -7px; cursor: nwse-resize; }
+        .watermark-handle.ne { top: -7px; right: -7px; cursor: nesw-resize; }
+        .watermark-handle.sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
+        .watermark-handle.se { bottom: -7px; right: -7px; cursor: nwse-resize; }
     </style>
 </head>
 <body>
@@ -714,7 +752,9 @@
                         </div>
                     </div>
                     <div class="btn-group">
-                        <button class="btn" onclick="applyWatermark()" id="applyWatermarkBtn" disabled>应用水印</button>
+                        <button class="btn" onclick="addWatermarkMode()" id="addWatermarkBtn" disabled>添加水印</button>
+                        <button class="btn btn-success" onclick="confirmWatermark()" id="confirmWatermarkBtn" style="display: none;">确认</button>
+                        <button class="btn btn-danger" onclick="cancelWatermark()" id="cancelWatermarkBtn" style="display: none;">取消</button>
                         <button class="btn btn-danger" onclick="clearWatermark()" id="clearWatermarkBtn" disabled>清除水印</button>
                     </div>
                 </div>
@@ -776,6 +816,13 @@
                         <button class="btn btn-danger" onclick="cancelCrop()">✕ 取消</button>
                     </div>
                     <div id="textBox" class="text-box" style="display: none;"></div>
+                    <div id="watermarkPreview" class="watermark-preview" style="display: none;">
+                        <img id="watermarkPreviewImg" src="" alt="水印预览">
+                        <div class="watermark-handle nw"></div>
+                        <div class="watermark-handle ne"></div>
+                        <div class="watermark-handle sw"></div>
+                        <div class="watermark-handle se"></div>
+                    </div>
                 </div>
             </div>
     </div>
@@ -798,6 +845,15 @@
         let textBox = { x: 0, y: 0, text: '', fontSize: 60, color: '#ffffff', withShadow: false };
         let textDragStart = { x: 0, y: 0 };
         let initialTextBox = { x: 0, y: 0 };
+
+        // 水印模式相关变量
+        let isWatermarkMode = false;
+        let isWatermarkDragging = false;
+        let isWatermarkResizing = false;
+        let watermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
+        let watermarkDragStart = { x: 0, y: 0 };
+        let watermarkResizeHandle = null;
+        let initialWatermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
 
         // 保存当前状态到历史记录
         function saveToHistory() {
@@ -948,7 +1004,7 @@
             document.getElementById('watermarkScaleSlider').disabled = !currentImage;
             document.getElementById('watermarkXSlider').disabled = !currentImage;
             document.getElementById('watermarkYSlider').disabled = !currentImage;
-            document.getElementById('applyWatermarkBtn').disabled = !currentImage || !watermarkBytes;
+            document.getElementById('addWatermarkBtn').disabled = !currentImage || !watermarkBytes;
             document.getElementById('clearWatermarkBtn').disabled = !currentImage;
         }
 
@@ -1124,30 +1180,102 @@
             document.getElementById('watermarkYValue').textContent = Math.floor(y);
         }
 
-        // 应用水印
-        window.applyWatermark = function() {
+        // 进入水印模式
+        window.addWatermarkMode = function() {
             if (!processor || !watermarkBytes) {
                 alert('请先加载主图像和水印图片');
                 return;
             }
 
-            saveHistory();
-
+            isWatermarkMode = true;
+            
+            // 计算初始水印大小（基于缩放滑块）
+            const scale = watermarkScaleSlider.value / 100;
             const width = processor.get_width();
             const height = processor.get_height();
+            
+            // 从字节数组加载水印图片获取原始尺寸
+            const tempImg = new Image();
+            tempImg.onload = function() {
+                watermarkPreview.width = Math.floor(tempImg.width * scale);
+                watermarkPreview.height = Math.floor(tempImg.height * scale);
+                watermarkPreview.x = Math.floor((width - watermarkPreview.width) / 2);
+                watermarkPreview.y = Math.floor((height - watermarkPreview.height) / 2);
+                
+                // 更新水印预览框
+                updateWatermarkPreview();
+                
+                // 显示水印预览框和按钮
+                document.getElementById('watermarkPreview').style.display = 'block';
+                document.getElementById('addWatermarkBtn').style.display = 'none';
+                document.getElementById('confirmWatermarkBtn').style.display = 'inline-block';
+                document.getElementById('cancelWatermarkBtn').style.display = 'inline-block';
+                
+                // 创建 base64 图片
+                const blob = new Blob([watermarkBytes], { type: 'image/*' });
+                const url = URL.createObjectURL(blob);
+                document.getElementById('watermarkPreviewImg').src = url;
+            };
+            tempImg.src = URL.createObjectURL(new Blob([watermarkBytes]));
+        }
 
-            const x = BigInt(Math.floor(width * watermarkXSlider.value / 100));
-            const y = BigInt(Math.floor(height * watermarkYSlider.value / 100));
-            const scale = watermarkScaleSlider.value / 100;
+        // 确认水印
+        window.confirmWatermark = function() {
+            if (!processor || !watermarkBytes) return;
+            
+            saveHistory();
+            
+            const x = BigInt(watermarkPreview.x);
+            const y = BigInt(watermarkPreview.y);
+            
+            // 计算实际缩放比例
+            const tempImg = new Image();
+            tempImg.onload = function() {
+                const scaleX = watermarkPreview.width / tempImg.width;
+                const scaleY = watermarkPreview.height / tempImg.height;
+                const scale = (scaleX + scaleY) / 2; // 取平均
+                
+                try {
+                    processor.apply_watermark_with_scale(watermarkBytes, x, y, scale);
+                    updateCanvas();
+                    console.log('水印已应用');
+                    exitWatermarkMode();
+                } catch (error) {
+                    console.error('水印应用失败:', error);
+                    alert('水印应用失败');
+                }
+            };
+            tempImg.src = URL.createObjectURL(new Blob([watermarkBytes]));
+        }
 
-            try {
-                processor.apply_watermark_with_scale(watermarkBytes, x, y, scale);
-                updateCanvas();
-                console.log('水印已应用');
-            } catch (error) {
-                console.error('水印应用失败:', error);
-                alert('水印应用失败');
-            }
+        // 取消水印模式
+        window.cancelWatermark = function() {
+            exitWatermarkMode();
+        }
+
+        // 退出水印模式
+        function exitWatermarkMode() {
+            isWatermarkMode = false;
+            isWatermarkDragging = false;
+            isWatermarkResizing = false;
+            watermarkResizeHandle = null;
+            
+            // 隐藏水印预览框
+            document.getElementById('watermarkPreview').style.display = 'none';
+            
+            // 恢复按钮
+            document.getElementById('addWatermarkBtn').style.display = 'inline-block';
+            document.getElementById('confirmWatermarkBtn').style.display = 'none';
+            document.getElementById('cancelWatermarkBtn').style.display = 'none';
+        }
+
+        // 更新水印预览框位置和大小
+        function updateWatermarkPreview() {
+            const preview = document.getElementById('watermarkPreview');
+            preview.style.left = watermarkPreview.x + 'px';
+            preview.style.top = watermarkPreview.y + 'px';
+            preview.style.width = watermarkPreview.width + 'px';
+            preview.style.height = watermarkPreview.height + 'px';
         }
 
         // 清除水印（重置到上一个状态）
@@ -2626,6 +2754,19 @@
                 isTextDragging = false;
                 const textBoxEl = document.getElementById('textBox');
                 if (textBoxEl) textBoxEl.classList.remove('dragging');
+
+                // 水印模式：释放拖动
+                if (isWatermarkDragging) {
+                    isWatermarkDragging = false;
+                    const previewEl = document.getElementById('watermarkPreview');
+                    if (previewEl) previewEl.classList.remove('dragging');
+                }
+                
+                // 水印模式：释放缩放
+                if (isWatermarkResizing) {
+                    isWatermarkResizing = false;
+                    watermarkResizeHandle = null;
+                }
             });
 
             // 鼠标离开
@@ -2633,6 +2774,156 @@
                 isTextDragging = false;
                 const textBoxEl = document.getElementById('textBox');
                 if (textBoxEl) textBoxEl.classList.remove('dragging');
+
+                // 水印模式
+                isWatermarkDragging = false;
+                isWatermarkResizing = false;
+                watermarkResizeHandle = null;
+            });
+
+            // 水印预览框的鼠标事件
+            const watermarkPreviewEl = document.getElementById('watermarkPreview');
+            
+            // 水印预览框鼠标按下（开始拖动）
+            watermarkPreviewEl.addEventListener('mousedown', (e) => {
+                if (!isWatermarkMode) return;
+                
+                const handle = e.target.classList.contains('watermark-handle') ? e.target : null;
+                
+                if (handle) {
+                    // 开始缩放
+                    isWatermarkResizing = true;
+                    watermarkResizeHandle = handle.className.split(' ')[1]; // nw, ne, sw, se
+                    watermarkDragStart = {
+                        x: e.clientX,
+                        y: e.clientY
+                    };
+                    initialWatermarkPreview = { ...watermarkPreview };
+                } else {
+                    // 开始拖动
+                    isWatermarkDragging = true;
+                    watermarkPreviewEl.classList.add('dragging');
+                    
+                    const rect = canvasContainer.getBoundingClientRect();
+                    watermarkDragStart = {
+                        x: e.clientX - rect.left - watermarkPreview.x,
+                        y: e.clientY - rect.top - watermarkPreview.y
+                    };
+                    initialWatermarkPreview = { ...watermarkPreview };
+                }
+                
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            // 修改鼠标移动事件，添加水印模式支持
+            const originalMouseMove = canvasContainer.onmousemove || (() => {});
+            canvasContainer.addEventListener('mousemove', (e) => {
+                // 文本模式
+                if (!isTextMode || !isTextDragging) {
+                    // 水印模式：拖动
+                    if (isWatermarkMode && isWatermarkDragging) {
+                        const rect = canvasContainer.getBoundingClientRect();
+                        const canvas = document.getElementById('imageCanvas');
+                        
+                        let newX = e.clientX - rect.left - watermarkDragStart.x;
+                        let newY = e.clientY - rect.top - watermarkDragStart.y;
+                        
+                        // 限制在画布范围内
+                        newX = Math.max(0, Math.min(canvas.width - watermarkPreview.width, newX));
+                        newY = Math.max(0, Math.min(canvas.height - watermarkPreview.height, newY));
+                        
+                        watermarkPreview.x = newX;
+                        watermarkPreview.y = newY;
+                        updateWatermarkPreview();
+                        return;
+                    }
+                    
+                    // 水印模式：缩放
+                    if (isWatermarkMode && isWatermarkResizing) {
+                        const dx = e.clientX - watermarkDragStart.x;
+                        const dy = e.clientY - watermarkDragStart.y;
+                        
+                        const canvas = document.getElementById('imageCanvas');
+                        const minSize = 20; // 最小尺寸
+                        
+                        switch(watermarkResizeHandle) {
+                            case 'nw':
+                                watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width - dx);
+                                watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height - dy);
+                                watermarkPreview.x = initialWatermarkPreview.x + initialWatermarkPreview.width - watermarkPreview.width;
+                                watermarkPreview.y = initialWatermarkPreview.y + initialWatermarkPreview.height - watermarkPreview.height;
+                                break;
+                            case 'ne':
+                                watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width + dx);
+                                watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height - dy);
+                                watermarkPreview.y = initialWatermarkPreview.y + initialWatermarkPreview.height - watermarkPreview.height;
+                                break;
+                            case 'sw':
+                                watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width - dx);
+                                watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height + dy);
+                                watermarkPreview.x = initialWatermarkPreview.x + initialWatermarkPreview.width - watermarkPreview.width;
+                                break;
+                            case 'se':
+                                watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width + dx);
+                                watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height + dy);
+                                break;
+                        }
+                        
+                        // 限制在画布范围内
+                        if (watermarkPreview.x < 0) watermarkPreview.x = 0;
+                        if (watermarkPreview.y < 0) watermarkPreview.y = 0;
+                        if (watermarkPreview.x + watermarkPreview.width > canvas.width) {
+                            watermarkPreview.width = canvas.width - watermarkPreview.x;
+                        }
+                        if (watermarkPreview.y + watermarkPreview.height > canvas.height) {
+                            watermarkPreview.height = canvas.height - watermarkPreview.y;
+                        }
+                        
+                        updateWatermarkPreview();
+                        return;
+                    }
+                    
+                    // 文本模式原始处理
+                    if (!isTextMode || !isTextDragging) return;
+                }
+
+                const rect = canvasContainer.getBoundingClientRect();
+                const canvas = document.getElementById('imageCanvas');
+
+                // 计算新的文本框位置
+                let newX = e.clientX - rect.left - textDragStart.x;
+                let newY = e.clientY - rect.top - textDragStart.y;
+
+                // 限制在画布范围内
+                const textBoxEl = document.getElementById('textBox');
+                const textWidth = textBoxEl.offsetWidth;
+                const textHeight = textBoxEl.offsetHeight;
+
+                newX = Math.max(0, Math.min(canvas.width - textWidth, newX));
+                newY = Math.max(0, Math.min(canvas.height - textHeight, newY));
+
+                textBox.x = newX;
+                textBox.y = newY;
+
+                textBoxEl.style.left = newX + 'px';
+                textBoxEl.style.top = newY + 'px';
+            });
+
+            // 点击非水印区域确认应用
+            canvasContainer.addEventListener('click', (e) => {
+                if (!isWatermarkMode) return;
+                
+                // 检查点击是否在水印预览框内
+                const watermarkPreviewEl = document.getElementById('watermarkPreview');
+                const rect = watermarkPreviewEl.getBoundingClientRect();
+                const isInWatermark = e.clientX >= rect.left && e.clientX <= rect.right &&
+                                   e.clientY >= rect.top && e.clientY <= rect.bottom;
+                
+                if (!isInWatermark && !isWatermarkDragging && !isWatermarkResizing) {
+                    // 点击非水印区域，确认应用
+                    confirmWatermark();
+                }
             });
         }
 
