@@ -836,7 +836,6 @@
                         <div class="slider-value"><span id="rotationValue">0</span>°</div>
                     </div>
                     <div class="btn-group" style="margin-top: 10px;">
-                        <button class="btn" onclick="rotateImage()" disabled>旋转 90°</button>
                         <button class="btn" onclick="flipHorizontal()" disabled>水平翻转</button>
                         <button class="btn" onclick="flipVertical()" disabled>垂直翻转</button>
                         <button class="btn" onclick="resizeImage()" disabled>缩放</button>
@@ -844,6 +843,43 @@
                     </div>
                 </div>
 
+                <div class="section">
+
+                    <h3>多图混合</h3>
+                    <label class="upload-area" id="blendUpload" style="padding: 15px; display: block; cursor: pointer;">
+                        <span id="blendFileName" style="color: #888;">点击上传混合图片</span>
+                        <input type="file" id="blendInput" accept="image/*" style="display: none;" disabled>
+                    </label>
+                    <div class="slider-container" style="margin-top: 10px;">
+                        <label>混合模式</label>
+                        <select id="blendMode" style="width: 100%; padding: 8px; background: #444; color: #e0e0e0; border: 1px solid #555; border-radius: 6px;" disabled>
+                            <option value="overlay">叠加</option>
+                            <option value="over">覆盖</option>
+                            <option value="atop">顶部</option>
+                            <option value="xor">异或</option>
+                            <option value="plus">加法</option>
+                            <option value="multiply">正片叠底</option>
+                            <option value="burn">线性加深</option>
+                            <option value="difference">差值</option>
+                            <option value="soft_light">柔光</option>
+                            <option value="screen">滤色</option>
+                            <option value="hard_light">强光</option>
+                            <option value="dodge">颜色减淡</option>
+                            <option value="exclusion">排除</option>
+                            <option value="lighten">变亮</option>
+                            <option value="darken">变暗</option>
+                        </select>
+                    </div>
+                    <div class="slider-container">
+                        <label>缩放比例 (10% ~ 200%)</label>
+                        <input type="range" id="blendScaleSlider" min="10" max="200" value="100" disabled>
+                        <div class="slider-value"><span id="blendScaleValue">100</span>%</div>
+                    </div>
+                    <div class="btn-group" style="margin-top: 10px;">
+                        <button class="btn btn-success" onclick="applyBlend()" id="applyBlendBtn" disabled>应用混合</button>
+                        <button class="btn btn-danger" onclick="clearBlend()" id="clearBlendBtn" disabled>清除混合图</button>
+                    </div>
+                </div>
                 <div class="section">
                     <h3>格式转换</h3>
                     <div class="btn-group">
@@ -924,6 +960,9 @@
         let isWatermarkMode = false;
         let isWatermarkDragging = false;
         let isWatermarkResizing = false;
+
+        // 多图混合相关变量
+        let blendBytes = null;
         let watermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
         let watermarkDragStart = { x: 0, y: 0 };
         let watermarkResizeHandle = null;
@@ -1272,6 +1311,13 @@
             document.getElementById('clearWatermarkBtn').disabled = !currentImage;
 
             // 启用旋转滑块
+
+            // 启用多图混合控件
+            document.getElementById('blendInput').disabled = !currentImage;
+            document.getElementById('blendMode').disabled = !currentImage;
+            document.getElementById('blendScaleSlider').disabled = !currentImage;
+            document.getElementById('applyBlendBtn').disabled = !currentImage || !blendBytes;
+            document.getElementById('clearBlendBtn').disabled = !currentImage;
             document.getElementById('rotationSlider').disabled = !currentImage;
         }
 
@@ -1603,6 +1649,81 @@
             if (historyStack.length > 0) {
                 undo();
             }
+
+        // ==================== 多图混合功能 ====================
+
+
+        // 初始化混合图像上传
+        const blendUpload = document.getElementById('blendUpload');
+        const blendInput = document.getElementById('blendInput');
+        const blendFileName = document.getElementById('blendFileName');
+        const blendScaleSlider = document.getElementById('blendScaleSlider');
+
+        blendUpload.addEventListener('click', (e) => {
+            if (currentImage) {
+                e.stopPropagation();
+                blendInput.click();
+            }
+        });
+
+        blendInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                loadBlendImage(file);
+            }
+        });
+
+        // 混合缩放滑块
+        blendScaleSlider.addEventListener('input', function() {
+            document.getElementById('blendScaleValue').textContent = this.value;
+        });
+
+        // 加载混合图像
+        async function loadBlendImage(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                blendBytes = new Uint8Array(arrayBuffer);
+
+                blendFileName.textContent = file.name;
+                blendFileName.style.color = '#4aaa6b';
+
+                document.getElementById('applyBlendBtn').disabled = false;
+            } catch (error) {
+                console.error('加载混合图像失败:', error);
+                alert('加载混合图像失败');
+            }
+        }
+
+        // 应用混合
+        window.applyBlend = function() {
+            if (!processor || !blendBytes) {
+                alert('请先上传主图像和混合图像');
+                return;
+            }
+
+            showLoading(true);
+            try {
+                saveToHistory();
+
+                const blendModeSelect = document.getElementById('blendMode');
+                const blendMode = blendModeSelect ? blendModeSelect.value : 'overlay';
+                const scale = blendScaleSlider.value / 100;
+
+                processor.blend_images_with_scale(blendBytes, scale, blendMode);
+                updateCanvas();
+            } catch (error) {
+                console.error('混合应用失败:', error);
+                alert('混合应用失败');
+            }
+            showLoading(false);
+        };
+
+        // 清除混合图像（重置到上一个状态）
+        window.clearBlend = function() {
+            if (historyStack.length > 0) {
+                undo();
+            }
+        };
         }
 
         // 加载图片

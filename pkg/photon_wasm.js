@@ -392,6 +392,66 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_watermark_with_scale(this.__wbg_ptr, ptr0, len0, x, y, scale);
     }
     /**
+     * 混合两张图像（支持任意大小的图像）
+     *
+     * 这个函数会自动调整第二张图像的大小以匹配第一张图像，然后使用指定的混合模式进行混合。
+     *
+     * # 参数
+     * * `overlay_bytes` - 要混合的第二张图像的字节数据
+     * * `blend_mode` - 混合模式，支持以下模式：
+     *   - "overlay": 叠加混合
+     *   - "over": 覆盖混合
+     *   - "atop": 顶部混合
+     *   - "xor": 异或混合
+     *   - "plus": 加法混合
+     *   - "multiply": 正片叠底
+     *   - "burn": 线性加深
+     *   - "difference": 差值混合
+     *   - "soft_light": 柔光混合
+     *   - "screen": 滤色混合
+     *   - "hard_light": 强光混合
+     *   - "dodge": 颜色减淡
+     *   - "exclusion": 排除混合
+     *   - "lighten": 变亮混合
+     *   - "darken": 变暗混合
+     *
+     * # 示例
+     * ```no_run
+     * // 在两张图像之间应用叠加混合
+     * let overlay_bytes = std::fs::read("overlay.png").unwrap();
+     * processor.blend_images(&overlay_bytes, "overlay");
+     * ```
+     * @param {Uint8Array} overlay_bytes
+     * @param {string} blend_mode
+     */
+    blend_images(overlay_bytes, blend_mode) {
+        const ptr0 = passArray8ToWasm0(overlay_bytes, wasm.__wbindgen_export);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(blend_mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len1 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_blend_images(this.__wbg_ptr, ptr0, len0, ptr1, len1);
+    }
+    /**
+     * 混合两张图像（带缩放参数）
+     *
+     * 类似于 blend_images，但允许指定覆盖图像的缩放比例。
+     *
+     * # 参数
+     * * `overlay_bytes` - 要混合的第二张图像的字节数据
+     * * `scale` - 缩放比例（0.1 ~ 2.0），1.0 表示不缩放
+     * * `blend_mode` - 混合模式
+     * @param {Uint8Array} overlay_bytes
+     * @param {number} scale
+     * @param {string} blend_mode
+     */
+    blend_images_with_scale(overlay_bytes, scale, blend_mode) {
+        const ptr0 = passArray8ToWasm0(overlay_bytes, wasm.__wbindgen_export);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(blend_mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len1 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_blend_images_with_scale(this.__wbg_ptr, ptr0, len0, scale, ptr1, len1);
+    }
+    /**
      * @param {number} x1
      * @param {number} y1
      * @param {number} x2
