@@ -339,7 +339,7 @@
             background: rgba(255, 255, 255, 0.1);
             cursor: move;
             display: flex;
-            align-items: flex-end;      /* 改为底部对齐，与WASM左下角基准匹配 */
+            align-items: center;
             justify-content: center;
             color: #fff;
             font-weight: bold;
@@ -350,7 +350,6 @@
             padding: 0;
             margin: 0;
             line-height: 1;
-            box-sizing: content-box;    /* 避免边框影响宽高 */
         }
 
         .text-box.dragging {
@@ -735,26 +734,6 @@
                         </label>
                     </div>
                     <div class="slider-container">
-                        <label>混合模式</label>
-                        <select id="watermarkBlendMode" style="width: 100%; padding: 8px; background: #444; color: #e0e0e0; border: 1px solid #555; border-radius: 6px;" disabled>
-                            <option value="overlay">叠加 (默认)</option>
-                            <option value="over">覆盖</option>
-                            <option value="atop">在上</option>
-                            <option value="xor">异或</option>
-                            <option value="plus">相加</option>
-                            <option value="multiply">正片叠底</option>
-                            <option value="burn">烧毁</option>
-                            <option value="difference">差值</option>
-                            <option value="soft_light">柔光</option>
-                            <option value="screen">滤色</option>
-                            <option value="hard_light">强光</option>
-                            <option value="dodge">颜色减淡</option>
-                            <option value="exclusion">排除</option>
-                            <option value="lighten">变亮</option>
-                            <option value="darken">变暗</option>
-                        </select>
-                    </div>
-                    <div class="slider-container">
                         <label>水印大小 (10% ~ 100%)</label>
                         <input type="range" id="watermarkScaleSlider" min="10" max="100" value="50" disabled>
                         <div class="slider-value"><span id="watermarkScaleValue">50</span>%</div>
@@ -872,7 +851,7 @@
         // 文本绘制相关变量
         let isTextMode = false;
         let isTextDragging = false;
-        let textBox = { x: 0, y: 0, text: '', fontSize: 60, color: '#ffffff', withShadow: false, textWidth: 0 }; // 新增 textWidth
+        let textBox = { x: 0, y: 0, text: '', fontSize: 60, color: '#ffffff', withShadow: false };
         let textDragStart = { x: 0, y: 0 };
         let initialTextBox = { x: 0, y: 0 };
 
@@ -1117,9 +1096,9 @@
             if (isTextMode && isTextDragging) {
                 const textBoxEl = document.getElementById('textBox');
                 
-                // 使用存储的 textWidth 和 fontSize 进行边界限制（原始像素）
-                const textWidth = textBox.textWidth;
-                const textHeight = textBox.fontSize;
+                // 将 CSS 宽度转为原始像素
+                const textWidth = textBoxEl.offsetWidth * scale.scaleX;
+                const textHeight = textBoxEl.offsetHeight * scale.scaleY;
                 
                 let newX = mouseOrigX - textDragStart.x;
                 let newY = mouseOrigY - textDragStart.y;
@@ -1220,7 +1199,6 @@
 
             // 启用水印控件
             document.getElementById('watermarkInput').disabled = !currentImage;
-            document.getElementById('watermarkBlendMode').disabled = !currentImage;
             document.getElementById('watermarkScaleSlider').disabled = !currentImage;
             document.getElementById('watermarkXSlider').disabled = !currentImage;
             document.getElementById('watermarkYSlider').disabled = !currentImage;
@@ -1504,14 +1482,10 @@
             // 直接使用滑块值作为缩放比例，避免反推误差
             const scale = watermarkScaleSlider.value / 100;
             
-            // 获取选定的混合模式
-            const blendModeSelect = document.getElementById('watermarkBlendMode');
-            const blendMode = blendModeSelect ? blendModeSelect.value : 'overlay';
-            
             try {
-                processor.apply_watermark_with_blend(watermarkBytes, x, y, scale, blendMode);
+                processor.apply_watermark_with_scale(watermarkBytes, x, y, scale);
                 updateCanvas();
-                console.log('水印已应用，混合模式:', blendMode);
+                console.log('水印已应用');
                 exitWatermarkMode();
             } catch (error) {
                 console.error('水印应用失败:', error);
@@ -2958,7 +2932,6 @@
             
             ctx.font = `${textBox.fontSize}px '${fontName}'`;
             const textWidth = ctx.measureText(text).width;
-            textBox.textWidth = textWidth; // 存储文本宽度
             const textHeight = textBox.fontSize;
 
             textBox.x = (canvasWidth - textWidth) / 2;
@@ -2973,9 +2946,6 @@
             // 将原始像素坐标转换为 CSS 像素
             textBoxEl.style.left = (textBox.x / scale.scaleX) + 'px';
             textBoxEl.style.top = (textBox.y / scale.scaleY) + 'px';
-            // 设置精确宽高（原始像素转 CSS）
-            textBoxEl.style.width = (textWidth / scale.scaleX) + 'px';
-            textBoxEl.style.height = (textHeight / scale.scaleY) + 'px';
             // 字体大小转换为 CSS 像素
             textBoxEl.style.fontSize = (textBox.fontSize / scale.scaleY) + 'px';
             textBoxEl.style.color = textBox.color;
@@ -3024,42 +2994,21 @@
 
             const scale = getCanvasScale();
             const textBoxEl = document.getElementById('textBox');
-            const text = document.getElementById('textInput').value;
+            textBoxEl.textContent = document.getElementById('textInput').value;
             const fontSize = parseInt(document.getElementById('fontSizeSlider').value);
             const offset = parseInt(document.getElementById('textOffsetSlider').value);
             
-            // 重新测量文本宽度
-            const canvas = document.getElementById('imageCanvas');
-            const ctx = canvas.getContext('2d');
-            const fontType = parseInt(document.getElementById('fontSelect').value);
-            let fontName = 'Roboto';
-            if (fontType === 1) fontName = 'AlibabaPuHuiTi-3-55-Regular';
-            else if (fontType === 2) fontName = '鸿雷小纸条青春体';
-            ctx.font = `${fontSize}px '${fontName}'`;
-            const textWidth = ctx.measureText(text).width;
-            
-            // 更新 textBox 对象
-            textBox.text = text;
-            textBox.fontSize = fontSize;
-            textBox.color = document.getElementById('textColorPicker').value;
-            textBox.textWidth = textWidth;
-            
-            // 更新预览框样式
-            textBoxEl.textContent = text;
+            // 字体大小转换为 CSS 像素
             textBoxEl.style.fontSize = (fontSize / scale.scaleY) + 'px';
-            textBoxEl.style.color = textBox.color;
-            textBoxEl.style.width = (textWidth / scale.scaleX) + 'px';
-            textBoxEl.style.height = (fontSize / scale.scaleY) + 'px';
+            textBoxEl.style.color = document.getElementById('textColorPicker').value;
             
             // 更新偏移值显示
             document.getElementById('textOffsetValue').textContent = offset;
             
-            // 应用垂直偏移预览效果（transform 不影响实际坐标）
-            textBoxEl.style.transform = `translateY(${offset / scale.scaleY}px)`;
+            // 应用垂直偏移预览效果（仅视觉效果，不改变实际坐标）
+            const offsetCss = offset / scale.scaleY;
+            textBoxEl.style.transform = `translateY(${offsetCss}px)`;
         }
-
-        // 将 updateTextBoxPreview 暴露到全局作用域
-        window.updateTextBoxPreview = updateTextBoxPreview;
 
         // 应用文本绘制
         // 通道调整快捷函数
@@ -3209,10 +3158,10 @@ window.applyText = function() {
                 const g = parseInt(colorHex.slice(3, 5), 16);
                 const b = parseInt(colorHex.slice(5, 7), 16);
 
-                // 直接使用预览框左上角坐标，Y 坐标加上字体高度（左下角基准）
+                // 直接使用预览框左上角坐标，根据字体基线调整 Y 坐标
                 const drawX = Math.floor(textBox.x);
                 const offset = parseInt(document.getElementById('textOffsetSlider').value);
-                const drawY = Math.floor(textBox.y + fontSize + offset);
+                const drawY = Math.floor(textBox.y + fontSize * 0.8 + offset);
 
                 if (withShadow) {
                     processor.draw_text_with_shadow_and_color_and_font(text, drawX, drawY, fontSize, r, g, b, fontType);

@@ -337,6 +337,20 @@ export class ImageProcessor {
      * @param {bigint} x
      * @param {bigint} y
      * @param {number} scale
+     * @param {string} blend_mode
+     */
+    apply_watermark_with_blend(watermark_bytes, x, y, scale, blend_mode) {
+        const ptr0 = passArray8ToWasm0(watermark_bytes, wasm.__wbindgen_export);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(blend_mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len1 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_apply_watermark_with_blend(this.__wbg_ptr, ptr0, len0, x, y, scale, ptr1, len1);
+    }
+    /**
+     * @param {Uint8Array} watermark_bytes
+     * @param {bigint} x
+     * @param {bigint} y
+     * @param {number} scale
      */
     apply_watermark_with_scale(watermark_bytes, x, y, scale) {
         const ptr0 = passArray8ToWasm0(watermark_bytes, wasm.__wbindgen_export);
