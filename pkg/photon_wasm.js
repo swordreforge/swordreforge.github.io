@@ -667,6 +667,18 @@ export class ImageProcessor {
         wasm.imageprocessor_rotate_any(this.__wbg_ptr, angle);
     }
     /**
+     * 优化的任意角度旋转
+     * 使用优化的算法实现：
+     * - 90 度倍数使用快速内存拷贝
+     * - 任意角度使用优化的三次剪切变换
+     * - 分块处理提高缓存效率
+     * angle: 旋转角度（度），支持 -360 到 360
+     * @param {number} angle
+     */
+    rotate_optimized(angle) {
+        wasm.imageprocessor_rotate_optimized(this.__wbg_ptr, angle);
+    }
+    /**
      * @param {number} level
      */
     saturate_hsl(level) {
@@ -4322,6 +4334,25 @@ export function resize_img_browser(photon_img, width, height, sampling_filter) {
 export function rotate(photon_img, angle) {
     _assertClass(photon_img, PhotonImage);
     const ret = wasm.rotate(photon_img.__wbg_ptr, angle);
+    return PhotonImage.__wrap(ret);
+}
+
+/**
+ * 优化的旋转函数
+ *
+ * # 参数
+ * - `img`: 输入图像
+ * - `angle`: 旋转角度（度）
+ *
+ * # 返回
+ * 旋转后的图像
+ * @param {PhotonImage} img
+ * @param {number} angle
+ * @returns {PhotonImage}
+ */
+export function rotate_optimized(img, angle) {
+    _assertClass(img, PhotonImage);
+    const ret = wasm.rotate_optimized(img.__wbg_ptr, angle);
     return PhotonImage.__wrap(ret);
 }
 
