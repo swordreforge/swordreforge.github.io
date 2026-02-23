@@ -677,6 +677,32 @@
                 </div>
 
                 <div class="section">
+                    <h3>水印功能</h3>
+                    <div style="margin-bottom: 10px;">
+                        <label class="upload-area" id="watermarkUpload" style="padding: 15px; display: block; cursor: pointer;">
+                            <div style="display: flex; align-items: center; justify-content: center;">
+                                <span id="watermarkFileName" style="color: #888;">点击上传水印图片</span>
+                            </div>
+                            <input type="file" id="watermarkInput" accept="image/*" style="display: none;" disabled>
+                        </label>
+                    </div>
+                    <div class="slider-container">
+                        <label>X 坐标 (0 ~ 图片宽度)</label>
+                        <input type="range" id="watermarkXSlider" min="0" max="100" value="0" disabled>
+                        <div class="slider-value"><span id="watermarkXValue">0</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>Y 坐标 (0 ~ 图片高度)</label>
+                        <input type="range" id="watermarkYSlider" min="0" max="100" value="0" disabled>
+                        <div class="slider-value"><span id="watermarkYValue">0</span></div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn" onclick="applyWatermark()" id="applyWatermarkBtn" disabled>应用水印</button>
+                        <button class="btn btn-danger" onclick="clearWatermark()" id="clearWatermarkBtn" disabled>清除水印</button>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>变换操作</h3>
                     <div class="btn-group">
                         <button class="btn" onclick="rotateImage()" disabled>旋转 90°</button>
@@ -896,6 +922,13 @@
             document.getElementById('textColorPicker').disabled = !currentImage;
             document.getElementById('fontSelect').disabled = !currentImage;
             document.getElementById('shadowCheckbox').disabled = !currentImage;
+
+            // 启用水印控件
+            document.getElementById('watermarkInput').disabled = !currentImage;
+            document.getElementById('watermarkXSlider').disabled = !currentImage;
+            document.getElementById('watermarkYSlider').disabled = !currentImage;
+            document.getElementById('applyWatermarkBtn').disabled = !currentImage || !watermarkBytes;
+            document.getElementById('clearWatermarkBtn').disabled = !currentImage;
         }
 
         // 切换侧边栏
@@ -951,6 +984,100 @@
                 loadImage(file);
             }
         });
+
+        // 水印文件上传处理
+        const watermarkUpload = document.getElementById('watermarkUpload');
+        const watermarkInput = document.getElementById('watermarkInput');
+        const watermarkFileName = document.getElementById('watermarkFileName');
+        const watermarkXSlider = document.getElementById('watermarkXSlider');
+        const watermarkYSlider = document.getElementById('watermarkYSlider');
+
+        let watermarkBytes = null;
+
+        // 点击水印上传区域
+        watermarkUpload.addEventListener('click', (e) => {
+            if (currentImage) {
+                e.stopPropagation();
+                watermarkInput.click();
+            }
+        });
+
+        // 水印文件选择
+        watermarkInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                loadWatermark(file);
+            }
+        });
+
+        // 加载水印图片
+        async function loadWatermark(file) {
+            showLoading(true);
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                watermarkBytes = new Uint8Array(arrayBuffer);
+                
+                watermarkFileName.textContent = file.name;
+                watermarkFileName.style.color = '#4aaa6b';
+                
+                document.getElementById('applyWatermarkBtn').disabled = false;
+                
+                console.log('水印图片已加载:', file.name);
+            } catch (error) {
+                console.error('水印图片加载失败:', error);
+                alert('水印图片加载失败');
+            }
+            showLoading(false);
+        }
+
+        // 水印位置滑块更新
+        watermarkXSlider.addEventListener('input', function() {
+            if (processor) {
+                const width = processor.get_width();
+                const x = Math.floor(width * this.value / 100);
+                document.getElementById('watermarkXValue').textContent = x;
+            }
+        });
+
+        watermarkYSlider.addEventListener('input', function() {
+            if (processor) {
+                const height = processor.get_height();
+                const y = Math.floor(height * this.value / 100);
+                document.getElementById('watermarkYValue').textContent = y;
+            }
+        });
+
+        // 应用水印
+        window.applyWatermark = function() {
+            if (!processor || !watermarkBytes) {
+                alert('请先加载主图像和水印图片');
+                return;
+            }
+
+            saveHistory();
+
+            const width = processor.get_width();
+            const height = processor.get_height();
+
+            const x = Math.floor(width * watermarkXSlider.value / 100);
+            const y = Math.floor(height * watermarkYSlider.value / 100);
+
+            try {
+                processor.apply_watermark(watermarkBytes, x, y);
+                updateCanvas();
+                console.log('水印已应用');
+            } catch (error) {
+                console.error('水印应用失败:', error);
+                alert('水印应用失败');
+            }
+        }
+
+        // 清除水印（重置到上一个状态）
+        window.clearWatermark = function() {
+            if (historyStack.length > 0) {
+                undo();
+            }
+        }
 
         // 加载图片
         async function loadImage(file) {
