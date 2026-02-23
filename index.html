@@ -362,6 +362,7 @@
             cursor: move;
             pointer-events: auto;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
         }
 
         .watermark-preview.dragging {
@@ -980,18 +981,32 @@
             canvasContainer.addEventListener('click', handleCanvasClick);
         }
 
+        // 获取 Canvas 缩放比例
+        function getCanvasScale() {
+            const canvas = document.getElementById('imageCanvas');
+            if (!canvas || !canvas.width) return { scaleX: 1, scaleY: 1 };
+            const rect = canvas.getBoundingClientRect();
+            return {
+                scaleX: canvas.width / rect.width,
+                scaleY: canvas.height / rect.height
+            };
+        }
+
         // 鼠标移动处理函数
         function handleCanvasMouseMove(e) {
             const canvasContainer = document.getElementById('canvasContainer');
             if (!canvasContainer) return;
             
+            const rect = canvasContainer.getBoundingClientRect();
+            const scale = getCanvasScale();
+            const mouseOrigX = (e.clientX - rect.left) * scale.scaleX;
+            const mouseOrigY = (e.clientY - rect.top) * scale.scaleY;
+            const canvas = document.getElementById('imageCanvas');
+            
             // 水印拖动
             if (isWatermarkMode && isWatermarkDragging) {
-                const rect = canvasContainer.getBoundingClientRect();
-                const canvas = document.getElementById('imageCanvas');
-                
-                let newX = e.clientX - rect.left - watermarkDragStart.x;
-                let newY = e.clientY - rect.top - watermarkDragStart.y;
+                let newX = mouseOrigX - watermarkDragStart.x;
+                let newY = mouseOrigY - watermarkDragStart.y;
                 
                 newX = Math.max(0, Math.min(canvas.width - watermarkPreview.width, newX));
                 newY = Math.max(0, Math.min(canvas.height - watermarkPreview.height, newY));
@@ -1014,9 +1029,8 @@
             
             // 水印缩放
             if (isWatermarkMode && isWatermarkResizing) {
-                const dx = e.clientX - watermarkDragStart.x;
-                const dy = e.clientY - watermarkDragStart.y;
-                const canvas = document.getElementById('imageCanvas');
+                const dx = mouseOrigX - watermarkDragStart.x;
+                const dy = mouseOrigY - watermarkDragStart.y;
                 const minSize = 20;
                 
                 switch(watermarkResizeHandle) {
@@ -1072,15 +1086,14 @@
             
             // 文本拖动
             if (isTextMode && isTextDragging) {
-                const rect = canvasContainer.getBoundingClientRect();
-                const canvas = document.getElementById('imageCanvas');
                 const textBoxEl = document.getElementById('textBox');
                 
-                let newX = e.clientX - rect.left - textDragStart.x;
-                let newY = e.clientY - rect.top - textDragStart.y;
+                // 将 CSS 宽度转为原始像素
+                const textWidth = textBoxEl.offsetWidth * scale.scaleX;
+                const textHeight = textBoxEl.offsetHeight * scale.scaleY;
                 
-                const textWidth = textBoxEl.offsetWidth;
-                const textHeight = textBoxEl.offsetHeight;
+                let newX = mouseOrigX - textDragStart.x;
+                let newY = mouseOrigY - textDragStart.y;
                 
                 newX = Math.max(0, Math.min(canvas.width - textWidth, newX));
                 newY = Math.max(0, Math.min(canvas.height - textHeight, newY));
@@ -1088,8 +1101,9 @@
                 textBox.x = newX;
                 textBox.y = newY;
                 
-                textBoxEl.style.left = newX + 'px';
-                textBoxEl.style.top = newY + 'px';
+                // 更新预览框 CSS 位置
+                textBoxEl.style.left = (newX / scale.scaleX) + 'px';
+                textBoxEl.style.top = (newY / scale.scaleY) + 'px';
             }
         }
 
@@ -1415,14 +1429,18 @@
                 if (!isWatermarkMode) return;
                 
                 const handle = e.target.classList.contains('watermark-handle') ? e.target : null;
+                const rect = canvasContainer.getBoundingClientRect();
+                const scale = getCanvasScale();
+                const mouseOrigX = (e.clientX - rect.left) * scale.scaleX;
+                const mouseOrigY = (e.clientY - rect.top) * scale.scaleY;
                 
                 if (handle) {
                     // 开始缩放
                     isWatermarkResizing = true;
                     watermarkResizeHandle = handle.className.split(' ')[1]; // nw, ne, sw, se
                     watermarkDragStart = {
-                        x: e.clientX,
-                        y: e.clientY
+                        x: mouseOrigX,
+                        y: mouseOrigY
                     };
                     initialWatermarkPreview = { ...watermarkPreview };
                 } else {
@@ -1430,10 +1448,9 @@
                     isWatermarkDragging = true;
                     updatedWatermarkPreviewEl.classList.add('dragging');
                     
-                    const rect = canvasContainer.getBoundingClientRect();
                     watermarkDragStart = {
-                        x: e.clientX - rect.left - watermarkPreview.x,
-                        y: e.clientY - rect.top - watermarkPreview.y
+                        x: mouseOrigX - watermarkPreview.x,
+                        y: mouseOrigY - watermarkPreview.y
                     };
                     initialWatermarkPreview = { ...watermarkPreview };
                 }
@@ -1452,24 +1469,18 @@
             const x = BigInt(watermarkPreview.x);
             const y = BigInt(watermarkPreview.y);
             
-            // 计算实际缩放比例
-            const tempImg = new Image();
-            tempImg.onload = function() {
-                const scaleX = watermarkPreview.width / tempImg.width;
-                const scaleY = watermarkPreview.height / tempImg.height;
-                const scale = (scaleX + scaleY) / 2; // 取平均
-                
-                try {
-                    processor.apply_watermark_with_scale(watermarkBytes, x, y, scale);
-                    updateCanvas();
-                    console.log('水印已应用');
-                    exitWatermarkMode();
-                } catch (error) {
-                    console.error('水印应用失败:', error);
-                    alert('水印应用失败');
-                }
-            };
-            tempImg.src = URL.createObjectURL(new Blob([watermarkBytes]));
+            // 直接使用滑块值作为缩放比例，避免反推误差
+            const scale = watermarkScaleSlider.value / 100;
+            
+            try {
+                processor.apply_watermark_with_scale(watermarkBytes, x, y, scale);
+                updateCanvas();
+                console.log('水印已应用');
+                exitWatermarkMode();
+            } catch (error) {
+                console.error('水印应用失败:', error);
+                alert('水印应用失败');
+            }
         }
 
         // 取消水印模式
@@ -1496,10 +1507,12 @@
         // 更新水印预览框位置和大小
         function updateWatermarkPreview() {
             const preview = document.getElementById('watermarkPreview');
-            preview.style.left = watermarkPreview.x + 'px';
-            preview.style.top = watermarkPreview.y + 'px';
-            preview.style.width = watermarkPreview.width + 'px';
-            preview.style.height = watermarkPreview.height + 'px';
+            const scale = getCanvasScale();
+            // 将原始像素坐标转换为 CSS 像素
+            preview.style.left = (watermarkPreview.x / scale.scaleX) + 'px';
+            preview.style.top = (watermarkPreview.y / scale.scaleY) + 'px';
+            preview.style.width = (watermarkPreview.width / scale.scaleX) + 'px';
+            preview.style.height = (watermarkPreview.height / scale.scaleY) + 'px';
         }
 
         // 清除水印（重置到上一个状态）
@@ -2905,12 +2918,17 @@
             textBox.x = (canvasWidth - textWidth) / 2;
             textBox.y = (canvasHeight - textHeight) / 2;
 
+            // 获取缩放比例
+            const scale = getCanvasScale();
+
             // 显示文本框
             const textBoxEl = document.getElementById('textBox');
             textBoxEl.style.display = 'flex';
-            textBoxEl.style.left = textBox.x + 'px';
-            textBoxEl.style.top = textBox.y + 'px';
-            textBoxEl.style.fontSize = textBox.fontSize + 'px';
+            // 将原始像素坐标转换为 CSS 像素
+            textBoxEl.style.left = (textBox.x / scale.scaleX) + 'px';
+            textBoxEl.style.top = (textBox.y / scale.scaleY) + 'px';
+            // 字体大小转换为 CSS 像素
+            textBoxEl.style.fontSize = (textBox.fontSize / scale.scaleY) + 'px';
             textBoxEl.style.color = textBox.color;
             textBoxEl.textContent = text;
 
@@ -2936,9 +2954,13 @@
                 textBoxEl.classList.add('dragging');
 
                 const rect = canvasContainer.getBoundingClientRect();
+                const scale = getCanvasScale();
+                const mouseOrigX = (e.clientX - rect.left) * scale.scaleX;
+                const mouseOrigY = (e.clientY - rect.top) * scale.scaleY;
+
                 textDragStart = {
-                    x: e.clientX - rect.left - textBox.x,
-                    y: e.clientY - rect.top - textBox.y
+                    x: mouseOrigX - textBox.x,
+                    y: mouseOrigY - textBox.y
                 };
 
                 initialTextBox = { x: textBox.x, y: textBox.y };
@@ -2951,9 +2973,12 @@
         function updateTextBoxPreview() {
             if (!isTextMode) return;
 
+            const scale = getCanvasScale();
             const textBoxEl = document.getElementById('textBox');
             textBoxEl.textContent = document.getElementById('textInput').value;
-            textBoxEl.style.fontSize = document.getElementById('fontSizeSlider').value + 'px';
+            const fontSize = parseInt(document.getElementById('fontSizeSlider').value);
+            // 字体大小转换为 CSS 像素
+            textBoxEl.style.fontSize = (fontSize / scale.scaleY) + 'px';
             textBoxEl.style.color = document.getElementById('textColorPicker').value;
         }
 
@@ -3105,9 +3130,9 @@ window.applyText = function() {
                 const g = parseInt(colorHex.slice(3, 5), 16);
                 const b = parseInt(colorHex.slice(5, 7), 16);
 
-                // 计算绘制位置（考虑字体基线）
-                const drawX = Math.floor(textBox.x + 10);
-                const drawY = Math.floor(textBox.y + fontSize * 0.75);
+                // 直接使用预览框左上角坐标，根据字体基线调整 Y 坐标
+                const drawX = Math.floor(textBox.x);
+                const drawY = Math.floor(textBox.y + fontSize * 0.8);
 
                 if (withShadow) {
                     processor.draw_text_with_shadow_and_color_and_font(text, drawX, drawY, fontSize, r, g, b, fontType);
