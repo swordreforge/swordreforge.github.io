@@ -687,6 +687,11 @@
                         </label>
                     </div>
                     <div class="slider-container">
+                        <label>水印大小 (10% ~ 100%)</label>
+                        <input type="range" id="watermarkScaleSlider" min="10" max="100" value="50" disabled>
+                        <div class="slider-value"><span id="watermarkScaleValue">50</span>%</div>
+                    </div>
+                    <div class="slider-container">
                         <label>X 坐标 (0 ~ 图片宽度)</label>
                         <input type="range" id="watermarkXSlider" min="0" max="100" value="0" disabled>
                         <div class="slider-value"><span id="watermarkXValue">0</span></div>
@@ -695,6 +700,18 @@
                         <label>Y 坐标 (0 ~ 图片高度)</label>
                         <input type="range" id="watermarkYSlider" min="0" max="100" value="0" disabled>
                         <div class="slider-value"><span id="watermarkYValue">0</span></div>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="color: #e0e0e0; font-size: 0.85em; display: block; margin-bottom: 5px;">预设位置</label>
+                        <div class="btn-group" style="grid-template-columns: repeat(4, 1fr);">
+                            <button class="btn" onclick="setWatermarkPosition('top-left')" disabled>左上</button>
+                            <button class="btn" onclick="setWatermarkPosition('top-center')" disabled>上中</button>
+                            <button class="btn" onclick="setWatermarkPosition('top-right')" disabled>右上</button>
+                            <button class="btn" onclick="setWatermarkPosition('center')" disabled>正中</button>
+                            <button class="btn" onclick="setWatermarkPosition('bottom-left')" disabled>左下</button>
+                            <button class="btn" onclick="setWatermarkPosition('bottom-center')" disabled>下中</button>
+                            <button class="btn" onclick="setWatermarkPosition('bottom-right')" disabled>右下</button>
+                        </div>
                     </div>
                     <div class="btn-group">
                         <button class="btn" onclick="applyWatermark()" id="applyWatermarkBtn" disabled>应用水印</button>
@@ -928,6 +945,7 @@
 
             // 启用水印控件
             document.getElementById('watermarkInput').disabled = !currentImage;
+            document.getElementById('watermarkScaleSlider').disabled = !currentImage;
             document.getElementById('watermarkXSlider').disabled = !currentImage;
             document.getElementById('watermarkYSlider').disabled = !currentImage;
             document.getElementById('applyWatermarkBtn').disabled = !currentImage || !watermarkBytes;
@@ -992,6 +1010,7 @@
         const watermarkUpload = document.getElementById('watermarkUpload');
         const watermarkInput = document.getElementById('watermarkInput');
         const watermarkFileName = document.getElementById('watermarkFileName');
+        const watermarkScaleSlider = document.getElementById('watermarkScaleSlider');
         const watermarkXSlider = document.getElementById('watermarkXSlider');
         const watermarkYSlider = document.getElementById('watermarkYSlider');
 
@@ -1033,6 +1052,11 @@
             showLoading(false);
         }
 
+        // 水印大小滑块更新
+        watermarkScaleSlider.addEventListener('input', function() {
+            document.getElementById('watermarkScaleValue').textContent = this.value;
+        });
+
         // 水印位置滑块更新
         watermarkXSlider.addEventListener('input', function() {
             if (processor) {
@@ -1050,6 +1074,56 @@
             }
         });
 
+        // 设置水印预设位置
+        window.setWatermarkPosition = function(position) {
+            if (!processor) return;
+            
+            const width = processor.get_width();
+            const height = processor.get_height();
+            let x, y;
+            
+            switch(position) {
+                case 'top-left':
+                    x = 0;
+                    y = 0;
+                    break;
+                case 'top-center':
+                    x = width / 2;
+                    y = 0;
+                    break;
+                case 'top-right':
+                    x = width;
+                    y = 0;
+                    break;
+                case 'center':
+                    x = width / 2;
+                    y = height / 2;
+                    break;
+                case 'bottom-left':
+                    x = 0;
+                    y = height;
+                    break;
+                case 'bottom-center':
+                    x = width / 2;
+                    y = height;
+                    break;
+                case 'bottom-right':
+                    x = width;
+                    y = height;
+                    break;
+                default:
+                    return;
+            }
+            
+            // 更新滑块值（转换为百分比）
+            watermarkXSlider.value = (x / width) * 100;
+            watermarkYSlider.value = (y / height) * 100;
+            
+            // 更新显示值
+            document.getElementById('watermarkXValue').textContent = Math.floor(x);
+            document.getElementById('watermarkYValue').textContent = Math.floor(y);
+        }
+
         // 应用水印
         window.applyWatermark = function() {
             if (!processor || !watermarkBytes) {
@@ -1064,9 +1138,10 @@
 
             const x = BigInt(Math.floor(width * watermarkXSlider.value / 100));
             const y = BigInt(Math.floor(height * watermarkYSlider.value / 100));
+            const scale = watermarkScaleSlider.value / 100;
 
             try {
-                processor.apply_watermark(watermarkBytes, x, y);
+                processor.apply_watermark_with_scale(watermarkBytes, x, y, scale);
                 updateCanvas();
                 console.log('水印已应用');
             } catch (error) {
