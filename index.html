@@ -21,13 +21,36 @@
             overflow: hidden;
         }
 
-        /* 顶部工具栏 */
-        .top-toolbar {
+        /* 应用标题栏 */
+        .app-title-bar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: 56px;
+            height: 36px;
+            background: #0f0f0f;
+            border-bottom: 1px solid #222;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1002;
+        }
+
+        .app-title {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+
+        /* 顶部工具栏 */
+        .top-toolbar {
+            position: fixed;
+            top: 36px;
+            left: 0;
+            right: 0;
+            height: 52px;
             background: #1a1a1a;
             border-bottom: 1px solid #333;
             display: flex;
@@ -42,15 +65,6 @@
             display: flex;
             align-items: center;
             gap: 12px;
-        }
-
-        .toolbar-title {
-            font-size: 1.1em;
-            font-weight: 600;
-            color: #e0e0e0;
-            margin: 0;
-            white-space: nowrap;
-            margin-right: 8px;
         }
 
         /* 专业工具按钮组 */
@@ -293,15 +307,15 @@
         .main-content {
             display: flex;
             flex: 1;
-            height: calc(100vh - 56px);
-            margin-top: 56px;
+            height: calc(100vh - 88px);
+            margin-top: 88px;
             overflow: hidden;
         }
 
         .sidebar-toggle {
             position: fixed;
             left: 0;
-            top: calc(50% + 28px);
+            top: calc(50% + 44px);
             transform: translateY(-50%);
             background: #444;
             color: white;
@@ -692,11 +706,14 @@
         </div>
     </div>
 
+    <!-- 应用标题栏 -->
+    <div class="app-title-bar">
+        <h1 class="app-title">WebAssembly 图像处理器</h1>
+    </div>
+
     <!-- 顶部工具栏 -->
     <div class="top-toolbar">
         <div class="toolbar-left">
-            <h1 class="toolbar-title">WebAssembly 图像处理器</h1>
-
             <!-- 专业工具按钮组 -->
             <div class="tool-buttons">
                 <!-- 滤镜工具 -->
