@@ -1,7 +1,7 @@
 // Service Worker for caching WASM and static assets
 // 强缓存 WASM 文件和其他静态资源，提高加载性能
 
-const CACHE_NAME = 'photon-wasm-v1';
+const CACHE_NAME = 'photon-wasm-v15';
 const ASSETS_TO_CACHE = [
   './pkg/photon_wasm.js',
   './pkg/photon_wasm_bg.wasm',

@@ -1843,8 +1843,8 @@
     </div>
 
     <script type="module">
-        import init from './pkg/photon_wasm.js?v=14';
-        import { ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint } from './pkg/photon_wasm.js?v=14';
+        import init from './pkg/photon_wasm.js?v=15';
+        import { ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint } from './pkg/photon_wasm.js?v=15';
 
         // 将类型导出到全局 window 对象
         window.BrushType = BrushType;
@@ -1955,6 +1955,8 @@
             const base64Data = state.base64.includes(',') ? state.base64.split(',')[1] : state.base64;
             const uint8Array = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
             processor = ImageProcessor.new_from_bytes(uint8Array);
+            // 恢复状态时清除 WASM 内部的笔刷历史
+            processor.clear_strokes();
             updateCanvas();
         }
 
@@ -2045,6 +2047,9 @@
             if (isBrushMode) {
                 isBrushDrawing = true;
                 if (processor) {
+                    // 在开始绘制前保存历史状态（用于通用撤销）
+                    saveToHistory();
+
                     // 将十六进制颜色转换为 RGB
                     const hex = brushSettings.color.replace('#', '');
                     const r = parseInt(hex.substring(0, 2), 16);
@@ -4720,6 +4725,7 @@ window.applyText = function() {
                 const success = processor.undo_stroke();
                 if (success) {
                     updateCanvas();
+                    // 同步到通用历史记录
                     saveToHistory();
                 } else {
                     alert('没有可以撤销的笔刷');
