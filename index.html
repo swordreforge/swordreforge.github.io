@@ -3791,6 +3791,9 @@
             currentImage = null;
             originalImageData = null;
 
+            // 重置文件输入框，确保可以重复选择同一文件
+            document.getElementById('fileInput').value = '';
+
             // 清空画布
             const canvas = document.getElementById('imageCanvas');
             const ctx = canvas.getContext('2d');
