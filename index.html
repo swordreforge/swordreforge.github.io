@@ -491,6 +491,13 @@
             z-index: 1000;
         }
 
+        .loading-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
         .loading-spinner {
             border: 5px solid #f3f3f3;
             border-top: 5px solid #667eea;
@@ -498,6 +505,15 @@
             width: 60px;
             height: 60px;
             animation: spin 1s linear infinite;
+        }
+
+        .loading-message {
+            color: #e0e0e0;
+            font-size: 1.1em;
+            font-weight: 500;
+            text-align: center;
+            max-width: 400px;
+            line-height: 1.6;
         }
 
         @keyframes spin {
@@ -670,7 +686,10 @@
 </head>
 <body>
     <div class="loading" id="loading">
-        <div class="loading-spinner"></div>
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-message" id="loadingMessage">正在加载...</div>
+        </div>
     </div>
 
     <!-- 顶部工具栏 -->
@@ -1631,7 +1650,7 @@
 
         // 初始化 WASM 模块
         async function initWasm() {
-            showLoading(true);
+            showLoading(true, '正在下载 WebAssembly 模块...\n\n包体大小约 5MB\n第一次使用请耐心等待\n后续访问将使用缓存，加载更快');
             try {
                 wasmModule = await init();
                 console.log('WebAssembly module loaded successfully');
@@ -1832,8 +1851,13 @@
         }
 
         // 显示/隐藏加载动画
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'flex' : 'none';
+        function showLoading(show, message = '正在加载...') {
+            const loadingEl = document.getElementById('loading');
+            const messageEl = document.getElementById('loadingMessage');
+            loadingEl.style.display = show ? 'flex' : 'none';
+            if (show) {
+                messageEl.textContent = message;
+            }
         }
 
         // 启用按钮
