@@ -1487,7 +1487,7 @@
                         <p style="font-size: 0.9em; color: #666; margin-top: 10px;">点击或拖拽上传</p>
                         <input type="file" id="fileInput" accept="image/*" style="display: none;">
                     </div>
-                    <canvas id="imageCanvas" style="display: none;"></canvas>
+                    <canvas id="imageCanvas" style="display: none;" willReadFrequently="true"></canvas>
                     <canvas id="cropOverlay" class="crop-overlay" style="display: none;"></canvas>
                     <div class="crop-controls" id="cropControls" style="display: none;">
                         <button class="btn btn-success" onclick="applyCrop()">✓ 确认裁剪</button>
