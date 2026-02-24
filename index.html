@@ -27,27 +27,65 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 36px;
-            background: #0f0f0f;
-            border-bottom: 1px solid #222;
+            height: 32px;
+            background: linear-gradient(to bottom, #3a3a3a 0%, #2d2d2d 100%);
+            border-bottom: 1px solid #1a1a1a;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1002;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         .app-title {
-            font-size: 0.95em;
-            font-weight: 600;
-            color: #e0e0e0;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #c5c5c5;
             margin: 0;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 窗口控制按钮区域 */
+        .window-controls {
+            position: absolute;
+            left: 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .window-btn.close {
+            background: #ff5f57;
+            border: 1px solid #e0443e;
+        }
+
+        .window-btn.minimize {
+            background: #febc2e;
+            border: 1px solid #d89e24;
+        }
+
+        .window-btn.maximize {
+            background: #28c840;
+            border: 1px solid #1aab29;
+        }
+
+        .window-btn:hover {
+            filter: brightness(1.1);
         }
 
         /* 顶部工具栏 */
         .top-toolbar {
             position: fixed;
-            top: 36px;
+            top: 32px;
             left: 0;
             right: 0;
             height: 52px;
@@ -307,15 +345,15 @@
         .main-content {
             display: flex;
             flex: 1;
-            height: calc(100vh - 88px);
-            margin-top: 88px;
+            height: calc(100vh - 84px);
+            margin-top: 84px;
             overflow: hidden;
         }
 
         .sidebar-toggle {
             position: fixed;
             left: 0;
-            top: calc(50% + 44px);
+            top: calc(50% + 42px);
             transform: translateY(-50%);
             background: #444;
             color: white;
@@ -708,6 +746,11 @@
 
     <!-- 应用标题栏 -->
     <div class="app-title-bar">
+        <div class="window-controls">
+            <button class="window-btn close" title="关闭"></button>
+            <button class="window-btn minimize" title="最小化"></button>
+            <button class="window-btn maximize" title="最大化"></button>
+        </div>
         <h1 class="app-title">WebAssembly 图像处理器</h1>
     </div>
 
