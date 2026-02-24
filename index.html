@@ -865,6 +865,46 @@
         <div class="toolbar-left">
             <!-- 专业工具按钮组 -->
             <div class="tool-buttons">
+                <!-- 新建画布工具 -->
+                <div class="tool-dropdown" id="newCanvasDropdown">
+                    <button class="tool-btn" onclick="toggleDropdown('newCanvasDropdown')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                        <span>新建</span>
+                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div class="menu-section">
+                            <div class="menu-category">画布尺寸</div>
+                            <div class="menu-items">
+                                <div style="grid-column: span 2; padding: 8px;">
+                                    <label style="color: #e0e0e0; font-size: 0.85em;">宽度 (px):</label>
+                                    <input type="number" id="canvasWidth" value="800" min="100" max="5000" style="width: 100%; margin-top: 4px; padding: 6px; background: #333; border: 1px solid #444; color: #e0e0e0; border-radius: 4px;">
+                                </div>
+                                <div style="grid-column: span 2; padding: 8px;">
+                                    <label style="color: #e0e0e0; font-size: 0.85em;">高度 (px):</label>
+                                    <input type="number" id="canvasHeight" value="600" min="100" max="5000" style="width: 100%; margin-top: 4px; padding: 6px; background: #333; border: 1px solid #444; color: #e0e0e0; border-radius: 4px;">
+                                </div>
+                                <button class="menu-item" onclick="createNewCanvas()" style="grid-column: span 2; background: #3a8b5a; color: white;">创建白色画布</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">预设尺寸</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="createNewCanvas(800, 600)">800×600</button>
+                                <button class="menu-item" onclick="createNewCanvas(1024, 768)">1024×768</button>
+                                <button class="menu-item" onclick="createNewCanvas(1920, 1080)">1920×1080</button>
+                                <button class="menu-item" onclick="createNewCanvas(500, 500)">500×500</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 滤镜工具 -->
                 <div class="tool-dropdown" id="filterDropdown">
                     <button class="tool-btn" onclick="toggleDropdown('filterDropdown')">
@@ -1843,8 +1883,8 @@
     </div>
 
     <script type="module">
-        import init from './pkg/photon_wasm.js?v=21';
-        import { ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint } from './pkg/photon_wasm.js?v=21';
+        import init from './pkg/photon_wasm.js?v=24';
+        import { ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint } from './pkg/photon_wasm.js?v=24';
 
         // 将类型导出到全局 window 对象
         window.BrushType = BrushType;
@@ -4764,6 +4804,61 @@ window.applyText = function() {
                     updateCanvas();
                     saveToHistory();
                 }
+            }
+        }
+
+        // 创建新的白色画布
+        window.createNewCanvas = function(width, height) {
+            // 如果没有提供参数，从输入框获取
+            if (!width || !height) {
+                width = parseInt(document.getElementById('canvasWidth').value);
+                height = parseInt(document.getElementById('canvasHeight').value);
+            }
+
+            // 验证尺寸
+            if (width < 100 || width > 5000 || height < 100 || height > 5000) {
+                alert('画布尺寸必须在 100 到 5000 像素之间');
+                return;
+            }
+
+            // 如果已有图像，确认是否覆盖
+            if (processor && currentImage) {
+                if (!confirm('创建新画布将覆盖当前图像，确定继续吗？')) {
+                    return;
+                }
+            }
+
+            try {
+                // 创建一个临时的 Canvas 生成白色图片
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = width;
+                tempCanvas.height = height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.fillStyle = '#FFFFFF';
+                tempCtx.fillRect(0, 0, width, height);
+
+                // 转换为 Blob
+                tempCanvas.toBlob((blob) => {
+                    if (blob) {
+                        const file = new File([blob], 'white-canvas.png', { type: 'image/png' });
+                        loadImage(file);
+
+                        // 重置历史记录
+                        historyStack = [];
+                        redoStack = [];
+
+                        // 关闭下拉菜单
+                        const dropdown = document.getElementById('newCanvasDropdown');
+                        if (dropdown) {
+                            dropdown.classList.remove('active');
+                        }
+
+                        console.log(`创建了 ${width}×${height} 的白色画布`);
+                    }
+                }, 'image/png');
+            } catch (error) {
+                console.error('创建画布失败:', error);
+                alert('创建画布失败: ' + error.message);
             }
         }
 

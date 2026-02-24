@@ -1028,6 +1028,27 @@ export class ImageProcessor {
         }
     }
     /**
+     * 创建指定大小的白色画布
+     * @param {number} width
+     * @param {number} height
+     * @returns {ImageProcessor}
+     */
+    static new_white_canvas(width, height) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.imageprocessor_new_white_canvas(retptr, width, height);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+            if (r2) {
+                throw takeObject(r1);
+            }
+            return ImageProcessor.__wrap(r0);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
      * @param {number} offset_amt
      */
     offset_blue(offset_amt) {
