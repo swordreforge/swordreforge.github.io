@@ -5,8 +5,6 @@ const CACHE_NAME = 'photon-wasm-v1';
 const ASSETS_TO_CACHE = [
   './pkg/photon_wasm.js',
   './pkg/photon_wasm_bg.wasm',
-  './pkg/photon_wasm.d.ts',
-  './pkg/photon_wasm_bg.wasm.d.ts',
   './index.html'
 ];
 
