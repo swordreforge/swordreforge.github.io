@@ -1003,6 +1003,55 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 像素工具 -->
+                <div class="tool-dropdown" id="pixelDropdown">
+                    <button class="tool-btn" onclick="toggleDropdown('pixelDropdown')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        像素
+                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div class="menu-section">
+                            <div class="menu-category">通道调整</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="alterRedChannel(50)">红+50</button>
+                                <button class="menu-item" onclick="alterRedChannel(-50)">红-50</button>
+                                <button class="menu-item" onclick="alterGreenChannel(50)">绿+50</button>
+                                <button class="menu-item" onclick="alterGreenChannel(-50)">绿-50</button>
+                                <button class="menu-item" onclick="alterBlueChannel(50)">蓝+50</button>
+                                <button class="menu-item" onclick="alterBlueChannel(-50)">蓝-50</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">噪点效果</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyPinkNoise()">粉色噪点</button>
+                                <button class="menu-item" onclick="applyColorNoise(0.1, 0.1, 0.6)">蓝色噪点</button>
+                                <button class="menu-item" onclick="applyColorNoise(0.1, 0.6, 0.1)">绿色噪点</button>
+                                <button class="menu-item" onclick="applyColorNoise(0.6, 0.1, 0.1)">红色噪点</button>
+                                <button class="menu-item" onclick="applyColorNoise(0.6, 0.6, 0.1)">黄色噪点</button>
+                                <button class="menu-item" onclick="applyColorNoise(0.6, 0.1, 0.6)">紫色噪点</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">图像处理</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="quickAdjust('noise', 1)">添加噪点 +1</button>
+                                <button class="menu-item" onclick="quickAdjust('noiseReduction', 1)">降噪 +1</button>
+                                <button class="menu-item" onclick="quickAdjust('sharpen', 1)">锐化 +1</button>
+                                <button class="menu-item" onclick="applyPixelate()">像素化</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="toolbar-right">
