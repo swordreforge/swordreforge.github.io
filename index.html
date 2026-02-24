@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WebAssembly 图像处理器</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>">
     <style>
@@ -283,12 +283,16 @@
 
             .toolbar-btn {
                 padding: 6px 12px;
-                min-width: auto;
+                min-width: 0;
                 gap: 6px;
             }
 
             .toolbar-btn span:not(svg) {
                 display: none;
+            }
+
+            .btn-success {
+                min-width: 0;
             }
         }
 
