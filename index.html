@@ -1896,6 +1896,10 @@
         let originalImageData = null;
         let currentImage = null;
         
+        // 离屏 Canvas 用于双缓冲，避免闪屏
+        let offscreenCanvas = null;
+        let offscreenCtx = null;
+        
         // 历史记录管理
         let historyStack = [];
         let redoStack = [];
@@ -1928,6 +1932,8 @@
             width: 5,
             type: 'basic'
         };
+        // 临时绘制变量，用于 mousemove 时的实时绘制
+        let lastBrushPoint = null;
 
         // 保存当前状态到历史记录
         function saveToHistory() {
@@ -2122,7 +2128,9 @@
 
                     processor.begin_stroke(config);
                     processor.add_stroke_point(mouseOrigX, mouseOrigY, 1.0);
-                    updateCanvas();
+                    // 初始化临时绘制变量
+                    lastBrushPoint = { x: mouseOrigX, y: mouseOrigY };
+                    // 不需要在这里调用 updateCanvas()，我们将在 mouseup 时一次性更新
                 }
             }
         }
@@ -2244,9 +2252,27 @@
             // 笔刷绘制
             if (isBrushMode && isBrushDrawing) {
                 if (processor) {
+                    // 将点添加到 WASM 处理器
                     processor.add_stroke_point(mouseOrigX, mouseOrigY, 1.0);
-                    // 实时更新画布显示
-                    updateCanvas();
+
+                    // 直接在主画布上绘制临时线段（避免频繁调用 updateCanvas 导致闪屏）
+                    const canvas = document.getElementById('imageCanvas');
+                    const ctx = canvas.getContext('2d');
+
+                    if (lastBrushPoint) {
+                        // 绘制从上一个点到当前点的线段
+                        ctx.beginPath();
+                        ctx.strokeStyle = brushSettings.color;
+                        ctx.lineWidth = brushSettings.width;
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        ctx.moveTo(lastBrushPoint.x, lastBrushPoint.y);
+                        ctx.lineTo(mouseOrigX, mouseOrigY);
+                        ctx.stroke();
+                    }
+
+                    // 更新上一个点的位置
+                    lastBrushPoint = { x: mouseOrigX, y: mouseOrigY };
                 }
             }
         }
@@ -2258,6 +2284,9 @@
                 isBrushDrawing = false;
                 if (processor) {
                     processor.end_stroke();
+                    // 重置临时绘制变量
+                    lastBrushPoint = null;
+                    // 调用 updateCanvas 显示最终效果（使用离屏 Canvas，不会闪烁）
                     updateCanvas();
                     saveToHistory();
                 }
@@ -4679,7 +4708,7 @@ window.applyText = function() {
             document.getElementById('cancelTextBtn').style.display = 'none';
         };
 
-        // 更新画布
+        // 更新画布（使用离屏 Canvas 和内存视图优化）
         let updateCanvasPromise = null;
 
         function updateCanvas() {
@@ -4692,33 +4721,42 @@ window.applyText = function() {
 
             const width = processor.get_width();
             const height = processor.get_height();
-            const base64 = processor.to_base64();
-
             const canvas = document.getElementById('imageCanvas');
             const ctx = canvas.getContext('2d');
 
-            // 更新画布尺寸
+            // 更新主画布尺寸
             canvas.width = width;
             canvas.height = height;
 
-            // 创建新的 Promise
-            const promise = new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => {
-                    // 只有当这个 Promise 是最新的时才绘制
-                    if (updateCanvasPromise === promise) {
-                        ctx.clearRect(0, 0, width, height);
-                        ctx.drawImage(img, 0, 0);
-                    }
-                    resolve();
-                };
-                img.onerror = () => {
-                    resolve();
-                };
-                img.src = base64;
-            });
+            // 初始化或更新离屏 Canvas
+            if (!offscreenCanvas || offscreenCanvas.width !== width || offscreenCanvas.height !== height) {
+                offscreenCanvas = document.createElement('canvas');
+                offscreenCanvas.width = width;
+                offscreenCanvas.height = height;
+                offscreenCtx = offscreenCanvas.getContext('2d');
+            }
 
-            updateCanvasPromise = promise;
+            // 使用 get_raw_pixels() 获取原始 RGBA 像素数据
+            const pixels = processor.get_raw_pixels();
+            const expectedLength = width * height * 4;
+
+            // 验证像素数据长度
+            if (pixels.length !== expectedLength) {
+                console.warn(`Pixel data length mismatch: expected ${expectedLength}, got ${pixels.length}`);
+                // 尝试修复：截断或填充
+                const validLength = Math.min(pixels.length, expectedLength);
+                const adjustedPixels = new Uint8ClampedArray(expectedLength);
+                adjustedPixels.set(pixels.subarray(0, validLength));
+                const imageData = new ImageData(adjustedPixels, width, height);
+                offscreenCtx.putImageData(imageData, 0, 0);
+            } else {
+                // 直接使用原始像素数据
+                const imageData = new ImageData(new Uint8ClampedArray(pixels), width, height);
+                offscreenCtx.putImageData(imageData, 0, 0);
+            }
+
+            // 将离屏 Canvas 内容绘制到主画布（快速合成，不会闪烁）
+            ctx.drawImage(offscreenCanvas, 0, 0);
 
             // 更新文件大小显示
             const fileSize = Number(processor.get_estimated_filesize());

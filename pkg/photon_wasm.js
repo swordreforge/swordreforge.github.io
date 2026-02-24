@@ -944,6 +944,23 @@ export class ImageProcessor {
         return ret >>> 0;
     }
     /**
+     * 获取原始像素数据（RGBA 格式，每个像素 4 字节）
+     * @returns {Uint8Array}
+     */
+    get_raw_pixels() {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.imageprocessor_get_raw_pixels(retptr, this.__wbg_ptr);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            var v1 = getArrayU8FromWasm0(r0, r1).slice();
+            wasm.__wbindgen_export4(r0, r1 * 1, 1);
+            return v1;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
      * 获取历史笔划数量
      * @returns {number}
      */
