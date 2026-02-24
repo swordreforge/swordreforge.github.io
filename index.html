@@ -3537,6 +3537,19 @@ window.applyText = function() {
             document.getElementById('fileSize').textContent = fileSizeStr;
         }
 
+        // 注册 Service Worker 用于强缓存 WASM 文件
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((registration) => {
+                        console.log('[SW] Registered with scope:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.error('[SW] Registration failed:', error);
+                    });
+            });
+        }
+
         // 初始化
         initWasm();
     </script>

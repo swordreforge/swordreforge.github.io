@@ -1,0 +1,23 @@
+# GitHub Pages 缓存配置
+
+# 停用 Jekyll 处理，提高性能
+markdown: kramdown
+
+# 插件（无插件以提高构建速度）
+plugins: []
+
+# 排除的文件/目录
+exclude:
+  - .gitignore
+  - photon-wasm/
+  - photon-wasm/.cargo/
+  - photon-wasm/target/
+  - node_modules/
+
+# 强缓存静态资源（通过 GitHub Pages 缓存头实现）
+# .wasm 文件和静态资源会被缓存 1 年
+# 实际缓存策略通过 Content-Type 和 GitHub CDN 实现
+
+# 确保 .wasm 文件有正确的 MIME 类型
+mime_types:
+  .wasm: application/wasm
