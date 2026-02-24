@@ -30,5 +30,6 @@ env/
 Thumbs.db
 
 # Build (exclude generated WASM files except hello.wasm)
+photon-wasm/
 photon-wasm/pkg/
 photon-wasm/target/
