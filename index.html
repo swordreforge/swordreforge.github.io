@@ -1843,8 +1843,8 @@
     </div>
 
     <script type="module">
-        import init from './pkg/photon_wasm.js?v=17';
-        import { ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint } from './pkg/photon_wasm.js?v=17';
+        import init from './pkg/photon_wasm.js?v=21';
+        import { ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint } from './pkg/photon_wasm.js?v=21';
 
         // 将类型导出到全局 window 对象
         window.BrushType = BrushType;
@@ -2066,10 +2066,15 @@
                         default: brushType = window.BrushType.Basic;
                     }
 
+                    // 橡皮擦使用白色，其他笔刷使用选择的颜色
+                    const eraserColor = brushType === window.BrushType.Eraser ? 255 : r;
+                    const eraserGreen = brushType === window.BrushType.Eraser ? 255 : g;
+                    const eraserBlue = brushType === window.BrushType.Eraser ? 255 : b;
+
                     const config = new window.BrushConfig(
                         brushType,
                         brushSettings.width,
-                        r, g, b, 255,
+                        eraserColor, eraserGreen, eraserBlue, 255,
                         window.BlendMode.Normal,
                         0.5,
                         0.5
@@ -4635,12 +4640,18 @@ window.applyText = function() {
         };
 
         // 更新画布
+        let updateCanvasPromise = null;
+
         function updateCanvas() {
             if (!processor) return;
+
+            // 取消之前的更新
+            if (updateCanvasPromise) {
+                updateCanvasPromise = null;
+            }
+
             const width = processor.get_width();
             const height = processor.get_height();
-
-            // 使用 get_base64() 获取图像数据并绘制到 Canvas
             const base64 = processor.to_base64();
 
             const canvas = document.getElementById('imageCanvas');
@@ -4650,12 +4661,24 @@ window.applyText = function() {
             canvas.width = width;
             canvas.height = height;
 
-            // 创建图像对象
-            const img = new Image();
-            img.onload = () => {
-                ctx.drawImage(img, 0, 0);
-            };
-            img.src = base64;
+            // 创建新的 Promise
+            const promise = new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    // 只有当这个 Promise 是最新的时才绘制
+                    if (updateCanvasPromise === promise) {
+                        ctx.clearRect(0, 0, width, height);
+                        ctx.drawImage(img, 0, 0);
+                    }
+                    resolve();
+                };
+                img.onerror = () => {
+                    resolve();
+                };
+                img.src = base64;
+            });
+
+            updateCanvasPromise = promise;
 
             // 更新文件大小显示
             const fileSize = Number(processor.get_estimated_filesize());
