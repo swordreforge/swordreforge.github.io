@@ -1,6 +1,287 @@
 /* @ts-self-types="./photon_wasm.d.ts" */
 
 /**
+ * 混合模式
+ * @enum {0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}
+ */
+export const BlendMode = Object.freeze({
+    Normal: 0, "0": "Normal",
+    Multiply: 1, "1": "Multiply",
+    Screen: 2, "2": "Screen",
+    Overlay: 3, "3": "Overlay",
+    SoftLight: 4, "4": "SoftLight",
+    HardLight: 5, "5": "HardLight",
+    Difference: 6, "6": "Difference",
+    Exclusion: 7, "7": "Exclusion",
+    Lighten: 8, "8": "Lighten",
+    Darken: 9, "9": "Darken",
+});
+
+/**
+ * 笔刷配置
+ */
+export class BrushConfig {
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(BrushConfig.prototype);
+        obj.__wbg_ptr = ptr;
+        BrushConfigFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        BrushConfigFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_brushconfig_free(ptr, 0);
+    }
+    /**
+     * 创建默认基础画笔配置
+     * @returns {BrushConfig}
+     */
+    static default_basic() {
+        const ret = wasm.brushconfig_default_basic();
+        return BrushConfig.__wrap(ret);
+    }
+    /**
+     * @param {BrushType} brush_type
+     * @param {number} base_width
+     * @param {number} color_r
+     * @param {number} color_g
+     * @param {number} color_b
+     * @param {number} color_a
+     * @param {BlendMode} blend_mode
+     * @param {number} smoothness
+     * @param {number} pressure_sensitivity
+     */
+    constructor(brush_type, base_width, color_r, color_g, color_b, color_a, blend_mode, smoothness, pressure_sensitivity) {
+        const ret = wasm.brushconfig_new(brush_type, base_width, color_r, color_g, color_b, color_a, blend_mode, smoothness, pressure_sensitivity);
+        this.__wbg_ptr = ret >>> 0;
+        BrushConfigFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * 基础宽度（像素）
+     * @returns {number}
+     */
+    get base_width() {
+        const ret = wasm.__wbg_get_brushconfig_base_width(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * 混合模式
+     * @returns {BlendMode}
+     */
+    get blend_mode() {
+        const ret = wasm.__wbg_get_brushconfig_blend_mode(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * 笔刷类型
+     * @returns {BrushType}
+     */
+    get brush_type() {
+        const ret = wasm.__wbg_get_brushconfig_brush_type(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get color_a() {
+        const ret = wasm.__wbg_get_brushconfig_color_a(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get color_b() {
+        const ret = wasm.__wbg_get_brushconfig_color_b(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get color_g() {
+        const ret = wasm.__wbg_get_brushconfig_color_g(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * 颜色（RGBA）
+     * @returns {number}
+     */
+    get color_r() {
+        const ret = wasm.__wbg_get_brushconfig_color_r(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * 压感强度（0.0 - 1.0）
+     * @returns {number}
+     */
+    get pressure_sensitivity() {
+        const ret = wasm.__wbg_get_brushconfig_pressure_sensitivity(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * 平滑度（0.0 - 1.0）
+     * @returns {number}
+     */
+    get smoothness() {
+        const ret = wasm.__wbg_get_brushconfig_smoothness(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * 基础宽度（像素）
+     * @param {number} arg0
+     */
+    set base_width(arg0) {
+        wasm.__wbg_set_brushconfig_base_width(this.__wbg_ptr, arg0);
+    }
+    /**
+     * 混合模式
+     * @param {BlendMode} arg0
+     */
+    set blend_mode(arg0) {
+        wasm.__wbg_set_brushconfig_blend_mode(this.__wbg_ptr, arg0);
+    }
+    /**
+     * 笔刷类型
+     * @param {BrushType} arg0
+     */
+    set brush_type(arg0) {
+        wasm.__wbg_set_brushconfig_brush_type(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set color_a(arg0) {
+        wasm.__wbg_set_brushconfig_color_a(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set color_b(arg0) {
+        wasm.__wbg_set_brushconfig_color_b(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set color_g(arg0) {
+        wasm.__wbg_set_brushconfig_color_g(this.__wbg_ptr, arg0);
+    }
+    /**
+     * 颜色（RGBA）
+     * @param {number} arg0
+     */
+    set color_r(arg0) {
+        wasm.__wbg_set_brushconfig_color_r(this.__wbg_ptr, arg0);
+    }
+    /**
+     * 压感强度（0.0 - 1.0）
+     * @param {number} arg0
+     */
+    set pressure_sensitivity(arg0) {
+        wasm.__wbg_set_brushconfig_pressure_sensitivity(this.__wbg_ptr, arg0);
+    }
+    /**
+     * 平滑度（0.0 - 1.0）
+     * @param {number} arg0
+     */
+    set smoothness(arg0) {
+        wasm.__wbg_set_brushconfig_smoothness(this.__wbg_ptr, arg0);
+    }
+}
+if (Symbol.dispose) BrushConfig.prototype[Symbol.dispose] = BrushConfig.prototype.free;
+
+/**
+ * 笔划数据
+ */
+export class BrushStroke {
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        BrushStrokeFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_brushstroke_free(ptr, 0);
+    }
+    /**
+     * 添加一个点到笔划
+     * @param {StrokePoint} point
+     */
+    add_point(point) {
+        _assertClass(point, StrokePoint);
+        var ptr0 = point.__destroy_into_raw();
+        wasm.brushstroke_add_point(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * 清除所有点
+     */
+    clear_points() {
+        wasm.brushstroke_clear_points(this.__wbg_ptr);
+    }
+    /**
+     * 获取笔刷配置
+     * @returns {BrushConfig}
+     */
+    get_config() {
+        const ret = wasm.brushstroke_get_config(this.__wbg_ptr);
+        return BrushConfig.__wrap(ret);
+    }
+    /**
+     * @param {BrushConfig} config
+     */
+    constructor(config) {
+        _assertClass(config, BrushConfig);
+        var ptr0 = config.__destroy_into_raw();
+        const ret = wasm.brushstroke_new(ptr0);
+        this.__wbg_ptr = ret >>> 0;
+        BrushStrokeFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * 获取点数量
+     * @returns {number}
+     */
+    point_count() {
+        const ret = wasm.brushstroke_point_count(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+}
+if (Symbol.dispose) BrushStroke.prototype[Symbol.dispose] = BrushStroke.prototype.free;
+
+/**
+ * 笔刷类型
+ * @enum {0 | 1 | 2 | 3 | 4}
+ */
+export const BrushType = Object.freeze({
+    /**
+     * 基础画笔
+     */
+    Basic: 0, "0": "Basic",
+    /**
+     * 铅笔风格
+     */
+    Pencil: 1, "1": "Pencil",
+    /**
+     * 马克笔风格
+     */
+    Marker: 2, "2": "Marker",
+    /**
+     * 水彩笔风格
+     */
+    Watercolor: 3, "3": "Watercolor",
+    /**
+     * 橡皮擦
+     */
+    Eraser: 4, "4": "Eraser",
+});
+
+/**
  * 字体类型枚举
  * @enum {0 | 1 | 2}
  */
@@ -36,6 +317,15 @@ export class ImageProcessor {
     free() {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_imageprocessor_free(ptr, 0);
+    }
+    /**
+     * 添加点到当前笔划
+     * @param {number} x
+     * @param {number} y
+     * @param {number} pressure
+     */
+    add_stroke_point(x, y, pressure) {
+        wasm.imageprocessor_add_stroke_point(this.__wbg_ptr, x, y, pressure);
     }
     /**
      * @param {number} amt
@@ -392,6 +682,15 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_watermark_with_scale(this.__wbg_ptr, ptr0, len0, x, y, scale);
     }
     /**
+     * 开始一笔新画
+     * @param {BrushConfig} config
+     */
+    begin_stroke(config) {
+        _assertClass(config, BrushConfig);
+        var ptr0 = config.__destroy_into_raw();
+        wasm.imageprocessor_begin_stroke(this.__wbg_ptr, ptr0);
+    }
+    /**
      * 混合两张图像（支持任意大小的图像）
      *
      * 这个函数会自动调整第二张图像的大小以匹配第一张图像，然后使用指定的混合模式进行混合。
@@ -452,6 +751,12 @@ export class ImageProcessor {
         wasm.imageprocessor_blend_images_with_scale(this.__wbg_ptr, ptr0, len0, scale, ptr1, len1);
     }
     /**
+     * 清除所有笔划
+     */
+    clear_strokes() {
+        wasm.imageprocessor_clear_strokes(this.__wbg_ptr);
+    }
+    /**
      * @param {number} x1
      * @param {number} y1
      * @param {number} x2
@@ -471,6 +776,18 @@ export class ImageProcessor {
      */
     desaturate_hsl(level) {
         wasm.imageprocessor_desaturate_hsl(this.__wbg_ptr, level);
+    }
+    /**
+     * 直接绘制一笔（简化接口）
+     * @param {any} points_js
+     * @param {number} r
+     * @param {number} g
+     * @param {number} b
+     * @param {number} a
+     * @param {number} width
+     */
+    draw_stroke(points_js, r, g, b, a, width) {
+        wasm.imageprocessor_draw_stroke(this.__wbg_ptr, addHeapObject(points_js), r, g, b, a, width);
     }
     /**
      * @param {string} text
@@ -584,6 +901,12 @@ export class ImageProcessor {
         const len0 = WASM_VECTOR_LEN;
         wasm.imageprocessor_draw_text_with_shadow_and_font(this.__wbg_ptr, ptr0, len0, x, y, font_size, font_type);
     }
+    /**
+     * 结束当前笔划并渲染
+     */
+    end_stroke() {
+        wasm.imageprocessor_end_stroke(this.__wbg_ptr);
+    }
     flip_horizontal() {
         wasm.imageprocessor_flip_horizontal(this.__wbg_ptr);
     }
@@ -618,6 +941,14 @@ export class ImageProcessor {
      */
     get_height() {
         const ret = wasm.imageprocessor_get_height(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
+     * 获取历史笔划数量
+     * @returns {number}
+     */
+    get_stroke_count() {
+        const ret = wasm.imageprocessor_get_stroke_count(this.__wbg_ptr);
         return ret >>> 0;
     }
     /**
@@ -836,6 +1167,14 @@ export class ImageProcessor {
             wasm.__wbindgen_add_to_stack_pointer(16);
             wasm.__wbindgen_export4(deferred1_0, deferred1_1, 1);
         }
+    }
+    /**
+     * 撤销最后一笔
+     * @returns {boolean}
+     */
+    undo_stroke() {
+        const ret = wasm.imageprocessor_undo_stroke(this.__wbg_ptr);
+        return ret !== 0;
     }
 }
 if (Symbol.dispose) ImageProcessor.prototype[Symbol.dispose] = ImageProcessor.prototype.free;
@@ -1247,6 +1586,95 @@ export const SamplingFilter = Object.freeze({
     Gaussian: 4, "4": "Gaussian",
     Lanczos3: 5, "5": "Lanczos3",
 });
+
+/**
+ * 笔划点
+ */
+export class StrokePoint {
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        StrokePointFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_strokepoint_free(ptr, 0);
+    }
+    /**
+     * 压感（0.0 - 1.0）
+     * @returns {number}
+     */
+    get pressure() {
+        const ret = wasm.__wbg_get_strokepoint_pressure(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * 时间戳（毫秒）
+     * @returns {bigint}
+     */
+    get timestamp() {
+        const ret = wasm.__wbg_get_strokepoint_timestamp(this.__wbg_ptr);
+        return BigInt.asUintN(64, ret);
+    }
+    /**
+     * X 坐标
+     * @returns {number}
+     */
+    get x() {
+        const ret = wasm.__wbg_get_strokepoint_x(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * Y 坐标
+     * @returns {number}
+     */
+    get y() {
+        const ret = wasm.__wbg_get_strokepoint_y(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * 压感（0.0 - 1.0）
+     * @param {number} arg0
+     */
+    set pressure(arg0) {
+        wasm.__wbg_set_strokepoint_pressure(this.__wbg_ptr, arg0);
+    }
+    /**
+     * 时间戳（毫秒）
+     * @param {bigint} arg0
+     */
+    set timestamp(arg0) {
+        wasm.__wbg_set_strokepoint_timestamp(this.__wbg_ptr, arg0);
+    }
+    /**
+     * X 坐标
+     * @param {number} arg0
+     */
+    set x(arg0) {
+        wasm.__wbg_set_strokepoint_x(this.__wbg_ptr, arg0);
+    }
+    /**
+     * Y 坐标
+     * @param {number} arg0
+     */
+    set y(arg0) {
+        wasm.__wbg_set_strokepoint_y(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number} pressure
+     * @param {bigint} timestamp
+     */
+    constructor(x, y, pressure, timestamp) {
+        const ret = wasm.strokepoint_new(x, y, pressure, timestamp);
+        this.__wbg_ptr = ret >>> 0;
+        StrokePointFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+}
+if (Symbol.dispose) StrokePoint.prototype[Symbol.dispose] = StrokePoint.prototype.free;
 
 /**
  * Add randomized noise to an image.
@@ -5238,6 +5666,12 @@ function __wbg_get_imports() {
             const ret = getObject(arg0) === undefined;
             return ret;
         },
+        __wbg___wbindgen_number_get_eed4462ef92e1bed: function(arg0, arg1) {
+            const obj = getObject(arg1);
+            const ret = typeof(obj) === 'number' ? obj : undefined;
+            getDataViewMemory0().setFloat64(arg0 + 8 * 1, isLikeNone(ret) ? 0 : ret, true);
+            getDataViewMemory0().setInt32(arg0 + 4 * 0, !isLikeNone(ret), true);
+        },
         __wbg___wbindgen_throw_df03e93053e0f4bc: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
@@ -5274,6 +5708,9 @@ function __wbg_get_imports() {
         __wbg_drawImage_c3857fdfb276fc8e: function() { return handleError(function (arg0, arg1, arg2, arg3) {
             getObject(arg0).drawImage(getObject(arg1), arg2, arg3);
         }, arguments); },
+        __wbg_error_51679600615c775d: function(arg0) {
+            console.error(getObject(arg0));
+        },
         __wbg_error_a6fa202b58aa1cd3: function(arg0, arg1) {
             let deferred0_0;
             let deferred0_1;
@@ -5300,6 +5737,14 @@ function __wbg_get_imports() {
         __wbg_getRandomValues_fc2c42282aa7250c: function(arg0, arg1) {
             getObject(arg0).getRandomValues(getObject(arg1));
         },
+        __wbg_get_c40e2c3262995a8e: function(arg0, arg1) {
+            const ret = getObject(arg0)[arg1 >>> 0];
+            return addHeapObject(ret);
+        },
+        __wbg_get_d0e1306db90b68d9: function() { return handleError(function (arg0, arg1) {
+            const ret = Reflect.get(getObject(arg0), getObject(arg1));
+            return addHeapObject(ret);
+        }, arguments); },
         __wbg_height_3991d9422ca14223: function(arg0) {
             const ret = getObject(arg0).height;
             return ret;
@@ -5332,6 +5777,16 @@ function __wbg_get_imports() {
             const ret = result;
             return ret;
         },
+        __wbg_instanceof_Object_687cb3f0f8443260: function(arg0) {
+            let result;
+            try {
+                result = getObject(arg0) instanceof Object;
+            } catch (_) {
+                result = false;
+            }
+            const ret = result;
+            return ret;
+        },
         __wbg_instanceof_Window_0cc62e4f32542cc4: function(arg0) {
             let result;
             try {
@@ -5340,6 +5795,10 @@ function __wbg_get_imports() {
                 result = false;
             }
             const ret = result;
+            return ret;
+        },
+        __wbg_length_00dd7227fd4626ad: function(arg0) {
+            const ret = getObject(arg0).length;
             return ret;
         },
         __wbg_length_5e07cf181b2745fb: function(arg0) {
@@ -5366,6 +5825,10 @@ function __wbg_get_imports() {
             const ret = new ImageData(getClampedArrayU8FromWasm0(arg0, arg1), arg2 >>> 0, arg3 >>> 0);
             return addHeapObject(ret);
         }, arguments); },
+        __wbg_now_81a04fc60f4b9917: function() {
+            const ret = Date.now();
+            return ret;
+        },
         __wbg_prototypesetcall_d1a7133bc8d83aa9: function(arg0, arg1, arg2) {
             Uint8Array.prototype.set.call(getArrayU8FromWasm0(arg0, arg1), getObject(arg2));
         },
@@ -5458,6 +5921,12 @@ function __wbg_get_imports() {
     };
 }
 
+const BrushConfigFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_brushconfig_free(ptr >>> 0, 1));
+const BrushStrokeFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_brushstroke_free(ptr >>> 0, 1));
 const ImageProcessorFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_imageprocessor_free(ptr >>> 0, 1));
@@ -5470,6 +5939,9 @@ const RgbFinalization = (typeof FinalizationRegistry === 'undefined')
 const RgbaFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_rgba_free(ptr >>> 0, 1));
+const StrokePointFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_strokepoint_free(ptr >>> 0, 1));
 
 function addHeapObject(obj) {
     if (heap_next === heap.length) heap.push(heap.length + 1);

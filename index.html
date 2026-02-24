@@ -1218,6 +1218,49 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 笔刷工具 -->
+                <div class="tool-dropdown" id="brushDropdown">
+                    <button class="tool-btn" onclick="toggleDropdown('brushDropdown')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 20a6 6 0 0 1-12 0V10a6 6 0 0 1 12 0v10z"></path>
+                            <path d="M6 6l12 12"></path>
+                        </svg>
+                        <span>笔刷</span>
+                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div class="menu-section">
+                            <div class="menu-category">笔刷设置</div>
+                            <div class="menu-items">
+                                <div class="menu-item-control">
+                                    <label>颜色</label>
+                                    <input type="color" id="brushColor" value="#000000" onchange="updateBrushColor()">
+                                </div>
+                                <div class="menu-item-control">
+                                    <label>宽度: <span id="brushWidthValue">5</span>px</label>
+                                    <input type="range" id="brushWidth" min="1" max="100" value="5" oninput="updateBrushWidth()">
+                                </div>
+                                <div class="menu-item-control">
+                                    <label>笔刷类型</label>
+                                    <select id="brushType" onchange="updateBrushType()">
+                                        <option value="basic">基础画笔</option>
+                                        <option value="pencil">铅笔</option>
+                                        <option value="marker">马克笔</option>
+                                        <option value="watercolor">水彩笔</option>
+                                        <option value="eraser">橡皮擦</option>
+                                    </select>
+                                </div>
+                                <button class="menu-item" onclick="enableBrushMode()" id="enableBrushBtn">启用笔刷</button>
+                                <button class="menu-item" onclick="disableBrushMode()" id="disableBrushBtn" style="display:none;">禁用笔刷</button>
+                                <button class="menu-item" onclick="undoBrushStroke()">撤销上一笔</button>
+                                <button class="menu-item" onclick="clearBrushStrokes()">清除所有笔刷</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="toolbar-right">
@@ -1800,8 +1843,15 @@
     </div>
 
     <script type="module">
-        import init from './pkg/photon_wasm.js?v=13';
-        import { ImageProcessor } from './pkg/photon_wasm.js?v=13';        let wasmModule = null;
+        import init from './pkg/photon_wasm.js?v=14';
+        import { ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint } from './pkg/photon_wasm.js?v=14';
+
+        // 将类型导出到全局 window 对象
+        window.BrushType = BrushType;
+        window.BlendMode = BlendMode;
+        window.BrushConfig = BrushConfig;
+        window.BrushStroke = BrushStroke;
+        window.StrokePoint = StrokePoint;        let wasmModule = null;
         let processor = null;
         let originalImageData = null;
         let currentImage = null;
@@ -1829,6 +1879,15 @@
         let watermarkDragStart = { x: 0, y: 0 };
         let watermarkResizeHandle = null;
         let initialWatermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
+
+        // 笔刷模式相关变量
+        let isBrushMode = false;
+        let isBrushDrawing = false;
+        let brushSettings = {
+            color: '#000000',
+            width: 5,
+            type: 'basic'
+        };
 
         // 保存当前状态到历史记录
         function saveToHistory() {
@@ -1949,12 +2008,14 @@
             canvasContainer.removeEventListener('mouseup', handleCanvasMouseUp);
             canvasContainer.removeEventListener('mouseleave', handleCanvasMouseLeave);
             canvasContainer.removeEventListener('click', handleCanvasClick);
-            
+            canvasContainer.removeEventListener('mousedown', handleCanvasMouseDown);
+
             // 添加新监听
             canvasContainer.addEventListener('mousemove', handleCanvasMouseMove);
             canvasContainer.addEventListener('mouseup', handleCanvasMouseUp);
             canvasContainer.addEventListener('mouseleave', handleCanvasMouseLeave);
             canvasContainer.addEventListener('click', handleCanvasClick);
+            canvasContainer.addEventListener('mousedown', handleCanvasMouseDown);
         }
 
         // 获取 Canvas 缩放比例
@@ -1966,6 +2027,54 @@
                 scaleX: canvas.width / rect.width,
                 scaleY: canvas.height / rect.height
             };
+        }
+
+        // 鼠标按下处理函数
+        function handleCanvasMouseDown(e) {
+            if (e.button !== 0) return; // 只处理左键
+
+            const canvasContainer = document.getElementById('canvasContainer');
+            if (!canvasContainer) return;
+
+            const rect = canvasContainer.getBoundingClientRect();
+            const scale = getCanvasScale();
+            const mouseOrigX = (e.clientX - rect.left) * scale.scaleX;
+            const mouseOrigY = (e.clientY - rect.top) * scale.scaleY;
+
+            // 笔刷绘制开始
+            if (isBrushMode) {
+                isBrushDrawing = true;
+                if (processor) {
+                    // 将十六进制颜色转换为 RGB
+                    const hex = brushSettings.color.replace('#', '');
+                    const r = parseInt(hex.substring(0, 2), 16);
+                    const g = parseInt(hex.substring(2, 4), 16);
+                    const b = parseInt(hex.substring(4, 6), 16);
+
+                    // 创建笔刷配置
+                    let brushType;
+                    switch (brushSettings.type) {
+                        case 'pencil': brushType = window.BrushType.Pencil; break;
+                        case 'marker': brushType = window.BrushType.Marker; break;
+                        case 'watercolor': brushType = window.BrushType.Watercolor; break;
+                        case 'eraser': brushType = window.BrushType.Eraser; break;
+                        default: brushType = window.BrushType.Basic;
+                    }
+
+                    const config = new window.BrushConfig(
+                        brushType,
+                        brushSettings.width,
+                        r, g, b, 255,
+                        window.BlendMode.Normal,
+                        0.5,
+                        0.5
+                    );
+
+                    processor.begin_stroke(config);
+                    processor.add_stroke_point(mouseOrigX, mouseOrigY, 1.0);
+                    updateCanvas();
+                }
+            }
         }
 
         // 鼠标移动处理函数
@@ -2063,28 +2172,47 @@
             // 文本拖动
             if (isTextMode && isTextDragging) {
                 const textBoxEl = document.getElementById('textBox');
-                
+
                 // 使用存储的 textWidth 和 fontSize 进行边界限制（原始像素）
                 const textWidth = textBox.textWidth;
                 const textHeight = textBox.fontSize;
-                
+
                 let newX = mouseOrigX - textDragStart.x;
                 let newY = mouseOrigY - textDragStart.y;
-                
+
                 newX = Math.max(0, Math.min(canvas.width - textWidth, newX));
                 newY = Math.max(0, Math.min(canvas.height - textHeight, newY));
-                
+
                 textBox.x = newX;
                 textBox.y = newY;
-                
+
                 // 更新预览框 CSS 位置
                 textBoxEl.style.left = (newX / scale.scaleX) + 'px';
                 textBoxEl.style.top = (newY / scale.scaleY) + 'px';
+            }
+
+            // 笔刷绘制
+            if (isBrushMode && isBrushDrawing) {
+                if (processor) {
+                    processor.add_stroke_point(mouseOrigX, mouseOrigY, 1.0);
+                    // 实时更新画布显示
+                    updateCanvas();
+                }
             }
         }
 
         // 鼠标释放处理函数
         function handleCanvasMouseUp() {
+            // 笔刷绘制结束
+            if (isBrushMode && isBrushDrawing) {
+                isBrushDrawing = false;
+                if (processor) {
+                    processor.end_stroke();
+                    updateCanvas();
+                    saveToHistory();
+                }
+            }
+
             // 文本拖动结束
             isTextDragging = false;
             const textBoxEl = document.getElementById('textBox');
@@ -4545,6 +4673,69 @@ window.applyText = function() {
                         console.error('[SW] Registration failed:', error);
                     });
             });
+        }
+
+        // ==================== 笔刷功能 ====================
+
+        // 更新笔刷颜色
+        window.updateBrushColor = function() {
+            brushSettings.color = document.getElementById('brushColor').value;
+        }
+
+        // 更新笔刷宽度
+        window.updateBrushWidth = function() {
+            brushSettings.width = parseInt(document.getElementById('brushWidth').value);
+            document.getElementById('brushWidthValue').textContent = brushSettings.width;
+        }
+
+        // 更新笔刷类型
+        window.updateBrushType = function() {
+            brushSettings.type = document.getElementById('brushType').value;
+        }
+
+        // 启用笔刷模式
+        window.enableBrushMode = function() {
+            if (!processor) {
+                alert('请先上传图片');
+                return;
+            }
+            isBrushMode = true;
+            document.getElementById('enableBrushBtn').style.display = 'none';
+            document.getElementById('disableBrushBtn').style.display = 'block';
+            document.getElementById('canvasContainer').style.cursor = 'crosshair';
+        }
+
+        // 禁用笔刷模式
+        window.disableBrushMode = function() {
+            isBrushMode = false;
+            isBrushDrawing = false;
+            document.getElementById('enableBrushBtn').style.display = 'block';
+            document.getElementById('disableBrushBtn').style.display = 'none';
+            document.getElementById('canvasContainer').style.cursor = 'default';
+        }
+
+        // 撤销上一笔
+        window.undoBrushStroke = function() {
+            if (processor) {
+                const success = processor.undo_stroke();
+                if (success) {
+                    updateCanvas();
+                    saveToHistory();
+                } else {
+                    alert('没有可以撤销的笔刷');
+                }
+            }
+        }
+
+        // 清除所有笔刷
+        window.clearBrushStrokes = function() {
+            if (confirm('确定要清除所有笔刷吗？')) {
+                if (processor) {
+                    processor.clear_strokes();
+                    updateCanvas();
+                    saveToHistory();
+                }
+            }
         }
 
         // 初始化
