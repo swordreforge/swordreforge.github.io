@@ -1749,8 +1749,8 @@
                     <div class="slider-container">
                         <label>混合模式</label>
                         <select id="watermarkBlendMode" style="width: 100%; padding: 8px; background: #444; color: #e0e0e0; border: 1px solid #555; border-radius: 6px;" disabled>
-                            <option value="overlay">叠加 (默认)</option>
-                            <option value="over">覆盖</option>
+                            <option value="over">覆盖 (默认)</option>
+                            <option value="overlay">叠加</option>
                             <option value="atop">在上</option>
                             <option value="xor">异或</option>
                             <option value="plus">相加</option>
@@ -4581,6 +4581,15 @@
                 return;
             }
 
+            // 如果在多边形预览模式，需要清空 cropOverlay 和多边形点
+            if (currentMaskType === 'polygon') {
+                const cropOverlay = document.getElementById('cropOverlay');
+                const ctx = cropOverlay.getContext('2d');
+                ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
+                cropOverlay.style.display = 'none';
+                polygonPoints = [];
+            }
+
             if (maskPreviewImageData) {
                 // 恢复预览前的图像
                 try {
@@ -5099,7 +5108,10 @@
         
         // 画布点击事件（用于多边形抠图）
         const canvasElement = document.getElementById('imageCanvas');
-        canvasElement.addEventListener('click', function(e) {
+        const cropOverlayElement = document.getElementById('cropOverlay');
+
+        // 定义多边形抠图点击处理函数
+        function handlePolygonClick(e) {
             if (!isPolygonCropMode || !processor) return;
 
             // 如果在预览模式下，点击会继续添加点
@@ -5141,23 +5153,33 @@
             if (polygonPoints.length === 3) {
                 enterPolygonPreviewMode();
             }
-        });
-        
-        // 右键点击进入预览模式
-        canvasElement.addEventListener('contextmenu', function(e) {
-            if (isPolygonCropMode && polygonPoints.length >= 3) {
-                e.preventDefault();
-                enterPolygonMaskPreview();
-            }
-        });
+        }
 
-        // 双击进入预览模式
-        canvasElement.addEventListener('dblclick', function(e) {
+        // 定义右键点击处理函数
+        function handlePolygonContextMenu(e) {
             if (isPolygonCropMode && polygonPoints.length >= 3) {
                 e.preventDefault();
                 enterPolygonMaskPreview();
             }
-        });
+        }
+
+        // 定义双击处理函数
+        function handlePolygonDoubleClick(e) {
+            if (isPolygonCropMode && polygonPoints.length >= 3) {
+                e.preventDefault();
+                enterPolygonMaskPreview();
+            }
+        }
+
+        // 在 imageCanvas 上添加事件监听器
+        canvasElement.addEventListener('click', handlePolygonClick);
+        canvasElement.addEventListener('contextmenu', handlePolygonContextMenu);
+        canvasElement.addEventListener('dblclick', handlePolygonDoubleClick);
+
+        // 在 cropOverlay 上也添加事件监听器（当多边形抠图模式时）
+        cropOverlayElement.addEventListener('click', handlePolygonClick);
+        cropOverlayElement.addEventListener('contextmenu', handlePolygonContextMenu);
+        cropOverlayElement.addEventListener('dblclick', handlePolygonDoubleClick);
         
         // 绘制多边形预览
         function drawPolygonPreview() {
