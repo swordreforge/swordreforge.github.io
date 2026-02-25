@@ -2363,10 +2363,16 @@
 
                 textBox.x = newX;
                 textBox.y = newY;
+                
+                // 获取画布在容器中的实际位置（考虑 flex 布局的居中偏移）
+                const canvasRect = canvas.getBoundingClientRect();
+                const containerRect = canvasContainer.getBoundingClientRect();
+                const canvasOffsetX = canvasRect.left - containerRect.left;
+                const canvasOffsetY = canvasRect.top - containerRect.top;
 
-                // 更新预览框 CSS 位置
-                textBoxEl.style.left = (newX / scale.scaleX) + 'px';
-                textBoxEl.style.top = (newY / scale.scaleY) + 'px';
+                // 更新预览框 CSS 位置，并加上画布在容器中的偏移
+                textBoxEl.style.left = (canvasOffsetX + newX / scale.scaleX) + 'px';
+                textBoxEl.style.top = (canvasOffsetY + newY / scale.scaleY) + 'px';
             }
 
             // 笔刷绘制
@@ -5800,11 +5806,21 @@
             // 使用 Canvas 测量文本宽度，提高精度
             const ctx = canvas.getContext('2d');
             const fontType = parseInt(document.getElementById('fontSelect').value);
-            let fontName = 'Roboto';
-            if (fontType === 1) fontName = 'AlibabaPuHuiTi-3-55-Regular';
-            else if (fontType === 2) fontName = '鸿雷小纸条青春体';
-            
-            ctx.font = `${textBox.fontSize}px '${fontName}'`;
+            // 字体映射：WASM 内嵌字体 -> 浏览器近似替代字体
+            // 注意：WASM 使用内嵌字体，预览使用浏览器字体，可能不完全一致
+            let fontName = 'monospace'; // 默认点阵字体替代
+            if (fontType === 0) {
+                // 丁卯点阵体 -> 使用等宽字体或点阵字体
+                fontName = '"Courier New", monospace';
+            } else if (fontType === 1) {
+                // Roboto -> 使用 Roboto 或无衬线字体
+                fontName = 'Roboto, Arial, sans-serif';
+            } else if (fontType === 2) {
+                // 站酷高端黑 -> 使用粗体中文字体
+                fontName = '"Microsoft YaHei", "SimHei", sans-serif';
+            }
+
+            ctx.font = `${textBox.fontSize}px ${fontName}`;
             const textWidth = ctx.measureText(text).width;
             textBox.textWidth = textWidth; // 存储文本宽度
             const textHeight = textBox.fontSize;
@@ -5818,15 +5834,27 @@
             // 显示文本框
             const textBoxEl = document.getElementById('textBox');
             textBoxEl.style.display = 'flex';
-            // 将原始像素坐标转换为 CSS 像素
-            textBoxEl.style.left = (textBox.x / scale.scaleX) + 'px';
-            textBoxEl.style.top = (textBox.y / scale.scaleY) + 'px';
+            
+            // 获取画布在容器中的实际位置（考虑 flex 布局的居中偏移）
+            const canvasRect = canvas.getBoundingClientRect();
+            const containerRect = canvasContainer.getBoundingClientRect();
+            const canvasOffsetX = canvasRect.left - containerRect.left;
+            const canvasOffsetY = canvasRect.top - containerRect.top;
+            
+            // 将原始像素坐标转换为 CSS 像素，并加上画布在容器中的偏移
+            textBoxEl.style.left = (canvasOffsetX + textBox.x / scale.scaleX) + 'px';
+            textBoxEl.style.top = (canvasOffsetY + textBox.y / scale.scaleY) + 'px';
             // 设置精确宽高（原始像素转 CSS）
             textBoxEl.style.width = (textWidth / scale.scaleX) + 'px';
             textBoxEl.style.height = (textHeight / scale.scaleY) + 'px';
-            // 字体大小转换为 CSS 像素
-            textBoxEl.style.fontSize = (textBox.fontSize / scale.scaleY) + 'px';
+            // 字体大小需要考虑缩放，但 WASM 和浏览器字体渲染有差异，添加补偿系数
+            const fontRenderRatio = 0.85; // 补偿系数，根据实际效果调整
+            textBoxEl.style.fontSize = (textBox.fontSize / scale.scaleY * fontRenderRatio) + 'px';
             textBoxEl.style.color = textBox.color;
+            textBoxEl.style.fontWeight = 'normal'; // 确保字体粗细正确
+            textBoxEl.style.letterSpacing = '-1.5px'; // 调整字间距，WASM 字体字间距更窄
+            // 设置字体（使用完整的字体栈）
+            textBoxEl.style.fontFamily = fontName;
             textBoxEl.textContent = text;
 
             // 更新按钮显示
@@ -5875,33 +5903,61 @@
             const text = document.getElementById('textInput').value;
             const fontSize = parseInt(document.getElementById('fontSizeSlider').value);
             const offset = parseInt(document.getElementById('textOffsetSlider').value);
-            
+
             // 重新测量文本宽度
             const canvas = document.getElementById('imageCanvas');
             const ctx = canvas.getContext('2d');
             const fontType = parseInt(document.getElementById('fontSelect').value);
-            let fontName = 'Roboto';
-            if (fontType === 1) fontName = 'AlibabaPuHuiTi-3-55-Regular';
-            else if (fontType === 2) fontName = '鸿雷小纸条青春体';
-            ctx.font = `${fontSize}px '${fontName}'`;
+            // 字体映射：WASM 内嵌字体 -> 浏览器近似替代字体
+            // 注意：WASM 使用内嵌字体，预览使用浏览器字体，可能不完全一致
+            let fontName = 'monospace'; // 默认点阵字体替代
+            if (fontType === 0) {
+                // 丁卯点阵体 -> 使用等宽字体或点阵字体
+                fontName = '"Courier New", monospace';
+            } else if (fontType === 1) {
+                // Roboto -> 使用 Roboto 或无衬线字体
+                fontName = 'Roboto, Arial, sans-serif';
+            } else if (fontType === 2) {
+                // 站酷高端黑 -> 使用粗体中文字体
+                fontName = '"Microsoft YaHei", "SimHei", sans-serif';
+            }
+
+            ctx.font = `${fontSize}px ${fontName}`;
             const textWidth = ctx.measureText(text).width;
-            
+
             // 更新 textBox 对象
             textBox.text = text;
             textBox.fontSize = fontSize;
             textBox.color = document.getElementById('textColorPicker').value;
             textBox.textWidth = textWidth;
-            
+
             // 更新预览框样式
             textBoxEl.textContent = text;
-            textBoxEl.style.fontSize = (fontSize / scale.scaleY) + 'px';
+            // 字体大小需要考虑缩放，但 WASM 和浏览器字体渲染有差异，添加补偿系数
+            // 调整补偿系数使预览字体大小匹配实际效果
+            const fontRenderRatio = 0.85; // 补偿系数，根据实际效果调整
+            textBoxEl.style.fontSize = (fontSize / scale.scaleY * fontRenderRatio) + 'px';
             textBoxEl.style.color = textBox.color;
+            textBoxEl.style.fontWeight = 'normal'; // 确保字体粗细正确
+            textBoxEl.style.letterSpacing = '-1.5px'; // 调整字间距，WASM 字体字间距更窄
+            // 使用完整的字体栈（已包含引号和备选字体）
+            textBoxEl.style.fontFamily = fontName;
             textBoxEl.style.width = (textWidth / scale.scaleX) + 'px';
-            textBoxEl.style.height = (fontSize / scale.scaleY) + 'px';
+            textBoxEl.style.height = (fontSize / scale.scaleY * fontRenderRatio) + 'px';
             
+            // 获取画布在容器中的实际位置（考虑 flex 布局的居中偏移）
+            const canvasRect = canvas.getBoundingClientRect();
+            const containerRect = document.getElementById('canvasContainer').getBoundingClientRect();
+            const canvasOffsetX = canvasRect.left - containerRect.left;
+            const canvasOffsetY = canvasRect.top - containerRect.top;
+            
+            // 添加画布偏移，确保预览框跟随画布位置
+            textBoxEl.style.left = (canvasOffsetX + textBox.x / scale.scaleX) + 'px';
+            textBoxEl.style.top = (canvasOffsetY + textBox.y / scale.scaleY) + 'px';
+
             // 更新偏移值显示
             document.getElementById('textOffsetValue').textContent = offset;
-            
+
             // 应用垂直偏移预览效果（transform 不影响实际坐标）
             textBoxEl.style.transform = `translateY(${offset / scale.scaleY}px)`;
         }
@@ -6057,10 +6113,12 @@ window.applyText = function() {
                 const g = parseInt(colorHex.slice(3, 5), 16);
                 const b = parseInt(colorHex.slice(5, 7), 16);
 
-                // 直接使用预览框左上角坐标，Y 坐标加上字体高度（左下角基准）
-                const drawX = Math.floor(textBox.x);
+                // 使用预览框左上角坐标，Y 坐标加上字体高度（WASM 使用左下角基准）
+                // 偏移量需要与预览框的 transform 方向一致（translateY 向下为正）
+                const drawX = Math.floor(textBox.x + 160); // X方向调整，增加160像素偏移
                 const offset = parseInt(document.getElementById('textOffsetSlider').value);
-                const drawY = Math.floor(textBox.y + fontSize + offset);
+                // 预览框的 top 是 textBox.y，调整基线偏移使预览和实际绘制对齐
+                const drawY = Math.floor(textBox.y + fontSize * 0 + offset); // 基线偏移设为0
 
                 if (withShadow) {
                     processor.draw_text_with_shadow_and_color_and_font(text, drawX, drawY, fontSize, r, g, b, fontType);
