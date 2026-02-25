@@ -1257,6 +1257,22 @@
                                 <button class="menu-item" onclick="resizeImage()">调整尺寸</button>
                             </div>
                         </div>
+                        <div class="menu-section">
+                            <div class="menu-category">抠图工具</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="togglePolygonCropMode()">多边形抠图</button>
+                                <button class="menu-item" onclick="applyCircularMask()">圆形抠图</button>
+                                <button class="menu-item" onclick="applyAutoCropByColor()">自动抠图（颜色）</button>
+                                <button class="menu-item" onclick="applyRefineEdges()">边缘优化</button>
+                                <button class="menu-item" onclick="applySmartCrop()">智能抠图</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">裁剪工具</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="enableCropMode()">裁剪</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -4543,7 +4559,7 @@
                     2      // 平滑半径
                 );
                 
-                redrawCanvas();
+                updateCanvas();
                 
                 // 退出多边形抠图模式
                 togglePolygonCropMode();
