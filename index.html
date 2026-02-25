@@ -3804,11 +3804,9 @@
             try {
                 // 基于原始图像应用所有调整
                 if (originalProcessor) {
-                    // 创建新的处理器实例（基于原始图像）
-                    const base64 = originalProcessor.to_base64();
-                    const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
-                    const uint8Array = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-                    processor = ImageProcessor.new_from_bytes(uint8Array);
+                    // 创建新的处理器实例（基于原始图像，使用 get_bytes() 代替 to_base64()，提升性能）
+                    const originalBytes = originalProcessor.get_bytes();
+                    processor = ImageProcessor.new_from_bytes(originalBytes);
                     
                     // 应用亮度 (-255 到 255)
                     const adjustedBrightness = Math.max(-255, Math.min(255, brightness));
@@ -4509,8 +4507,16 @@
 
             // 预览状态已经是应用后的状态，maskPreviewImageData 保存的是应用前的状态
             // 直接保存应用前的状态到历史记录
+            let historyData;
+            if (maskPreviewImageData instanceof Uint8Array) {
+                // 将 Uint8Array 转换为 base64 用于历史记录存储
+                historyData = btoa(String.fromCharCode.apply(null, new Uint8Array(maskPreviewImageData)));
+            } else {
+                // 兼容旧的 base64 格式
+                historyData = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+            }
             historyStack.push({
-                base64: maskPreviewImageData,
+                base64: historyData,
                 width: processor.get_width(),
                 height: processor.get_height()
             });
@@ -4551,10 +4557,15 @@
             if (maskPreviewImageData) {
                 // 恢复预览前的图像
                 try {
-                    // 提取纯 base64 数据（移除可能的 data URI 前缀）
-                    const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
-                    const originalBytes = base64_to_bytes(base64Data);
-                    processor = ImageProcessor.new_from_bytes(originalBytes);
+                    // maskPreviewImageData 现在是 Uint8Array，直接使用
+                    if (maskPreviewImageData instanceof Uint8Array) {
+                        processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
+                    } else {
+                        // 兼容旧的 base64 格式
+                        const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                        const originalBytes = base64_to_bytes(base64Data);
+                        processor = ImageProcessor.new_from_bytes(originalBytes);
+                    }
                     updateCanvas();
                 } catch (error) {
                     console.error('Failed to restore image:', error);
@@ -4958,8 +4969,8 @@
 
             showLoading(true);
 
-            // 保存当前图像数据
-            maskPreviewImageData = processor.to_base64();
+            // 保存当前图像数据（使用 get_bytes() 代替 to_base64()，提升性能）
+            maskPreviewImageData = processor.get_bytes();
 
             try {
                 const centerX = rectSelectionBox.x + rectSelectionBox.width / 2;
@@ -5166,8 +5177,8 @@
 
             showLoading(true);
 
-            // 保存当前图像数据用于恢复（使用base64）
-            maskPreviewImageData = processor.to_base64();
+            // 保存当前图像数据用于恢复（使用 get_bytes() 代替 base64，提升性能）
+            maskPreviewImageData = processor.get_bytes();
 
             // 转换顶点为平坦数组
             const vertices = [];
@@ -5203,9 +5214,14 @@
                 alert(`预览失败: ${error.message}`);
                 if (maskPreviewImageData) {
                     try {
-                        const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
-                        const originalBytes = base64_to_bytes(base64Data);
-                        processor = ImageProcessor.new_from_bytes(originalBytes);
+                        if (maskPreviewImageData instanceof Uint8Array) {
+                            processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
+                        } else {
+                            // 兼容旧的 base64 格式
+                            const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                            const originalBytes = base64_to_bytes(base64Data);
+                            processor = ImageProcessor.new_from_bytes(originalBytes);
+                        }
                         updateCanvas();
                     } catch (e) {
                         console.error('Failed to restore image:', e);
@@ -5316,8 +5332,8 @@
             showLoading(true);
 
             try {
-                // 保存当前图像数据用于恢复（使用base64）
-                maskPreviewImageData = processor.to_base64();
+                // 保存当前图像数据用于恢复（使用 get_bytes() 代替 base64，提升性能）
+                maskPreviewImageData = processor.get_bytes();
 
                 const centerX = parseFloat(document.getElementById('circleCenterXSlider').value);
                 const centerY = parseFloat(document.getElementById('circleCenterYSlider').value);
@@ -5339,9 +5355,14 @@
                 alert(`预览失败: ${error.message}`);
                 if (maskPreviewImageData) {
                     try {
-                        const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
-                        const originalBytes = base64_to_bytes(base64Data);
-                        processor = ImageProcessor.new_from_bytes(originalBytes);
+                        if (maskPreviewImageData instanceof Uint8Array) {
+                            processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
+                        } else {
+                            // 兼容旧的 base64 格式
+                            const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                            const originalBytes = base64_to_bytes(base64Data);
+                            processor = ImageProcessor.new_from_bytes(originalBytes);
+                        }
                         updateCanvas();
                     } catch (e) {
                         console.error('Failed to restore image:', e);
@@ -5391,8 +5412,8 @@
             showLoading(true);
 
             try {
-                // 保存当前图像数据用于恢复（使用base64）
-                maskPreviewImageData = processor.to_base64();
+                // 保存当前图像数据用于恢复（使用 get_bytes() 代替 base64，提升性能）
+                maskPreviewImageData = processor.get_bytes();
 
                 const colorHex = document.getElementById('targetColorPicker').value;
                 const tolerance = parseInt(document.getElementById('toleranceSlider').value);
@@ -5418,9 +5439,14 @@
                 alert(`预览失败: ${error.message}`);
                 if (maskPreviewImageData) {
                     try {
-                        const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
-                        const originalBytes = base64_to_bytes(base64Data);
-                        processor = ImageProcessor.new_from_bytes(originalBytes);
+                        if (maskPreviewImageData instanceof Uint8Array) {
+                            processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
+                        } else {
+                            // 兼容旧的 base64 格式
+                            const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                            const originalBytes = base64_to_bytes(base64Data);
+                            processor = ImageProcessor.new_from_bytes(originalBytes);
+                        }
                         updateCanvas();
                     } catch (e) {
                         console.error('Failed to restore image:', e);
@@ -5508,8 +5534,8 @@
             showLoading(true);
 
             try {
-                // 保存当前图像数据用于恢复（使用base64）
-                maskPreviewImageData = processor.to_base64();
+                // 保存当前图像数据用于恢复（使用 get_bytes() 代替 base64，提升性能）
+                maskPreviewImageData = processor.get_bytes();
 
                 const threshold = parseInt(document.getElementById('edgeThresholdSlider').value);
                 const featherRadius = parseFloat(document.getElementById('smartFeatherSlider').value);
@@ -5529,9 +5555,14 @@
                 alert(`预览失败: ${error.message}`);
                 if (maskPreviewImageData) {
                     try {
-                        const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
-                        const originalBytes = base64_to_bytes(base64Data);
-                        processor = ImageProcessor.new_from_bytes(originalBytes);
+                        if (maskPreviewImageData instanceof Uint8Array) {
+                            processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
+                        } else {
+                            // 兼容旧的 base64 格式
+                            const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                            const originalBytes = base64_to_bytes(base64Data);
+                            processor = ImageProcessor.new_from_bytes(originalBytes);
+                        }
                         updateCanvas();
                     } catch (e) {
                         console.error('Failed to restore image:', e);
@@ -5984,14 +6015,24 @@ window.applyText = function() {
 
         // 更新画布（使用离屏 Canvas 和内存视图优化）
         let updateCanvasPromise = null;
+        let updateCanvasScheduled = false;
 
         function updateCanvas() {
             if (!processor) return;
 
-            // 取消之前的更新
-            if (updateCanvasPromise) {
-                updateCanvasPromise = null;
+            // 使用 requestAnimationFrame 实现节流，避免短时间内多次调用
+            if (updateCanvasScheduled) {
+                return; // 已经有更新的请求在队列中
             }
+
+            updateCanvasScheduled = true;
+            requestAnimationFrame(() => {
+                updateCanvasScheduled = false;
+
+                // 取消之前的更新
+                if (updateCanvasPromise) {
+                    updateCanvasPromise = null;
+                }
 
             const width = processor.get_width();
             const height = processor.get_height();
@@ -6040,6 +6081,7 @@ window.applyText = function() {
                 ? `${fileSizeMB} MB`
                 : `${fileSizeKB} KB`;
             document.getElementById('fileSize').textContent = fileSizeStr;
+        });
         }
 
         // 注册 Service Worker 用于强缓存 WASM 文件
