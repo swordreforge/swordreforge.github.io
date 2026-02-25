@@ -4733,7 +4733,7 @@ window.applyText = function() {
                 offscreenCanvas = document.createElement('canvas');
                 offscreenCanvas.width = width;
                 offscreenCanvas.height = height;
-                offscreenCtx = offscreenCanvas.getContext('2d');
+                offscreenCtx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
             }
 
             // 使用 get_raw_pixels() 获取原始 RGBA 像素数据
@@ -4871,7 +4871,7 @@ window.applyText = function() {
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = width;
                 tempCanvas.height = height;
-                const tempCtx = tempCanvas.getContext('2d');
+                const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
                 tempCtx.fillStyle = '#FFFFFF';
                 tempCtx.fillRect(0, 0, width, height);
 
