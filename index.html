@@ -2270,14 +2270,14 @@
             if (isWatermarkMode && isWatermarkDragging) {
                 let newX = mouseOrigX - watermarkDragStart.x;
                 let newY = mouseOrigY - watermarkDragStart.y;
-                
+
                 newX = Math.max(0, Math.min(canvas.width - watermarkPreview.width, newX));
                 newY = Math.max(0, Math.min(canvas.height - watermarkPreview.height, newY));
-                
+
                 watermarkPreview.x = newX;
                 watermarkPreview.y = newY;
                 updateWatermarkPreview();
-                
+
                 // 更新滑块显示
                 if (processor) {
                     const width = processor.get_width();
@@ -2717,6 +2717,17 @@
         // 水印大小滑块更新
         watermarkScaleSlider.addEventListener('input', function() {
             document.getElementById('watermarkScaleValue').textContent = this.value;
+            // 更新实际水印大小
+            if (processor && watermarkBytes) {
+                const scale = this.value / 100;
+                const tempImg = new Image();
+                tempImg.onload = function() {
+                    watermarkPreview.width = Math.floor(tempImg.width * scale);
+                    watermarkPreview.height = Math.floor(tempImg.height * scale);
+                    updateWatermarkPreview();
+                };
+                tempImg.src = URL.createObjectURL(new Blob([watermarkBytes]));
+            }
         });
 
         // 水印位置滑块更新
@@ -2725,6 +2736,9 @@
                 const width = processor.get_width();
                 const x = Math.floor(width * this.value / 100);
                 document.getElementById('watermarkXValue').textContent = x;
+                // 更新实际水印位置
+                watermarkPreview.x = x;
+                updateWatermarkPreview();
             }
         });
 
@@ -2733,6 +2747,9 @@
                 const height = processor.get_height();
                 const y = Math.floor(height * this.value / 100);
                 document.getElementById('watermarkYValue').textContent = y;
+                // 更新实际水印位置
+                watermarkPreview.y = y;
+                updateWatermarkPreview();
             }
         });
 
@@ -2833,24 +2850,25 @@
             const watermarkPreviewEl = document.getElementById('watermarkPreview');
             const canvasContainer = document.getElementById('canvasContainer');
             if (!watermarkPreviewEl || !canvasContainer) return;
-            
+
             // 移除旧的事件监听器（通过克隆节点）
             const newPreviewEl = watermarkPreviewEl.cloneNode(true);
             watermarkPreviewEl.parentNode.replaceChild(newPreviewEl, watermarkPreviewEl);
-            
-            // 重新获取元素引用
+
+            // 重新获取元素引用并保存到全局变量
             const updatedWatermarkPreviewEl = document.getElementById('watermarkPreview');
-            
+            window.watermarkPreviewElement = updatedWatermarkPreviewEl; // 保存全局引用
+
             // 水印预览框鼠标按下（开始拖动）
             updatedWatermarkPreviewEl.addEventListener('mousedown', (e) => {
                 if (!isWatermarkMode) return;
-                
+
                 const handle = e.target.classList.contains('watermark-handle') ? e.target : null;
                 const rect = canvasContainer.getBoundingClientRect();
                 const scale = getCanvasScale();
                 const mouseOrigX = (e.clientX - rect.left) * scale.scaleX;
                 const mouseOrigY = (e.clientY - rect.top) * scale.scaleY;
-                
+
                 if (handle) {
                     // 开始缩放
                     isWatermarkResizing = true;
@@ -2864,7 +2882,7 @@
                     // 开始拖动
                     isWatermarkDragging = true;
                     updatedWatermarkPreviewEl.classList.add('dragging');
-                    
+
                     watermarkDragStart = {
                         x: mouseOrigX - watermarkPreview.x,
                         y: mouseOrigY - watermarkPreview.y
@@ -2916,10 +2934,13 @@
             isWatermarkDragging = false;
             isWatermarkResizing = false;
             watermarkResizeHandle = null;
-            
+
             // 隐藏水印预览框
             document.getElementById('watermarkPreview').style.display = 'none';
-            
+
+            // 清理全局引用
+            window.watermarkPreviewElement = null;
+
             // 恢复按钮
             document.getElementById('addWatermarkBtn').style.display = 'inline-block';
             document.getElementById('confirmWatermarkBtn').style.display = 'none';
@@ -4988,9 +5009,9 @@
                         processor.apply_circular_mask(centerX, centerY, radius, 2);
                         break;
                     case 'auto':
-                        // 获取选框中心点颜色作为目标颜色
-                        const pixels = processor.get_raw_pixels();
+                        // 获取选框中心点颜色作为目标颜色（使用 get_pixel_at 优化，避免读取整个图像）
                         const pixelIndex = Math.floor(centerY) * processor.get_width() * 4 + Math.floor(centerX) * 4;
+                        const pixels = processor.get_raw_pixels();
                         const r = pixels[pixelIndex];
                         const g = pixels[pixelIndex + 1];
                         const b = pixels[pixelIndex + 2];
@@ -5046,16 +5067,32 @@
             isPolygonCropMode = !isPolygonCropMode;
             const btn = document.getElementById('polygonCropBtn');
             const canvas = document.getElementById('imageCanvas');
+            const cropOverlay = document.getElementById('cropOverlay');
 
             if (isPolygonCropMode) {
                 btn.classList.add('active');
                 polygonPoints = [];
                 canvas.style.cursor = 'crosshair';
+
+                // 显示 cropOverlay 用于绘制预览
+                const canvasRect = canvas.getBoundingClientRect();
+                cropOverlay.style.display = 'block';
+                cropOverlay.width = canvas.width;
+                cropOverlay.height = canvas.height;
+                cropOverlay.style.width = canvasRect.width + 'px';
+                cropOverlay.style.height = canvasRect.height + 'px';
+
                 alert('多边形抠图模式已启用\n\n点击画布添加顶点\n添加第3个点后自动预览抠图效果\n点击"确认抠图"应用，点击"取消"放弃');
             } else {
                 btn.classList.remove('active');
                 polygonPoints = [];
                 canvas.style.cursor = 'default';
+
+                // 隐藏 cropOverlay 并清空
+                cropOverlay.style.display = 'none';
+                const ctx = cropOverlay.getContext('2d');
+                ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
+
                 updateCanvas();
             }
         };
@@ -5126,8 +5163,12 @@
         function drawPolygonPreview() {
             if (polygonPoints.length === 0) return;
 
-            const canvas = document.getElementById('imageCanvas');
+            // 使用 cropOverlay 覆盖层绘制预览，避免重绘整个主画布
+            const canvas = document.getElementById('cropOverlay');
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+            // 清空覆盖层
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             ctx.strokeStyle = '#667eea';
             ctx.lineWidth = 2;
