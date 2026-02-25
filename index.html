@@ -3941,7 +3941,7 @@
         window.cropImage = function() {
             if (!processor) return;
             isCropMode = true;
-            
+
             // 初始化裁剪框为图像中心的一半大小
             const canvas = document.getElementById('imageCanvas');
             const width = canvas.width;
@@ -3952,22 +3952,60 @@
                 width: width * 0.5,
                 height: height * 0.5
             };
-            
+
             // 显示裁剪覆盖层
             const cropOverlay = document.getElementById('cropOverlay');
             cropOverlay.style.display = 'block';
+
+            // 设置 canvas 内部尺寸（用于绘制）
             cropOverlay.width = width;
             cropOverlay.height = height;
-            
+
+            // 同步 CSS 显示尺寸以匹配 imageCanvas 的显示效果
+            const canvasRect = canvas.getBoundingClientRect();
+            cropOverlay.style.width = canvasRect.width + 'px';
+            cropOverlay.style.height = canvasRect.height + 'px';
+
             // 显示裁剪控制按钮
             document.getElementById('cropControls').style.display = 'flex';
-            
+
             // 绘制裁剪框
             drawCropOverlay();
-            
+
             // 添加事件监听
             setupCropEvents();
+
+            // 添加窗口大小变化监听器，确保裁剪框尺寸始终与 imageCanvas 同步
+            const resizeHandler = () => {
+                if (isCropMode) {
+                    const updatedCanvas = document.getElementById('imageCanvas');
+                    const updatedCanvasRect = updatedCanvas.getBoundingClientRect();
+                    const updatedCropOverlay = document.getElementById('cropOverlay');
+                    updatedCropOverlay.style.width = updatedCanvasRect.width + 'px';
+                    updatedCropOverlay.style.height = updatedCanvasRect.height + 'px';
+                }
+            };
+            window.addEventListener('resize', resizeHandler);
+            // 保存 resizeHandler 引用以便在取消裁剪时移除
+            window._cropResizeHandler = resizeHandler;
         };
+
+        // 获取 Canvas 显示尺寸和实际尺寸的比例
+        function getCanvasScale(canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return { scaleX, scaleY };
+        }
+
+        // 将显示坐标转换为 Canvas 实际坐标
+        function displayToCanvasCoords(x, y, canvas) {
+            const { scaleX, scaleY } = getCanvasScale(canvas);
+            return {
+                x: x * scaleX,
+                y: y * scaleY
+            };
+        }
 
         // 设置裁剪事件监听
         function setupCropEvents() {
@@ -3986,32 +4024,36 @@
 
             // 鼠标按下
             updatedCropOverlay.addEventListener('mousedown', (e) => {
-                const rect = updatedCropOverlay.getBoundingClientRect();
+                // 使用 imageCanvas 的 getBoundingClientRect() 作为坐标基准
+                const rect = canvas.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
-                
+
+                // 转换为 Canvas 实际坐标
+                const canvasCoords = displayToCanvasCoords(mouseX, mouseY, canvas);
+
                 // 检查是否点击了裁剪框
-                if (mouseX >= cropBox.x && mouseX <= cropBox.x + cropBox.width &&
-                    mouseY >= cropBox.y && mouseY <= cropBox.y + cropBox.height) {
-                    
+                if (canvasCoords.x >= cropBox.x && canvasCoords.x <= cropBox.x + cropBox.width &&
+                    canvasCoords.y >= cropBox.y && canvasCoords.y <= cropBox.y + cropBox.height) {
+
                     // 检查是否点击了调整手柄
                     const handleSize = 16;
-                    if (Math.abs(mouseX - cropBox.x) < handleSize && Math.abs(mouseY - cropBox.y) < handleSize) {
+                    if (Math.abs(canvasCoords.x - cropBox.x) < handleSize && Math.abs(canvasCoords.y - cropBox.y) < handleSize) {
                         isResizing = true;
                         resizeHandle = 'nw';
-                    } else if (Math.abs(mouseX - (cropBox.x + cropBox.width)) < handleSize && Math.abs(mouseY - cropBox.y) < handleSize) {
+                    } else if (Math.abs(canvasCoords.x - (cropBox.x + cropBox.width)) < handleSize && Math.abs(canvasCoords.y - cropBox.y) < handleSize) {
                         isResizing = true;
                         resizeHandle = 'ne';
-                    } else if (Math.abs(mouseX - cropBox.x) < handleSize && Math.abs(mouseY - (cropBox.y + cropBox.height)) < handleSize) {
+                    } else if (Math.abs(canvasCoords.x - cropBox.x) < handleSize && Math.abs(canvasCoords.y - (cropBox.y + cropBox.height)) < handleSize) {
                         isResizing = true;
                         resizeHandle = 'sw';
-                    } else if (Math.abs(mouseX - (cropBox.x + cropBox.width)) < handleSize && Math.abs(mouseY - (cropBox.y + cropBox.height)) < handleSize) {
+                    } else if (Math.abs(canvasCoords.x - (cropBox.x + cropBox.width)) < handleSize && Math.abs(canvasCoords.y - (cropBox.y + cropBox.height)) < handleSize) {
                         isResizing = true;
                         resizeHandle = 'se';
                     } else {
                         isDragging = true;
                     }
-                    
+
                     dragStart = { x: mouseX, y: mouseY };
                     initialCropBox = { ...cropBox };
                     e.preventDefault();
@@ -4021,22 +4063,30 @@
             // 鼠标移动
             updatedCropOverlay.addEventListener('mousemove', (e) => {
                 if (!isCropMode) return;
-                
-                const rect = updatedCropOverlay.getBoundingClientRect();
+
+                // 使用 imageCanvas 的 getBoundingClientRect() 作为坐标基准
+                const rect = canvas.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
                 const dx = mouseX - dragStart.x;
                 const dy = mouseY - dragStart.y;
-                
+
+                // 转换为 Canvas 实际坐标
+                const canvasCoords = displayToCanvasCoords(mouseX, mouseY, canvas);
+
                 // 更新光标样式
-                updateCursor(mouseX, mouseY, rect);
-                
+                updateCursor(canvasCoords.x, canvasCoords.y, rect);
+
                 if (isDragging) {
-                    cropBox.x = Math.max(0, Math.min(canvas.width - cropBox.width, initialCropBox.x + dx));
-                    cropBox.y = Math.max(0, Math.min(canvas.height - cropBox.height, initialCropBox.y + dy));
+                    // 转换移动距离为 Canvas 实际坐标
+                    const { scaleX, scaleY } = getCanvasScale(canvas);
+                    cropBox.x = Math.max(0, Math.min(canvas.width - cropBox.width, initialCropBox.x + dx * scaleX));
+                    cropBox.y = Math.max(0, Math.min(canvas.height - cropBox.height, initialCropBox.y + dy * scaleY));
                     drawCropOverlay();
                 } else if (isResizing) {
-                    handleResize(dx, dy);
+                    // 转换移动距离为 Canvas 实际坐标
+                    const { scaleX, scaleY } = getCanvasScale(canvas);
+                    handleResize(dx * scaleX, dy * scaleY);
                     drawCropOverlay();
                 }
             });
@@ -4047,7 +4097,7 @@
                 isResizing = false;
                 resizeHandle = null;
             });
-            
+
             // 鼠标离开
             updatedCropOverlay.addEventListener('mouseleave', () => {
                 isDragging = false;
@@ -4202,6 +4252,12 @@
             document.getElementById('cropOverlay').style.display = 'none';
             document.getElementById('cropControls').style.display = 'none';
             document.getElementById('imageCanvas').style.cursor = 'default';
+
+            // 移除窗口大小变化监听器
+            if (window._cropResizeHandler) {
+                window.removeEventListener('resize', window._cropResizeHandler);
+                delete window._cropResizeHandler;
+            }
         };
 
         // 格式转换
