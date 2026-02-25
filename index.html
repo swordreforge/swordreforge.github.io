@@ -4609,15 +4609,48 @@
             ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
             ctx.fillRect(0, 0, cropOverlay.width, cropOverlay.height);
 
-            // 清除选框区域的遮罩
-            ctx.clearRect(rectSelectionBox.x, rectSelectionBox.y, rectSelectionBox.width, rectSelectionBox.height);
+            // 根据抠图类型绘制不同的选框
+            if (rectSelectionType === 'circular') {
+                // 圆形抠图：绘制圆形选框
+                const centerX = rectSelectionBox.x + rectSelectionBox.width / 2;
+                const centerY = rectSelectionBox.y + rectSelectionBox.height / 2;
+                const radius = Math.min(rectSelectionBox.width, rectSelectionBox.height) / 2;
 
-            // 绘制选框边框
-            ctx.strokeStyle = '#667eea';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
-            ctx.strokeRect(rectSelectionBox.x, rectSelectionBox.y, rectSelectionBox.width, rectSelectionBox.height);
-            ctx.setLineDash([]);
+                // 清除圆形区域的遮罩
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
+                ctx.restore();
+
+                // 绘制圆形边框
+                ctx.strokeStyle = '#667eea';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // 绘制圆心点
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#333';
+                ctx.stroke();
+            } else {
+                // 其他抠图类型：绘制矩形选框
+                ctx.clearRect(rectSelectionBox.x, rectSelectionBox.y, rectSelectionBox.width, rectSelectionBox.height);
+
+                // 绘制矩形边框
+                ctx.strokeStyle = '#667eea';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.strokeRect(rectSelectionBox.x, rectSelectionBox.y, rectSelectionBox.width, rectSelectionBox.height);
+                ctx.setLineDash([]);
+            }
 
             // 绘制调整手柄
             const handleSize = 16;
@@ -4625,17 +4658,33 @@
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 2;
 
-            // 四角和四边中点（8个手柄）
-            const handles = [
-                { x: rectSelectionBox.x - handleSize/2, y: rectSelectionBox.y - handleSize/2 }, // nw
-                { x: rectSelectionBox.x + rectSelectionBox.width/2 - handleSize/2, y: rectSelectionBox.y - handleSize/2 }, // n
-                { x: rectSelectionBox.x + rectSelectionBox.width - handleSize/2, y: rectSelectionBox.y - handleSize/2 }, // ne
-                { x: rectSelectionBox.x + rectSelectionBox.width - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height/2 - handleSize/2 }, // e
-                { x: rectSelectionBox.x + rectSelectionBox.width - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height - handleSize/2 }, // se
-                { x: rectSelectionBox.x + rectSelectionBox.width/2 - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height - handleSize/2 }, // s
-                { x: rectSelectionBox.x - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height - handleSize/2 }, // sw
-                { x: rectSelectionBox.x - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height/2 - handleSize/2 } // w
-            ];
+            // 根据抠图类型绘制不同的手柄
+            const handles = [];
+            if (rectSelectionType === 'circular') {
+                // 圆形抠图：只显示4个方向的手柄（上、下、左、右），吸附到圆形边缘
+                const centerX = rectSelectionBox.x + rectSelectionBox.width / 2;
+                const centerY = rectSelectionBox.y + rectSelectionBox.height / 2;
+                const radius = Math.min(rectSelectionBox.width, rectSelectionBox.height) / 2;
+                
+                handles.push(
+                    { x: centerX - handleSize/2, y: rectSelectionBox.y - handleSize/2 }, // 上（圆形顶部）
+                    { x: centerX - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height - handleSize/2 }, // 下（圆形底部）
+                    { x: rectSelectionBox.x + radius - handleSize/2, y: centerY - handleSize/2 }, // 左（圆形左侧）
+                    { x: rectSelectionBox.x + rectSelectionBox.width - radius - handleSize/2, y: centerY - handleSize/2 } // 右（圆形右侧）
+                );
+            } else {
+                // 其他抠图类型：显示8个手柄（四角 + 四边中点）
+                handles.push(
+                    { x: rectSelectionBox.x - handleSize/2, y: rectSelectionBox.y - handleSize/2 }, // nw
+                    { x: rectSelectionBox.x + rectSelectionBox.width/2 - handleSize/2, y: rectSelectionBox.y - handleSize/2 }, // n
+                    { x: rectSelectionBox.x + rectSelectionBox.width - handleSize/2, y: rectSelectionBox.y - handleSize/2 }, // ne
+                    { x: rectSelectionBox.x + rectSelectionBox.width - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height/2 - handleSize/2 }, // e
+                    { x: rectSelectionBox.x + rectSelectionBox.width - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height - handleSize/2 }, // se
+                    { x: rectSelectionBox.x + rectSelectionBox.width/2 - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height - handleSize/2 }, // s
+                    { x: rectSelectionBox.x - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height - handleSize/2 }, // sw
+                    { x: rectSelectionBox.x - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height/2 - handleSize/2 } // w
+                );
+            }
 
             handles.forEach(h => {
                 ctx.fillRect(h.x, h.y, handleSize, handleSize);
@@ -4679,16 +4728,32 @@
 
                 // 检查是否点击了调整手柄
                 const halfSize = handleSize / 2;
-                const handles = {
-                    'nw': { x: rectSelectionBox.x, y: rectSelectionBox.y },
-                    'n': { x: rectSelectionBox.x + rectSelectionBox.width/2, y: rectSelectionBox.y },
-                    'ne': { x: rectSelectionBox.x + rectSelectionBox.width, y: rectSelectionBox.y },
-                    'e': { x: rectSelectionBox.x + rectSelectionBox.width, y: rectSelectionBox.y + rectSelectionBox.height/2 },
-                    'se': { x: rectSelectionBox.x + rectSelectionBox.width, y: rectSelectionBox.y + rectSelectionBox.height },
-                    's': { x: rectSelectionBox.x + rectSelectionBox.width/2, y: rectSelectionBox.y + rectSelectionBox.height },
-                    'sw': { x: rectSelectionBox.x, y: rectSelectionBox.y + rectSelectionBox.height },
-                    'w': { x: rectSelectionBox.x, y: rectSelectionBox.y + rectSelectionBox.height/2 }
-                };
+                let handles = {};
+
+                if (rectSelectionType === 'circular') {
+                    // 圆形抠图：只检测4个方向的手柄，吸附到圆形边缘
+                    const centerX = rectSelectionBox.x + rectSelectionBox.width / 2;
+                    const centerY = rectSelectionBox.y + rectSelectionBox.height / 2;
+                    const radius = Math.min(rectSelectionBox.width, rectSelectionBox.height) / 2;
+                    handles = {
+                        'n': { x: centerX, y: rectSelectionBox.y },
+                        's': { x: centerX, y: rectSelectionBox.y + rectSelectionBox.height },
+                        'w': { x: rectSelectionBox.x + radius, y: centerY },
+                        'e': { x: rectSelectionBox.x + rectSelectionBox.width - radius, y: centerY }
+                    };
+                } else {
+                    // 其他抠图类型：检测8个方向的手柄
+                    handles = {
+                        'nw': { x: rectSelectionBox.x, y: rectSelectionBox.y },
+                        'n': { x: rectSelectionBox.x + rectSelectionBox.width/2, y: rectSelectionBox.y },
+                        'ne': { x: rectSelectionBox.x + rectSelectionBox.width, y: rectSelectionBox.y },
+                        'e': { x: rectSelectionBox.x + rectSelectionBox.width, y: rectSelectionBox.y + rectSelectionBox.height/2 },
+                        'se': { x: rectSelectionBox.x + rectSelectionBox.width, y: rectSelectionBox.y + rectSelectionBox.height },
+                        's': { x: rectSelectionBox.x + rectSelectionBox.width/2, y: rectSelectionBox.y + rectSelectionBox.height },
+                        'sw': { x: rectSelectionBox.x, y: rectSelectionBox.y + rectSelectionBox.height },
+                        'w': { x: rectSelectionBox.x, y: rectSelectionBox.y + rectSelectionBox.height/2 }
+                    };
+                }
 
                 for (const [handle, pos] of Object.entries(handles)) {
                     if (Math.abs(canvasCoords.x - pos.x) < halfSize && Math.abs(canvasCoords.y - pos.y) < halfSize) {
@@ -4767,12 +4832,70 @@
 
                 // 更新鼠标样式
                 const canvasCoords = displayToCanvasCoords(mouseX, mouseY, canvas);
-                if (canvasCoords.x >= rectSelectionBox.x && canvasCoords.x <= rectSelectionBox.x + rectSelectionBox.width &&
-                    canvasCoords.y >= rectSelectionBox.y && canvasCoords.y <= rectSelectionBox.y + rectSelectionBox.height) {
-                    updatedCropOverlay.style.cursor = 'move';
+                const handleSize = 16;
+                const halfSize = handleSize / 2;
+                let cursorStyle = 'default';
+
+                if (rectSelectionType === 'circular') {
+                    // 圆形抠图：检查4个方向的手柄，吸附到圆形边缘
+                    const centerX = rectSelectionBox.x + rectSelectionBox.width / 2;
+                    const centerY = rectSelectionBox.y + rectSelectionBox.height / 2;
+                    const radius = Math.min(rectSelectionBox.width, rectSelectionBox.height) / 2;
+                    
+                    if (Math.abs(canvasCoords.x - centerX) < halfSize && Math.abs(canvasCoords.y - rectSelectionBox.y) < halfSize) {
+                        cursorStyle = 'n-resize';
+                    } else if (Math.abs(canvasCoords.x - centerX) < halfSize && Math.abs(canvasCoords.y - (rectSelectionBox.y + rectSelectionBox.height)) < halfSize) {
+                        cursorStyle = 's-resize';
+                    } else if (Math.abs(canvasCoords.x - (rectSelectionBox.x + radius)) < halfSize && Math.abs(canvasCoords.y - centerY) < halfSize) {
+                        cursorStyle = 'w-resize';
+                    } else if (Math.abs(canvasCoords.x - (rectSelectionBox.x + rectSelectionBox.width - radius)) < halfSize && Math.abs(canvasCoords.y - centerY) < halfSize) {
+                        cursorStyle = 'e-resize';
+                    } else {
+                        // 检查是否在圆形内部
+                        const dist = Math.sqrt(Math.pow(canvasCoords.x - centerX, 2) + Math.pow(canvasCoords.y - centerY, 2));
+                        if (dist < radius) {
+                            cursorStyle = 'move';
+                        }
+                    }
                 } else {
-                    updatedCropOverlay.style.cursor = 'default';
+                    // 其他抠图类型：检查8个方向的手柄
+                    const handles = {
+                        'nw': { x: rectSelectionBox.x, y: rectSelectionBox.y },
+                        'n': { x: rectSelectionBox.x + rectSelectionBox.width/2, y: rectSelectionBox.y },
+                        'ne': { x: rectSelectionBox.x + rectSelectionBox.width, y: rectSelectionBox.y },
+                        'e': { x: rectSelectionBox.x + rectSelectionBox.width, y: rectSelectionBox.y + rectSelectionBox.height/2 },
+                        'se': { x: rectSelectionBox.x + rectSelectionBox.width, y: rectSelectionBox.y + rectSelectionBox.height },
+                        's': { x: rectSelectionBox.x + rectSelectionBox.width/2, y: rectSelectionBox.y + rectSelectionBox.height },
+                        'sw': { x: rectSelectionBox.x, y: rectSelectionBox.y + rectSelectionBox.height },
+                        'w': { x: rectSelectionBox.x, y: rectSelectionBox.y + rectSelectionBox.height/2 }
+                    };
+
+                    const cursorMap = {
+                        'nw': 'nw-resize',
+                        'n': 'n-resize',
+                        'ne': 'ne-resize',
+                        'e': 'e-resize',
+                        'se': 'se-resize',
+                        's': 's-resize',
+                        'sw': 'sw-resize',
+                        'w': 'w-resize'
+                    };
+
+                    for (const [handle, pos] of Object.entries(handles)) {
+                        if (Math.abs(canvasCoords.x - pos.x) < halfSize && Math.abs(canvasCoords.y - pos.y) < halfSize) {
+                            cursorStyle = cursorMap[handle];
+                            break;
+                        }
+                    }
+
+                    if (cursorStyle === 'default' && 
+                        canvasCoords.x >= rectSelectionBox.x && canvasCoords.x <= rectSelectionBox.x + rectSelectionBox.width &&
+                        canvasCoords.y >= rectSelectionBox.y && canvasCoords.y <= rectSelectionBox.y + rectSelectionBox.height) {
+                        cursorStyle = 'move';
+                    }
                 }
+
+                updatedCropOverlay.style.cursor = cursorStyle;
             });
 
             // 鼠标释放
