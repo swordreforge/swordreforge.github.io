@@ -2053,21 +2053,21 @@
         // 保存当前状态到历史记录
         function saveToHistory() {
             if (!processor) return;
-            
+
             const state = {
-                base64: processor.to_base64(),
+                bytes: processor.get_bytes(),  // 使用 get_bytes() 代替 to_base64()，提升性能
                 width: processor.get_width(),
                 height: processor.get_height()
             };
-            
+
             historyStack.push(state);
             if (historyStack.length > MAX_HISTORY) {
                 historyStack.shift();
             }
-            
+
             // 清空重做栈
             redoStack = [];
-            
+
             updateUndoRedoButtons();
         }
 
@@ -2077,45 +2077,50 @@
         // 撤销
         window.undo = function() {
             if (historyStack.length === 0) return;
-            
+
             // 保存当前状态到重做栈
             redoStack.push({
-                base64: processor.to_base64(),
+                bytes: processor.get_bytes(),  // 使用 get_bytes() 代替 to_base64()，提升性能
                 width: processor.get_width(),
                 height: processor.get_height()
             });
-            
+
             // 恢复上一个状态
             const state = historyStack.pop();
             restoreState(state);
-            
+
             updateUndoRedoButtons();
         }
 
         // 重做
         window.redo = function() {
             if (redoStack.length === 0) return;
-            
+
             // 保存当前状态到历史栈
             historyStack.push({
-                base64: processor.to_base64(),
+                bytes: processor.get_bytes(),  // 使用 get_bytes() 代替 to_base64()，提升性能
                 width: processor.get_width(),
                 height: processor.get_height()
             });
-            
+
             // 恢复重做状态
             const state = redoStack.pop();
             restoreState(state);
-            
+
             updateUndoRedoButtons();
         }
 
         // 恢复状态
         function restoreState(state) {
-            // 提取纯 base64 数据（移除可能的 data URI 前缀）
-            const base64Data = state.base64.includes(',') ? state.base64.split(',')[1] : state.base64;
-            const uint8Array = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-            processor = ImageProcessor.new_from_bytes(uint8Array);
+            // state.bytes 现在是 Uint8Array，直接使用
+            if (state.bytes instanceof Uint8Array) {
+                processor = ImageProcessor.new_from_bytes(state.bytes);
+            } else {
+                // 兼容旧的 base64 格式
+                const base64Data = state.base64.includes(',') ? state.base64.split(',')[1] : state.base64;
+                const uint8Array = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+                processor = ImageProcessor.new_from_bytes(uint8Array);
+            }
             // 恢复状态时清除 WASM 内部的笔刷历史
             processor.clear_strokes();
             updateCanvas();
@@ -4506,17 +4511,18 @@
             if (!maskPreviewImageData) return;
 
             // 预览状态已经是应用后的状态，maskPreviewImageData 保存的是应用前的状态
-            // 直接保存应用前的状态到历史记录
+            // 直接保存应用前的状态到历史记录（使用 bytes 存储）
             let historyData;
             if (maskPreviewImageData instanceof Uint8Array) {
-                // 将 Uint8Array 转换为 base64 用于历史记录存储
-                historyData = btoa(String.fromCharCode.apply(null, new Uint8Array(maskPreviewImageData)));
+                // 直接使用 Uint8Array
+                historyData = maskPreviewImageData;
             } else {
-                // 兼容旧的 base64 格式
-                historyData = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                // 兼容旧的 base64 格式，转换为 Uint8Array
+                const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                historyData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
             }
             historyStack.push({
-                base64: historyData,
+                bytes: historyData,
                 width: processor.get_width(),
                 height: processor.get_height()
             });
