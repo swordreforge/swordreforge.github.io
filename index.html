@@ -3990,17 +3990,11 @@
             window._cropResizeHandler = resizeHandler;
         };
 
-        // 获取 Canvas 显示尺寸和实际尺寸的比例
-        function getCanvasScale(canvas) {
+        // 将显示坐标转换为 Canvas 实际坐标
+        function displayToCanvasCoords(x, y, canvas) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
-            return { scaleX, scaleY };
-        }
-
-        // 将显示坐标转换为 Canvas 实际坐标
-        function displayToCanvasCoords(x, y, canvas) {
-            const { scaleX, scaleY } = getCanvasScale(canvas);
             return {
                 x: x * scaleX,
                 y: y * scaleY
