@@ -4466,18 +4466,20 @@
                 return;
             }
 
+            // 如果在多边形预览模式（还未应用抠图），先应用抠图
+            if (currentMaskType === 'polygon' && isPolygonCropMode) {
+                enterPolygonMaskPreview();
+                return;
+            }
+
             if (!maskPreviewImageData) return;
 
             // 预览状态已经是应用后的状态，maskPreviewImageData 保存的是应用前的状态
-            // 先恢复到应用前的状态，再保存到历史，然后重新应用
-            const originalBytes = base64_to_bytes(maskPreviewImageData);
-            const originalProcessor = ImageProcessor.new_from_bytes(originalBytes);
-
-            // 保存应用前的状态
+            // 直接保存应用前的状态到历史记录
             historyStack.push({
                 base64: maskPreviewImageData,
-                width: originalProcessor.get_width(),
-                height: originalProcessor.get_height()
+                width: processor.get_width(),
+                height: processor.get_height()
             });
             if (historyStack.length > MAX_HISTORY) {
                 historyStack.shift();
@@ -4504,20 +4506,31 @@
                 return;
             }
 
+            // 如果在多边形抠图模式，退出多边形模式
+            if (isPolygonCropMode) {
+                togglePolygonCropMode();
+                hideMaskPreviewControls();
+                currentMaskType = null;
+                maskPreviewImageData = null;
+                return;
+            }
+
             if (maskPreviewImageData) {
                 // 恢复预览前的图像
-                const originalBytes = base64_to_bytes(maskPreviewImageData);
-                processor = ImageProcessor.new_from_bytes(originalBytes);
-                updateCanvas();
+                try {
+                    // 提取纯 base64 数据（移除可能的 data URI 前缀）
+                    const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                    const originalBytes = base64_to_bytes(base64Data);
+                    processor = ImageProcessor.new_from_bytes(originalBytes);
+                    updateCanvas();
+                } catch (error) {
+                    console.error('Failed to restore image:', error);
+                    alert('恢复图像失败');
+                }
             }
             hideMaskPreviewControls();
             currentMaskType = null;
             maskPreviewImageData = null;
-
-            // 退出所有抠图模式
-            if (isPolygonCropMode) {
-                togglePolygonCropMode();
-            }
         }
 
         // Base64 转 Uint8Array
@@ -4569,6 +4582,9 @@
             const canvasRect = canvas.getBoundingClientRect();
             cropOverlay.style.width = canvasRect.width + 'px';
             cropOverlay.style.height = canvasRect.height + 'px';
+
+            // 隐藏裁剪控制栏（如果显示的话）
+            document.getElementById('cropControls').style.display = 'none';
 
             // 显示预览控制栏（使用确认抠图/取消按钮）
             document.getElementById('maskPreviewControls').style.display = 'flex';
@@ -4824,7 +4840,9 @@
                 alert(`预览失败: ${error.message}`);
                 if (maskPreviewImageData) {
                     try {
-                        const originalBytes = base64_to_bytes(maskPreviewImageData);
+                        // 提取纯 base64 数据（移除可能的 data URI 前缀）
+                        const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                        const originalBytes = base64_to_bytes(base64Data);
                         processor = ImageProcessor.new_from_bytes(originalBytes);
                         updateCanvas();
                     } catch (e) {
@@ -4860,7 +4878,7 @@
                 btn.classList.add('active');
                 polygonPoints = [];
                 canvas.style.cursor = 'crosshair';
-                alert('多边形抠图模式已启用\n\n点击画布添加顶点，至少需要3个点\n右键点击或双击完成选择\n完成后可以预览抠图效果');
+                alert('多边形抠图模式已启用\n\n点击画布添加顶点\n添加第3个点后自动预览抠图效果\n点击"确认抠图"应用，点击"取消"放弃');
             } else {
                 btn.classList.remove('active');
                 polygonPoints = [];
@@ -4873,6 +4891,25 @@
         const canvasElement = document.getElementById('imageCanvas');
         canvasElement.addEventListener('click', function(e) {
             if (!isPolygonCropMode || !processor) return;
+
+            // 如果在预览模式下，点击会继续添加点
+            if (isMaskPreviewMode && currentMaskType === 'polygon') {
+                // 添加新点
+                const canvas = document.getElementById('imageCanvas');
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+
+                const x = (e.clientX - rect.left) * scaleX;
+                const y = (e.clientY - rect.top) * scaleY;
+
+                polygonPoints.push({ x, y });
+
+                // 重新绘制多边形预览（在原图上）
+                updateCanvas();
+                drawPolygonPreview();
+                return;
+            }
 
             const canvas = document.getElementById('imageCanvas');
             const ctx = canvas.getContext('2d');
@@ -4890,9 +4927,9 @@
             updateCanvas();
             drawPolygonPreview();
 
-            // 显示当前点数
-            if (polygonPoints.length >= 3) {
-                console.log(`当前顶点数: ${polygonPoints.length} (至少需要3个点)`);
+            // 当添加第3个点时，进入预览模式（显示确认/取消框，但不应用抠图）
+            if (polygonPoints.length === 3) {
+                enterPolygonPreviewMode();
             }
         });
         
@@ -4946,7 +4983,25 @@
             }
         }
         
-        // 进入多边形抠图预览模式
+        // 进入多边形抠图预览模式（显示控制栏，但不应用抠图）
+        function enterPolygonPreviewMode() {
+            if (polygonPoints.length < 3) {
+                alert('至少需要3个顶点才能形成多边形');
+                return;
+            }
+
+            // 隐藏裁剪控制栏（如果显示的话）
+            document.getElementById('cropControls').style.display = 'none';
+
+            // 显示预览控制栏
+            showMaskPreviewControls();
+            currentMaskType = 'polygon';
+            isMaskPreviewMode = true;
+
+            alert('预览模式下，您可以继续添加顶点调整选区\n点击"确认抠图"应用，点击"取消"放弃');
+        }
+
+        // 进入多边形抠图预览模式（应用抠图效果）
         function enterPolygonMaskPreview() {
             if (polygonPoints.length < 3) {
                 alert('至少需要3个顶点才能形成多边形');
@@ -4975,18 +5030,30 @@
 
                 updateCanvas();
 
+                // 退出多边形抠图模式
+                isPolygonCropMode = false;
+                const btn = document.getElementById('polygonCropBtn');
+                btn.classList.remove('active');
+                document.getElementById('imageCanvas').style.cursor = 'default';
+
+                // 隐藏裁剪控制栏（如果显示的话）
+                document.getElementById('cropControls').style.display = 'none';
+
                 // 显示预览控制栏
                 showMaskPreviewControls();
                 currentMaskType = 'polygon';
-
-                alert('预览模式下，您可以查看抠图效果\n点击"确认抠图"应用，点击"取消"放弃');
             } catch (error) {
                 console.error('Polygon mask preview error:', error);
                 alert(`预览失败: ${error.message}`);
                 if (maskPreviewImageData) {
-                    const originalBytes = base64_to_bytes(maskPreviewImageData);
-                    processor = ImageProcessor.new_from_bytes(originalBytes);
-                    updateCanvas();
+                    try {
+                        const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                        const originalBytes = base64_to_bytes(base64Data);
+                        processor = ImageProcessor.new_from_bytes(originalBytes);
+                        updateCanvas();
+                    } catch (e) {
+                        console.error('Failed to restore image:', e);
+                    }
                 }
             }
 
@@ -5115,9 +5182,14 @@
                 console.error('Circular mask preview error:', error);
                 alert(`预览失败: ${error.message}`);
                 if (maskPreviewImageData) {
-                    const originalBytes = base64_to_bytes(maskPreviewImageData);
-                    processor = ImageProcessor.new_from_bytes(originalBytes);
-                    updateCanvas();
+                    try {
+                        const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                        const originalBytes = base64_to_bytes(base64Data);
+                        processor = ImageProcessor.new_from_bytes(originalBytes);
+                        updateCanvas();
+                    } catch (e) {
+                        console.error('Failed to restore image:', e);
+                    }
                 }
             }
 
@@ -5189,9 +5261,14 @@
                 console.error('Auto crop preview error:', error);
                 alert(`预览失败: ${error.message}`);
                 if (maskPreviewImageData) {
-                    const originalBytes = base64_to_bytes(maskPreviewImageData);
-                    processor = ImageProcessor.new_from_bytes(originalBytes);
-                    updateCanvas();
+                    try {
+                        const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                        const originalBytes = base64_to_bytes(base64Data);
+                        processor = ImageProcessor.new_from_bytes(originalBytes);
+                        updateCanvas();
+                    } catch (e) {
+                        console.error('Failed to restore image:', e);
+                    }
                 }
             }
 
@@ -5295,9 +5372,14 @@
                 console.error('Smart crop preview error:', error);
                 alert(`预览失败: ${error.message}`);
                 if (maskPreviewImageData) {
-                    const originalBytes = base64_to_bytes(maskPreviewImageData);
-                    processor = ImageProcessor.new_from_bytes(originalBytes);
-                    updateCanvas();
+                    try {
+                        const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                        const originalBytes = base64_to_bytes(base64Data);
+                        processor = ImageProcessor.new_from_bytes(originalBytes);
+                        updateCanvas();
+                    } catch (e) {
+                        console.error('Failed to restore image:', e);
+                    }
                 }
             }
 
