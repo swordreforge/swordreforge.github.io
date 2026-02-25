@@ -376,6 +376,22 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_brightness(this.__wbg_ptr, level);
     }
     /**
+     * 应用圆形遮罩
+     *
+     * # 参数
+     * * `center_x` - 圆心 X 坐标
+     * * `center_y` - 圆心 Y 坐标
+     * * `radius` - 圆半径
+     * * `feather_radius` - 羽化半径（像素）
+     * @param {number} center_x
+     * @param {number} center_y
+     * @param {number} radius
+     * @param {number} feather_radius
+     */
+    apply_circular_mask(center_x, center_y, radius, feather_radius) {
+        wasm.imageprocessor_apply_circular_mask(this.__wbg_ptr, center_x, center_y, radius, feather_radius);
+    }
+    /**
      * @param {number} num_strips
      * @param {number} r
      * @param {number} g
@@ -567,6 +583,24 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_pixelate(this.__wbg_ptr, pixel_size);
     }
     /**
+     * 应用多边形遮罩（不规则形状抠图）
+     *
+     * # 参数
+     * * `vertices` - 多边形顶点坐标数组 [x1, y1, x2, y2, ...]
+     * * `anti_aliased` - 是否启用抗锯齿
+     * * `smooth_edges` - 是否平滑边缘
+     * * `smoothing_radius` - 平滑半径（像素）
+     * @param {Float32Array} vertices
+     * @param {boolean} anti_aliased
+     * @param {boolean} smooth_edges
+     * @param {number} smoothing_radius
+     */
+    apply_polygon_mask(vertices, anti_aliased, smooth_edges, smoothing_radius) {
+        const ptr0 = passArrayF32ToWasm0(vertices, wasm.__wbindgen_export);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.imageprocessor_apply_polygon_mask(this.__wbg_ptr, ptr0, len0, anti_aliased, smooth_edges, smoothing_radius);
+    }
+    /**
      * @param {string} filter_name
      */
     apply_preset_filter(filter_name) {
@@ -680,6 +714,24 @@ export class ImageProcessor {
         const ptr0 = passArray8ToWasm0(watermark_bytes, wasm.__wbindgen_export);
         const len0 = WASM_VECTOR_LEN;
         wasm.imageprocessor_apply_watermark_with_scale(this.__wbg_ptr, ptr0, len0, x, y, scale);
+    }
+    /**
+     * 自动抠图 - 基于颜色
+     *
+     * # 参数
+     * * `target_r` - 目标颜色 R 分量
+     * * `target_g` - 目标颜色 G 分量
+     * * `target_b` - 目标颜色 B 分量
+     * * `tolerance` - 颜色容差（0-255）
+     * * `feather_radius` - 边缘羽化半径
+     * @param {number} target_r
+     * @param {number} target_g
+     * @param {number} target_b
+     * @param {number} tolerance
+     * @param {number} feather_radius
+     */
+    auto_crop_by_color(target_r, target_g, target_b, tolerance, feather_radius) {
+        wasm.imageprocessor_auto_crop_by_color(this.__wbg_ptr, target_r, target_g, target_b, tolerance, feather_radius);
     }
     /**
      * 开始一笔新画
@@ -1083,6 +1135,18 @@ export class ImageProcessor {
     offset_red(offset_amt) {
         wasm.imageprocessor_offset_red(this.__wbg_ptr, offset_amt);
     }
+    /**
+     * 优化图像边缘（自动边缘检测和优化）
+     *
+     * 这个方法会对当前图像的边缘进行优化，使边缘更加平滑自然
+     *
+     * # 参数
+     * * `smoothing_radius` - 平滑半径（像素），推荐值 1-5
+     * @param {number} smoothing_radius
+     */
+    refine_edges(smoothing_radius) {
+        wasm.imageprocessor_refine_edges(this.__wbg_ptr, smoothing_radius);
+    }
     remove_blue_channel() {
         wasm.imageprocessor_remove_blue_channel(this.__wbg_ptr);
     }
@@ -1118,6 +1182,20 @@ export class ImageProcessor {
      */
     saturate_hsl(level) {
         wasm.imageprocessor_saturate_hsl(this.__wbg_ptr, level);
+    }
+    /**
+     * 智能抠图 - 自动检测主体并进行抠图
+     *
+     * 这个方法会尝试自动检测图像中的主体并创建遮罩
+     *
+     * # 参数
+     * * `threshold` - 边缘检测阈值（0-255）
+     * * `feather_radius` - 边缘羽化半径
+     * @param {number} threshold
+     * @param {number} feather_radius
+     */
+    smart_crop(threshold, feather_radius) {
+        wasm.imageprocessor_smart_crop(this.__wbg_ptr, threshold, feather_radius);
     }
     swap_gb_channels() {
         wasm.imageprocessor_swap_gb_channels(this.__wbg_ptr);
@@ -2009,6 +2087,49 @@ export function apply_gradient(image) {
 }
 
 /**
+ * 应用遮罩到图像
+ * @param {Uint8Array} image_bytes
+ * @param {Uint8Array} mask
+ * @param {number} width
+ * @param {number} height
+ */
+export function apply_mask_to_image(image_bytes, mask, width, height) {
+    var ptr0 = passArray8ToWasm0(image_bytes, wasm.__wbindgen_export);
+    var len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArray8ToWasm0(mask, wasm.__wbindgen_export);
+    const len1 = WASM_VECTOR_LEN;
+    wasm.apply_mask_to_image(ptr0, len0, addHeapObject(image_bytes), ptr1, len1, width, height);
+}
+
+/**
+ * 自动抠图 - 基于颜色的智能抠图
+ * @param {Uint8Array} image_bytes
+ * @param {number} width
+ * @param {number} height
+ * @param {number} target_r
+ * @param {number} target_g
+ * @param {number} target_b
+ * @param {number} tolerance
+ * @param {number} feather_radius
+ * @returns {Uint8Array}
+ */
+export function auto_crop_by_color(image_bytes, width, height, target_r, target_g, target_b, tolerance, feather_radius) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passArray8ToWasm0(image_bytes, wasm.__wbindgen_export);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.auto_crop_by_color(retptr, ptr0, len0, width, height, target_r, target_g, target_b, tolerance, feather_radius);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var v2 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_export4(r0, r1 * 1, 1);
+        return v2;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+
+/**
  * Convert an image to grayscale by setting a pixel's 3 RGB values to the Blue channel's value.
  *
  * # Arguments
@@ -2226,6 +2347,30 @@ export function colorize(photon_image) {
 }
 
 /**
+ * 创建圆形遮罩（带抗锯齿）
+ * @param {number} width
+ * @param {number} height
+ * @param {number} center_x
+ * @param {number} center_y
+ * @param {number} radius
+ * @param {number} feather_radius
+ * @returns {Uint8Array}
+ */
+export function create_circular_mask(width, height, center_x, center_y, radius, feather_radius) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        wasm.create_circular_mask(retptr, width, height, center_x, center_y, radius, feather_radius);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var v1 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_export4(r0, r1 * 1, 1);
+        return v1;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+
+/**
  * @param {number} width
  * @param {number} height
  * @returns {PhotonImage}
@@ -2233,6 +2378,39 @@ export function colorize(photon_image) {
 export function create_gradient(width, height) {
     const ret = wasm.create_gradient(width, height);
     return PhotonImage.__wrap(ret);
+}
+
+/**
+ * 创建多边形遮罩
+ *
+ * # 参数
+ * * `width` - 图像宽度
+ * * `height` - 图像高度
+ * * `vertices` - 多边形顶点坐标数组 [x1, y1, x2, y2, ...]
+ * * `anti_aliased` - 是否启用抗锯齿
+ *
+ * # 返回
+ * 遮罩像素数据（灰度图，每个像素 1 字节）
+ * @param {number} width
+ * @param {number} height
+ * @param {Float32Array} vertices
+ * @param {boolean} anti_aliased
+ * @returns {Uint8Array}
+ */
+export function create_polygon_mask(width, height, vertices, anti_aliased) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passArrayF32ToWasm0(vertices, wasm.__wbindgen_export);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.create_polygon_mask(retptr, width, height, ptr0, len0, anti_aliased);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var v2 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_export4(r0, r1 * 1, 1);
+        return v2;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
 }
 
 /**
@@ -4669,6 +4847,19 @@ export function r_grayscale(photon_image) {
 }
 
 /**
+ * 自动边缘优化 - 对遮罩进行平滑处理
+ * @param {Uint8Array} mask
+ * @param {number} width
+ * @param {number} height
+ * @param {number} smoothing_radius
+ */
+export function refine_mask_edges(mask, width, height, smoothing_radius) {
+    var ptr0 = passArray8ToWasm0(mask, wasm.__wbindgen_export);
+    var len0 = WASM_VECTOR_LEN;
+    wasm.refine_mask_edges(ptr0, len0, addHeapObject(mask), width, height, smoothing_radius);
+}
+
+/**
  * Remove the Blue channel's influence in an image.
  *
  * # Arguments
@@ -5693,6 +5884,9 @@ export function watermark(img, watermark, x, y) {
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
+        __wbg___wbindgen_copy_to_typed_array_281f659934f5228b: function(arg0, arg1, arg2) {
+            new Uint8Array(getObject(arg2).buffer, getObject(arg2).byteOffset, getObject(arg2).byteLength).set(getArrayU8FromWasm0(arg0, arg1));
+        },
         __wbg___wbindgen_debug_string_43c7ccb034739216: function(arg0, arg1) {
             const ret = debugString(getObject(arg1));
             const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_export, wasm.__wbindgen_export2);
@@ -6091,6 +6285,14 @@ function getDataViewMemory0() {
     return cachedDataViewMemory0;
 }
 
+let cachedFloat32ArrayMemory0 = null;
+function getFloat32ArrayMemory0() {
+    if (cachedFloat32ArrayMemory0 === null || cachedFloat32ArrayMemory0.byteLength === 0) {
+        cachedFloat32ArrayMemory0 = new Float32Array(wasm.memory.buffer);
+    }
+    return cachedFloat32ArrayMemory0;
+}
+
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(ptr, len);
@@ -6134,6 +6336,13 @@ function isLikeNone(x) {
 function passArray8ToWasm0(arg, malloc) {
     const ptr = malloc(arg.length * 1, 1) >>> 0;
     getUint8ArrayMemory0().set(arg, ptr / 1);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
+function passArrayF32ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 4, 4) >>> 0;
+    getFloat32ArrayMemory0().set(arg, ptr / 4);
     WASM_VECTOR_LEN = arg.length;
     return ptr;
 }
@@ -6217,6 +6426,7 @@ function __wbg_finalize_init(instance, module) {
     wasm = instance.exports;
     wasmModule = module;
     cachedDataViewMemory0 = null;
+    cachedFloat32ArrayMemory0 = null;
     cachedUint8ArrayMemory0 = null;
     cachedUint8ClampedArrayMemory0 = null;
     wasm.__wbindgen_start();

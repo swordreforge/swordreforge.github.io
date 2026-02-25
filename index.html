@@ -1836,6 +1836,89 @@
                 </div>
 
                 <div class="section">
+                    <h3>边缘优化</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="togglePolygonCropMode()" id="polygonCropBtn" disabled>多边形抠图</button>
+                        <button class="btn" onclick="applyCircularMask()" id="circularMaskBtn" disabled>圆形抠图</button>
+                        <button class="btn" onclick="applyAutoCropByColor()" id="autoCropBtn" disabled>自动抠图</button>
+                        <button class="btn" onclick="applyRefineEdges()" id="refineEdgesBtn" disabled>边缘优化</button>
+                        <button class="btn" onclick="applySmartCrop()" id="smartCropBtn" disabled>智能抠图</button>
+                    </div>
+                    
+                    <!-- 圆形抠图参数 -->
+                    <div id="circularMaskParams" style="display: none; margin-top: 10px;">
+                        <div class="slider-container">
+                            <label>圆心 X: <span id="circleCenterXValue">0</span></label>
+                            <input type="range" id="circleCenterXSlider" min="0" max="100" value="50">
+                        </div>
+                        <div class="slider-container">
+                            <label>圆心 Y: <span id="circleCenterYValue">0</span></label>
+                            <input type="range" id="circleCenterYSlider" min="0" max="100" value="50">
+                        </div>
+                        <div class="slider-container">
+                            <label>半径: <span id="circleRadiusValue">100</span></label>
+                            <input type="range" id="circleRadiusSlider" min="10" max="500" value="100">
+                        </div>
+                        <div class="slider-container">
+                            <label>羽化半径: <span id="circleFeatherValue">2</span></label>
+                            <input type="range" id="circleFeatherSlider" min="0" max="20" value="2">
+                        </div>
+                        <div class="btn-group" style="margin-top: 10px;">
+                            <button class="btn btn-success" onclick="applyCircularMaskWithParams()">应用</button>
+                            <button class="btn" onclick="hideCircularMaskParams()">取消</button>
+                        </div>
+                    </div>
+
+                    <!-- 自动抠图参数 -->
+                    <div id="autoCropParams" style="display: none; margin-top: 10px;">
+                        <div class="slider-container">
+                            <label>目标颜色: <span id="targetColorValue">#FFFFFF</span></label>
+                            <input type="color" id="targetColorPicker" value="#ffffff" style="width: 100%; height: 30px; margin-top: 5px;">
+                        </div>
+                        <div class="slider-container">
+                            <label>容差: <span id="toleranceValue">30</span></label>
+                            <input type="range" id="toleranceSlider" min="0" max="100" value="30">
+                        </div>
+                        <div class="slider-container">
+                            <label>羽化半径: <span id="autoFeatherValue">2</span></label>
+                            <input type="range" id="autoFeatherSlider" min="0" max="20" value="2">
+                        </div>
+                        <div class="btn-group" style="margin-top: 10px;">
+                            <button class="btn btn-success" onclick="applyAutoCropWithParams()">应用</button>
+                            <button class="btn" onclick="hideAutoCropParams()">取消</button>
+                        </div>
+                    </div>
+
+                    <!-- 边缘优化参数 -->
+                    <div id="refineEdgesParams" style="display: none; margin-top: 10px;">
+                        <div class="slider-container">
+                            <label>平滑半径: <span id="smoothRadiusValue">2</span></label>
+                            <input type="range" id="smoothRadiusSlider" min="1" max="10" value="2">
+                        </div>
+                        <div class="btn-group" style="margin-top: 10px;">
+                            <button class="btn btn-success" onclick="applyRefineEdgesWithParams()">应用</button>
+                            <button class="btn" onclick="hideRefineEdgesParams()">取消</button>
+                        </div>
+                    </div>
+
+                    <!-- 智能抠图参数 -->
+                    <div id="smartCropParams" style="display: none; margin-top: 10px;">
+                        <div class="slider-container">
+                            <label>边缘检测阈值: <span id="edgeThresholdValue">50</span></label>
+                            <input type="range" id="edgeThresholdSlider" min="0" max="255" value="50">
+                        </div>
+                        <div class="slider-container">
+                            <label>羽化半径: <span id="smartFeatherValue">2</span></label>
+                            <input type="range" id="smartFeatherSlider" min="0" max="20" value="2">
+                        </div>
+                        <div class="btn-group" style="margin-top: 10px;">
+                            <button class="btn btn-success" onclick="applySmartCropWithParams()">应用</button>
+                            <button class="btn" onclick="hideSmartCropParams()">取消</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>操作</h3>
                     <div class="btn-group">
                         <button class="btn" onclick="undo()" disabled id="undoBtn">↩ 撤销</button>
@@ -2402,6 +2485,13 @@
             document.getElementById('applyBlendBtn').disabled = !currentImage || !blendBytes;
             document.getElementById('clearBlendBtn').disabled = !currentImage;
             document.getElementById('rotationSlider').disabled = !currentImage;
+
+            // 启用边缘优化按钮
+            document.getElementById('polygonCropBtn').disabled = !currentImage;
+            document.getElementById('circularMaskBtn').disabled = !currentImage;
+            document.getElementById('autoCropBtn').disabled = !currentImage;
+            document.getElementById('refineEdgesBtn').disabled = !currentImage;
+            document.getElementById('smartCropBtn').disabled = !currentImage;
         }
 
         // 切换侧边栏
@@ -4319,6 +4409,361 @@
                 console.error('Convert error:', error);
                 alert(`格式转换失败: ${error.message}`);
             }
+            showLoading(false);
+        };
+
+        // ==================== 边缘优化功能 ====================
+        
+        // 多边形抠图模式相关变量
+        let isPolygonCropMode = false;
+        let polygonPoints = [];
+        
+        // 切换多边形抠图模式
+        window.togglePolygonCropMode = function() {
+            if (!processor) return;
+
+            isPolygonCropMode = !isPolygonCropMode;
+            const btn = document.getElementById('polygonCropBtn');
+            const canvas = document.getElementById('imageCanvas');
+
+            if (isPolygonCropMode) {
+                btn.classList.add('active');
+                polygonPoints = [];
+                canvas.style.cursor = 'crosshair';
+                alert('多边形抠图模式已启用\n\n点击画布添加顶点，至少需要3个点\n右键点击或双击完成抠图');
+            } else {
+                btn.classList.remove('active');
+                polygonPoints = [];
+                canvas.style.cursor = 'default';
+                updateCanvas();
+            }
+        };
+        
+        // 画布点击事件（用于多边形抠图）
+        const canvasElement = document.getElementById('imageCanvas');
+        canvasElement.addEventListener('click', function(e) {
+            if (!isPolygonCropMode || !processor) return;
+
+            const canvas = document.getElementById('imageCanvas');
+            const ctx = canvas.getContext('2d');
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+
+            polygonPoints.push({ x, y });
+
+            // 绘制预览
+            updateCanvas();
+            drawPolygonPreview();
+
+            // 显示当前点数
+            if (polygonPoints.length >= 3) {
+                console.log(`当前顶点数: ${polygonPoints.length} (至少需要3个点)`);
+            }
+        });
+        
+        // 右键点击完成多边形抠图
+        canvasElement.addEventListener('contextmenu', function(e) {
+            if (isPolygonCropMode && polygonPoints.length >= 3) {
+                e.preventDefault();
+                applyPolygonMask();
+            }
+        });
+        
+        // 双击完成多边形抠图
+        canvasElement.addEventListener('dblclick', function(e) {
+            if (isPolygonCropMode && polygonPoints.length >= 3) {
+                e.preventDefault();
+                applyPolygonMask();
+            }
+        });
+        
+        // 绘制多边形预览
+        function drawPolygonPreview() {
+            if (polygonPoints.length === 0) return;
+
+            const canvas = document.getElementById('imageCanvas');
+            const ctx = canvas.getContext('2d');
+
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(polygonPoints[0].x, polygonPoints[0].y);
+
+            for (let i = 1; i < polygonPoints.length; i++) {
+                ctx.lineTo(polygonPoints[i].x, polygonPoints[i].y);
+            }
+
+            if (polygonPoints.length >= 3) {
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(102, 126, 234, 0.2)';
+                ctx.fill();
+            }
+
+            ctx.stroke();
+
+            // 绘制顶点
+            ctx.fillStyle = '#fff';
+            for (const point of polygonPoints) {
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+        
+        // 应用多边形遮罩
+        function applyPolygonMask() {
+            if (polygonPoints.length < 3) {
+                alert('至少需要3个顶点才能形成多边形');
+                return;
+            }
+            
+            showLoading(true);
+            
+            // 转换顶点为平坦数组
+            const vertices = [];
+            for (const point of polygonPoints) {
+                vertices.push(point.x, point.y);
+            }
+            
+            try {
+                // 保存当前状态到历史记录
+                saveToHistory();
+                
+                // 应用多边形遮罩（带抗锯齿和平滑边缘）
+                processor.apply_polygon_mask(
+                    vertices,
+                    true,  // 抗锯齿
+                    true,  // 平滑边缘
+                    2      // 平滑半径
+                );
+                
+                redrawCanvas();
+                
+                // 退出多边形抠图模式
+                togglePolygonCropMode();
+                
+                alert('多边形抠图完成！');
+            } catch (error) {
+                console.error('Polygon mask error:', error);
+                alert(`多边形抠图失败: ${error.message}`);
+            }
+            
+            showLoading(false);
+        }
+        
+        // 显示圆形抠图参数面板
+        window.applyCircularMask = function() {
+            if (!processor) return;
+            
+            document.getElementById('circularMaskParams').style.display = 'block';
+            
+            // 设置滑块范围
+            const width = processor.get_width();
+            const height = processor.get_height();
+            
+            document.getElementById('circleCenterXSlider').max = width;
+            document.getElementById('circleCenterXSlider').value = width / 2;
+            document.getElementById('circleCenterXValue').textContent = Math.round(width / 2);
+            
+            document.getElementById('circleCenterYSlider').max = height;
+            document.getElementById('circleCenterYSlider').value = height / 2;
+            document.getElementById('circleCenterYValue').textContent = Math.round(height / 2);
+            
+            const maxRadius = Math.min(width, height) / 2;
+            document.getElementById('circleRadiusSlider').max = maxRadius;
+            document.getElementById('circleRadiusSlider').value = maxRadius * 0.6;
+            document.getElementById('circleRadiusValue').textContent = Math.round(maxRadius * 0.6);
+            
+            // 更新滑块显示值
+            document.getElementById('circleCenterXSlider').oninput = function() {
+                document.getElementById('circleCenterXValue').textContent = this.value;
+            };
+            document.getElementById('circleCenterYSlider').oninput = function() {
+                document.getElementById('circleCenterYValue').textContent = this.value;
+            };
+            document.getElementById('circleRadiusSlider').oninput = function() {
+                document.getElementById('circleRadiusValue').textContent = this.value;
+            };
+            document.getElementById('circleFeatherSlider').oninput = function() {
+                document.getElementById('circleFeatherValue').textContent = this.value;
+            };
+        };
+        
+        // 隐藏圆形抠图参数面板
+        window.hideCircularMaskParams = function() {
+            document.getElementById('circularMaskParams').style.display = 'none';
+        };
+        
+        // 应用圆形遮罩
+        window.applyCircularMaskWithParams = function() {
+            if (!processor) return;
+
+            showLoading(true);
+
+            try {
+                saveToHistory();
+
+                const centerX = parseFloat(document.getElementById('circleCenterXSlider').value);
+                const centerY = parseFloat(document.getElementById('circleCenterYSlider').value);
+                const radius = parseFloat(document.getElementById('circleRadiusSlider').value);
+                const featherRadius = parseFloat(document.getElementById('circleFeatherSlider').value);
+
+                processor.apply_circular_mask(centerX, centerY, radius, featherRadius);
+                updateCanvas();
+
+                hideCircularMaskParams();
+                alert('圆形抠图完成！');
+            } catch (error) {
+                console.error('Circular mask error:', error);
+                alert(`圆形抠图失败: ${error.message}`);
+            }
+
+            showLoading(false);
+        };
+        
+        // 显示自动抠图参数面板
+        window.applyAutoCropByColor = function() {
+            if (!processor) return;
+            
+            document.getElementById('autoCropParams').style.display = 'block';
+            
+            // 更新滑块显示值
+            document.getElementById('toleranceSlider').oninput = function() {
+                document.getElementById('toleranceValue').textContent = this.value;
+            };
+            document.getElementById('autoFeatherSlider').oninput = function() {
+                document.getElementById('autoFeatherValue').textContent = this.value;
+            };
+            document.getElementById('targetColorPicker').oninput = function() {
+                document.getElementById('targetColorValue').textContent = this.value.toUpperCase();
+            };
+        };
+        
+        // 隐藏自动抠图参数面板
+        window.hideAutoCropParams = function() {
+            document.getElementById('autoCropParams').style.display = 'none';
+        };
+        
+        // 应用自动抠图
+        window.applyAutoCropWithParams = function() {
+            if (!processor) return;
+
+            showLoading(true);
+
+            try {
+                saveToHistory();
+
+                const colorHex = document.getElementById('targetColorPicker').value;
+                const tolerance = parseInt(document.getElementById('toleranceSlider').value);
+                const featherRadius = parseFloat(document.getElementById('autoFeatherSlider').value);
+
+                // 转换十六进制颜色为 RGB
+                const r = parseInt(colorHex.slice(1, 3), 16);
+                const g = parseInt(colorHex.slice(3, 5), 16);
+                const b = parseInt(colorHex.slice(5, 7), 16);
+
+                processor.auto_crop_by_color(r, g, b, tolerance, featherRadius);
+                updateCanvas();
+
+                hideAutoCropParams();
+                alert('自动抠图完成！');
+            } catch (error) {
+                console.error('Auto crop error:', error);
+                alert(`自动抠图失败: ${error.message}`);
+            }
+
+            showLoading(false);
+        };
+        
+        // 显示边缘优化参数面板
+        window.applyRefineEdges = function() {
+            if (!processor) return;
+            
+            document.getElementById('refineEdgesParams').style.display = 'block';
+            
+            // 更新滑块显示值
+            document.getElementById('smoothRadiusSlider').oninput = function() {
+                document.getElementById('smoothRadiusValue').textContent = this.value;
+            };
+        };
+        
+        // 隐藏边缘优化参数面板
+        window.hideRefineEdgesParams = function() {
+            document.getElementById('refineEdgesParams').style.display = 'none';
+        };
+        
+        // 应用边缘优化
+        window.applyRefineEdgesWithParams = function() {
+            if (!processor) return;
+
+            showLoading(true);
+
+            try {
+                saveToHistory();
+
+                const smoothingRadius = parseInt(document.getElementById('smoothRadiusSlider').value);
+
+                processor.refine_edges(smoothingRadius);
+                updateCanvas();
+
+                hideRefineEdgesParams();
+                alert('边缘优化完成！');
+            } catch (error) {
+                console.error('Refine edges error:', error);
+                alert(`边缘优化失败: ${error.message}`);
+            }
+
+            showLoading(false);
+        };
+        
+        // 显示智能抠图参数面板
+        window.applySmartCrop = function() {
+            if (!processor) return;
+            
+            document.getElementById('smartCropParams').style.display = 'block';
+            
+            // 更新滑块显示值
+            document.getElementById('edgeThresholdSlider').oninput = function() {
+                document.getElementById('edgeThresholdValue').textContent = this.value;
+            };
+            document.getElementById('smartFeatherSlider').oninput = function() {
+                document.getElementById('smartFeatherValue').textContent = this.value;
+            };
+        };
+        
+        // 隐藏智能抠图参数面板
+        window.hideSmartCropParams = function() {
+            document.getElementById('smartCropParams').style.display = 'none';
+        };
+        
+        // 应用智能抠图
+        window.applySmartCropWithParams = function() {
+            if (!processor) return;
+
+            showLoading(true);
+
+            try {
+                saveToHistory();
+
+                const threshold = parseInt(document.getElementById('edgeThresholdSlider').value);
+                const featherRadius = parseFloat(document.getElementById('smartFeatherSlider').value);
+
+                processor.smart_crop(threshold, featherRadius);
+                updateCanvas();
+
+                hideSmartCropParams();
+                alert('智能抠图完成！');
+            } catch (error) {
+                console.error('Smart crop error:', error);
+                alert(`智能抠图失败: ${error.message}`);
+            }
+
             showLoading(false);
         };
 

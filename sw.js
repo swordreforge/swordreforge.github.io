@@ -67,17 +67,26 @@ self.addEventListener('fetch', (event) => {
                   cache.put(event.request, responseToCache);
                 });
               return networkResponse;
+            })
+            .catch((error) => {
+              console.error('[SW] Network request failed:', event.request.url, error);
+              throw error;
             });
         })
-        .catch(() => {
-          console.error('[SW] Network request failed:', event.request.url);
+        .catch((error) => {
+          console.error('[SW] Cache and network both failed:', event.request.url, error);
+          throw error;
         })
     );
   } else {
     // 其他请求使用网络优先策略
     event.respondWith(
       fetch(event.request)
-        .catch(() => {
+        .then((networkResponse) => {
+          return networkResponse;
+        })
+        .catch((error) => {
+          console.log('[SW] Network failed, trying cache:', event.request.url);
           return caches.match(event.request);
         })
     );
