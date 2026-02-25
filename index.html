@@ -1998,27 +1998,72 @@
     </div>
 
     <script type="module">
-        import init from './pkg/photon_wasm.js?v=24';
-        import { ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint } from './pkg/photon_wasm.js?v=24';
+        // 全局变量声明
+        let wasmModule = null;
+        let processor = null;
+        let originalImageData = null;
+        let currentImage = null;
+
+        // 离屏 Canvas 用于双缓冲，避免闪屏
+        let offscreenCanvas = null;
+        let offscreenCtx = null;
+
+        // 历史记录管理
+        let historyStack = [];
+        let redoStack = [];
+        const MAX_HISTORY = 30;
+
+        // 绕过 WASM 模块加载限制：完全手动加载，不依赖任何模块导入
+        async function loadWasmModule() {
+            try {
+                // 动态导入 JS 胶水代码，获取所有导出的函数
+                const bgModule = await import('./pkg/photon_wasm_bg.js?v=26');
+
+                // 构建导入对象：WASM 需要从 ./photon_wasm_bg.js 导入的函数
+                const imports = {
+                    './photon_wasm_bg.js': bgModule
+                };
+
+                // 加载 WASM 二进制文件
+                const wasmResponse = await fetch('./pkg/photon_wasm_bg.wasm');
+                if (!wasmResponse.ok) {
+                    throw new Error(`Failed to load WASM: ${wasmResponse.status}`);
+                }
+                const wasmBytes = await wasmResponse.arrayBuffer();
+
+                // 实例化 WASM 模块，传入正确的导入对象
+                wasmModule = await WebAssembly.instantiate(wasmBytes, imports);
+
+                // 设置 WASM 实例到 JS 胶水代码
+                bgModule.__wbg_set_wasm(wasmModule.instance.exports);
+
+                // 初始化 WASM 模块（调用 __wbindgen_start）
+                wasmModule.instance.exports.__wbindgen_start();
+
+                // 从 bgModule 直接获取所有需要的导出（不使用 photon_wasm.js）
+                return {
+                    ImageProcessor: bgModule.ImageProcessor,
+                    BrushType: bgModule.BrushType,
+                    BlendMode: bgModule.BlendMode,
+                    BrushConfig: bgModule.BrushConfig,
+                    BrushStroke: bgModule.BrushStroke,
+                    StrokePoint: bgModule.StrokePoint
+                };
+            } catch (error) {
+                console.error('Failed to load WASM module:', error);
+                throw error;
+            }
+        }
+
+        // 加载 WASM 模块并初始化
+        const { ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint } = await loadWasmModule();
 
         // 将类型导出到全局 window 对象
         window.BrushType = BrushType;
         window.BlendMode = BlendMode;
         window.BrushConfig = BrushConfig;
         window.BrushStroke = BrushStroke;
-        window.StrokePoint = StrokePoint;        let wasmModule = null;
-        let processor = null;
-        let originalImageData = null;
-        let currentImage = null;
-        
-        // 离屏 Canvas 用于双缓冲，避免闪屏
-        let offscreenCanvas = null;
-        let offscreenCtx = null;
-        
-        // 历史记录管理
-        let historyStack = [];
-        let redoStack = [];
-        const MAX_HISTORY = 30;
+        window.StrokePoint = StrokePoint;
 
         // 文本绘制相关变量
         let isTextMode = false;
@@ -2054,18 +2099,32 @@
         function saveToHistory() {
             if (!processor) return;
 
+            // 优化：使用 Blob URL 减少内存占用
+            const bytes = processor.get_bytes();
+            const blob = new Blob([bytes], { type: 'image/png' });
+            const url = URL.createObjectURL(blob);
+
             const state = {
-                bytes: processor.get_bytes(),  // 使用 get_bytes() 代替 to_base64()，提升性能
+                url: url,
                 width: processor.get_width(),
                 height: processor.get_height()
             };
 
             historyStack.push(state);
             if (historyStack.length > MAX_HISTORY) {
-                historyStack.shift();
+                // 释放被移除状态的 Blob URL
+                const removedState = historyStack.shift();
+                if (removedState.url) {
+                    URL.revokeObjectURL(removedState.url);
+                }
             }
 
             // 清空重做栈
+            redoStack.forEach(state => {
+                if (state.url) {
+                    URL.revokeObjectURL(state.url);
+                }
+            });
             redoStack = [];
 
             updateUndoRedoButtons();
@@ -2075,52 +2134,78 @@
         window.saveHistory = saveToHistory;
 
         // 撤销
-        window.undo = function() {
+        window.undo = async function() {
             if (historyStack.length === 0) return;
 
             // 保存当前状态到重做栈
+            const currentBytes = processor.get_bytes();
+            const currentBlob = new Blob([currentBytes], { type: 'image/png' });
+            const currentUrl = URL.createObjectURL(currentBlob);
+            
             redoStack.push({
-                bytes: processor.get_bytes(),  // 使用 get_bytes() 代替 to_base64()，提升性能
+                url: currentUrl,
                 width: processor.get_width(),
                 height: processor.get_height()
             });
 
             // 恢复上一个状态
             const state = historyStack.pop();
-            restoreState(state);
+            await restoreState(state);
 
             updateUndoRedoButtons();
         }
 
         // 重做
-        window.redo = function() {
+        window.redo = async function() {
             if (redoStack.length === 0) return;
 
             // 保存当前状态到历史栈
+            const currentBytes = processor.get_bytes();
+            const currentBlob = new Blob([currentBytes], { type: 'image/png' });
+            const currentUrl = URL.createObjectURL(currentBlob);
+            
             historyStack.push({
-                bytes: processor.get_bytes(),  // 使用 get_bytes() 代替 to_base64()，提升性能
+                url: currentUrl,
                 width: processor.get_width(),
                 height: processor.get_height()
             });
 
             // 恢复重做状态
             const state = redoStack.pop();
-            restoreState(state);
+            await restoreState(state);
 
             updateUndoRedoButtons();
         }
 
         // 恢复状态
-        function restoreState(state) {
-            // state.bytes 现在是 Uint8Array，直接使用
-            if (state.bytes instanceof Uint8Array) {
+        async function restoreState(state) {
+            // state.url 现在是 Blob URL
+            if (state.url) {
+                try {
+                    const response = await fetch(state.url);
+                    const bytes = new Uint8Array(await response.arrayBuffer());
+                    processor = ImageProcessor.new_from_bytes(bytes);
+                    
+                    // 释放 Blob URL（因为我们已经获取了数据）
+                    URL.revokeObjectURL(state.url);
+                    state.url = null;
+                } catch (error) {
+                    console.error('Failed to restore state from Blob URL:', error);
+                    // 如果 Blob URL 失败，尝试从 bytes 恢复（向后兼容）
+                    if (state.bytes) {
+                        processor = ImageProcessor.new_from_bytes(state.bytes);
+                    }
+                }
+            } else if (state.bytes) {
+                // 兼容旧的格式
                 processor = ImageProcessor.new_from_bytes(state.bytes);
-            } else {
-                // 兼容旧的 base64 格式
+            } else if (state.base64) {
+                // 兼容更旧的 base64 格式
                 const base64Data = state.base64.includes(',') ? state.base64.split(',')[1] : state.base64;
                 const uint8Array = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
                 processor = ImageProcessor.new_from_bytes(uint8Array);
             }
+            
             // 恢复状态时清除 WASM 内部的笔刷历史
             processor.clear_strokes();
             updateCanvas();
@@ -2150,18 +2235,20 @@
             updateTextBoxPreview();
         });
 
-        // 初始化 WASM 模块
+        // 初始化 WASM 模块（WASM 已在 loadWasmModule 中加载）
         async function initWasm() {
-            showLoading(true, '正在下载 WebAssembly 模块...\n\n包体大小约 5MB\n第一次使用请耐心等待\n后续访问将使用缓存，加载更快');
+            showLoading(true, '正在初始化应用...\n\nWebAssembly 模块已加载完成');
             try {
-                wasmModule = await init();
-                console.log('WebAssembly module loaded successfully');
+                // WASM 模块已在 loadWasmModule 中加载并初始化
+                // 这里只需要启用按钮和初始化事件监听器
+                console.log('Initializing application...');
                 enableButtons();
                 // 初始化全局事件监听器
                 initGlobalEvents();
+                console.log('Application initialized successfully');
             } catch (error) {
-                console.error('Failed to load WebAssembly:', error);
-                alert('WebAssembly 模块加载失败，请确保服务器支持 WASM');
+                console.error('Failed to initialize application:', error);
+                alert('应用初始化失败');
             }
             showLoading(false);
         }

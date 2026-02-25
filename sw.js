@@ -1,10 +1,10 @@
-// Service Worker for caching WASM and static assets
-// 强缓存 WASM 文件和其他静态资源，提高加载性能
+// Service Worker for caching static assets
+// 缓存 WASM 文件以提升用户体验
 
-const CACHE_NAME = 'photon-wasm-v15';
+const CACHE_NAME = 'photon-wasm-v18';
 const ASSETS_TO_CACHE = [
-  './pkg/photon_wasm.js',
   './pkg/photon_wasm_bg.wasm',
+  './pkg/photon_wasm_bg.js',
   './index.html'
 ];
 
@@ -38,22 +38,24 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 拦截请求：优先从缓存读取
+// 拦截请求：根据资源类型使用不同策略
 self.addEventListener('fetch', (event) => {
-  // 对 WASM 文件和静态资源使用缓存优先策略
-  if (event.request.url.includes('.wasm') ||
-      event.request.url.includes('.js') ||
-      event.request.url.includes('.css')) {
+  const requestUrl = event.request.url;
+
+  // WASM、JS 和 CSS 文件使用缓存优先策略，提升加载速度
+  if (requestUrl.includes('.wasm') ||
+      requestUrl.includes('.js') ||
+      requestUrl.includes('.css')) {
     event.respondWith(
       caches.match(event.request)
         .then((response) => {
           // 缓存命中，直接返回
           if (response) {
-            console.log('[SW] Cache hit:', event.request.url);
+            console.log('[SW] Cache hit:', requestUrl);
             return response;
           }
           // 缓存未命中，网络请求并缓存
-          console.log('[SW] Cache miss, fetching:', event.request.url);
+          console.log('[SW] Cache miss, fetching:', requestUrl);
           return fetch(event.request)
             .then((networkResponse) => {
               // 检查是否有效响应
@@ -69,28 +71,29 @@ self.addEventListener('fetch', (event) => {
               return networkResponse;
             })
             .catch((error) => {
-              console.error('[SW] Network request failed:', event.request.url, error);
+              console.error('[SW] Network request failed:', requestUrl, error);
               throw error;
             });
         })
         .catch((error) => {
-          console.error('[SW] Cache and network both failed:', event.request.url, error);
+          console.error('[SW] Cache and network both failed:', requestUrl, error);
           throw error;
         })
     );
-  } else {
-    // 其他请求使用网络优先策略
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          return networkResponse;
-        })
-        .catch((error) => {
-          console.log('[SW] Network failed, trying cache:', event.request.url);
-          return caches.match(event.request);
-        })
-    );
+    return;
   }
+
+  // 其他请求使用网络优先策略
+  event.respondWith(
+    fetch(event.request)
+      .then((networkResponse) => {
+        return networkResponse;
+      })
+      .catch((error) => {
+        console.log('[SW] Network failed, trying cache:', requestUrl);
+        return caches.match(event.request);
+      })
+  );
 });
 
 // 监听消息：更新缓存
