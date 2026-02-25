@@ -3071,39 +3071,32 @@
                             // 保存原始处理器用于无级调节
                             originalProcessor = ImageProcessor.new_from_bytes(uint8Array);
 
-                            // 使用 get_base64() 获取图像数据并绘制到 Canvas
-                            const base64 = processor.to_base64();
-
+                            // 优化：使用 get_raw_pixels() + ImageData 直接渲染 Canvas（零拷贝优化）
                             const canvas = document.getElementById('imageCanvas');
                             canvas.width = width;
                             canvas.height = height;
                             const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-                            // 创建图像对象
-                            const img = new Image();
-                            img.onload = () => {
-                                ctx.drawImage(img, 0, 0);
-                                // 保存原始图像数据
-                                originalImageData = ctx.getImageData(0, 0, width, height);
-                                currentImage = {
-                                    data: new Uint8ClampedArray(originalImageData.data),
-                                    width,
-                                    height
-                                };
+                            // 获取原始像素数据并直接创建 ImageData
+                            const pixels = processor.get_raw_pixels();
+                            const imageData = new ImageData(new Uint8ClampedArray(pixels), width, height);
+                            ctx.putImageData(imageData, 0, 0);
 
-                                document.getElementById('emptyState').style.display = 'none';
-                                canvas.style.display = 'block';
-
-                                document.getElementById('imageSize').textContent = `${width} x ${height}`;
-                                document.getElementById('imageFormat').textContent = file.type.split('/')[1].toUpperCase();
-
-                                enableButtons();
+                            // 保存原始图像数据
+                            originalImageData = ctx.getImageData(0, 0, width, height);
+                            currentImage = {
+                                data: new Uint8ClampedArray(originalImageData.data),
+                                width,
+                                height
                             };
-                            img.onerror = () => {
-                                console.error('Failed to load image from base64');
-                                alert('图片显示失败');
-                            };
-                            img.src = base64;
+
+                            document.getElementById('emptyState').style.display = 'none';
+                            canvas.style.display = 'block';
+
+                            document.getElementById('imageSize').textContent = `${width} x ${height}`;
+                            document.getElementById('imageFormat').textContent = file.type.split('/')[1].toUpperCase();
+
+                            enableButtons();
                         } catch (error) {
                             console.error('Failed to load image:', error);
                             alert('图片加载失败，可能是尺寸过大导致内存不足');
