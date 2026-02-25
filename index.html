@@ -3973,14 +3973,17 @@
         function setupCropEvents() {
             const cropOverlay = document.getElementById('cropOverlay');
             const canvas = document.getElementById('imageCanvas');
-            
+
             // 移除旧的事件监听器（通过克隆节点）
             const newCropOverlay = cropOverlay.cloneNode(true);
             cropOverlay.parentNode.replaceChild(newCropOverlay, cropOverlay);
-            
+
             // 更新引用
             const updatedCropOverlay = document.getElementById('cropOverlay');
-            
+
+            // 重新绘制裁剪框，因为 cloneNode 会丢失 canvas 内容
+            drawCropOverlay();
+
             // 鼠标按下
             updatedCropOverlay.addEventListener('mousedown', (e) => {
                 const rect = updatedCropOverlay.getBoundingClientRect();
