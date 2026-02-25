@@ -2372,7 +2372,7 @@
 
                     // 直接在主画布上绘制临时线段（避免频繁调用 updateCanvas 导致闪屏）
                     const canvas = document.getElementById('imageCanvas');
-                    const ctx = canvas.getContext('2d');
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
                     if (lastBrushPoint) {
                         // 绘制从上一个点到当前点的线段
@@ -4302,7 +4302,7 @@
         // 绘制裁剪覆盖层
         function drawCropOverlay() {
             const cropOverlay = document.getElementById('cropOverlay');
-            const ctx = cropOverlay.getContext('2d');
+            const ctx = cropOverlay.getContext('2d', { willReadFrequently: true });
             
             // 清空覆盖层
             ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
@@ -4633,7 +4633,7 @@
         // 绘制矩形选框覆盖层
         function drawRectSelectionOverlay() {
             const cropOverlay = document.getElementById('cropOverlay');
-            const ctx = cropOverlay.getContext('2d');
+            const ctx = cropOverlay.getContext('2d', { willReadFrequently: true });
 
             // 清空覆盖层
             ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
@@ -5068,7 +5068,7 @@
             }
 
             const canvas = document.getElementById('imageCanvas');
-            const ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
@@ -5110,7 +5110,7 @@
             if (polygonPoints.length === 0) return;
 
             const canvas = document.getElementById('imageCanvas');
-            const ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
             ctx.strokeStyle = '#667eea';
             ctx.lineWidth = 2;
@@ -5996,7 +5996,7 @@ window.applyText = function() {
             const width = processor.get_width();
             const height = processor.get_height();
             const canvas = document.getElementById('imageCanvas');
-            const ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
             // 更新主画布尺寸
             canvas.width = width;
