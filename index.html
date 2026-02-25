@@ -730,7 +730,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            pointer-events: none;
+            pointer-events: auto;
+            z-index: 10;
         }
 
         .crop-box {
@@ -3991,7 +3992,7 @@
                     mouseY >= cropBox.y && mouseY <= cropBox.y + cropBox.height) {
                     
                     // 检查是否点击了调整手柄
-                    const handleSize = 10;
+                    const handleSize = 16;
                     if (Math.abs(mouseX - cropBox.x) < handleSize && Math.abs(mouseY - cropBox.y) < handleSize) {
                         isResizing = true;
                         resizeHandle = 'nw';
@@ -4055,8 +4056,8 @@
         // 更新光标样式
         function updateCursor(mouseX, mouseY, rect) {
             const canvas = document.getElementById('imageCanvas');
-            const handleSize = 10;
-            
+            const handleSize = 16;
+
             if (mouseX >= cropBox.x && mouseX <= cropBox.x + cropBox.width &&
                 mouseY >= cropBox.y && mouseY <= cropBox.y + cropBox.height) {
                 if (Math.abs(mouseX - cropBox.x) < handleSize && Math.abs(mouseY - cropBox.y) < handleSize) {
@@ -4151,21 +4152,21 @@
             }
             
             // 绘制调整手柄
-            const handleSize = 8;
+            const handleSize = 16;
             ctx.fillStyle = '#fff';
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 2;
-            
+
             // 四角
             ctx.fillRect(cropBox.x - handleSize/2, cropBox.y - handleSize/2, handleSize, handleSize);
             ctx.strokeRect(cropBox.x - handleSize/2, cropBox.y - handleSize/2, handleSize, handleSize);
-            
+
             ctx.fillRect(cropBox.x + cropBox.width - handleSize/2, cropBox.y - handleSize/2, handleSize, handleSize);
             ctx.strokeRect(cropBox.x + cropBox.width - handleSize/2, cropBox.y - handleSize/2, handleSize, handleSize);
-            
+
             ctx.fillRect(cropBox.x - handleSize/2, cropBox.y + cropBox.height - handleSize/2, handleSize, handleSize);
             ctx.strokeRect(cropBox.x - handleSize/2, cropBox.y + cropBox.height - handleSize/2, handleSize, handleSize);
-            
+
             ctx.fillRect(cropBox.x + cropBox.width - handleSize/2, cropBox.y + cropBox.height - handleSize/2, handleSize, handleSize);
             ctx.strokeRect(cropBox.x + cropBox.width - handleSize/2, cropBox.y + cropBox.height - handleSize/2, handleSize, handleSize);
         }
