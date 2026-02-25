@@ -1970,6 +1970,10 @@
                         <button class="btn btn-success" onclick="applyCrop()">✓ 确认裁剪</button>
                         <button class="btn btn-danger" onclick="cancelCrop()">✕ 取消</button>
                     </div>
+                    <div class="crop-controls" id="maskPreviewControls" style="display: none;">
+                        <button class="btn btn-success" onclick="confirmMaskPreview()">✓ 确认抠图</button>
+                        <button class="btn btn-danger" onclick="cancelMaskPreview()">✕ 取消</button>
+                    </div>
                     <div id="textBox" class="text-box" style="display: none;"></div>
                     <div id="watermarkPreview" class="watermark-preview" style="display: none;">
                         <img id="watermarkPreviewImg" src="" alt="水印预览">
@@ -4429,7 +4433,411 @@
         };
 
         // ==================== 边缘优化功能 ====================
-        
+
+        // 抠图预览模式相关变量
+        let isMaskPreviewMode = false;
+        let currentMaskType = null; // 'polygon', 'circular', 'auto', 'smart'
+        let maskPreviewCanvas = null;
+        let maskPreviewImageData = null; // 保存预览前的图像数据（base64）
+
+        // 显示抠图预览控制栏
+        function showMaskPreviewControls() {
+            document.getElementById('maskPreviewControls').style.display = 'flex';
+            isMaskPreviewMode = true;
+        }
+
+        // 隐藏抠图预览控制栏
+        function hideMaskPreviewControls() {
+            document.getElementById('maskPreviewControls').style.display = 'none';
+            isMaskPreviewMode = false;
+        }
+
+        // 确认抠图预览
+        window.confirmMaskPreview = function() {
+            // 如果在矩形选框模式，先应用抠图
+            if (isRectSelectionMode) {
+                // 先保存当前状态（抠图前的状态）
+                saveToHistory();
+                applyMaskFromRectSelection();
+                hideMaskPreviewControls();
+                currentMaskType = null;
+                maskPreviewImageData = null;
+                alert('抠图完成！');
+                return;
+            }
+
+            if (!maskPreviewImageData) return;
+
+            // 预览状态已经是应用后的状态，maskPreviewImageData 保存的是应用前的状态
+            // 先恢复到应用前的状态，再保存到历史，然后重新应用
+            const originalBytes = base64_to_bytes(maskPreviewImageData);
+            const originalProcessor = ImageProcessor.new_from_bytes(originalBytes);
+
+            // 保存应用前的状态
+            historyStack.push({
+                base64: maskPreviewImageData,
+                width: originalProcessor.get_width(),
+                height: originalProcessor.get_height()
+            });
+            if (historyStack.length > MAX_HISTORY) {
+                historyStack.shift();
+            }
+            redoStack = [];
+            updateUndoRedoButtons();
+
+            // 使用当前的 processor（已经应用了抠图效果）
+            updateCanvas();
+            hideMaskPreviewControls();
+            currentMaskType = null;
+            maskPreviewImageData = null;
+            alert('抠图完成！');
+        }
+
+        // 取消抠图预览
+        window.cancelMaskPreview = function() {
+            // 如果在矩形选框模式，退出选框模式
+            if (isRectSelectionMode) {
+                exitRectSelectionMode();
+                hideMaskPreviewControls();
+                currentMaskType = null;
+                maskPreviewImageData = null;
+                return;
+            }
+
+            if (maskPreviewImageData) {
+                // 恢复预览前的图像
+                const originalBytes = base64_to_bytes(maskPreviewImageData);
+                processor = ImageProcessor.new_from_bytes(originalBytes);
+                updateCanvas();
+            }
+            hideMaskPreviewControls();
+            currentMaskType = null;
+            maskPreviewImageData = null;
+
+            // 退出所有抠图模式
+            if (isPolygonCropMode) {
+                togglePolygonCropMode();
+            }
+        }
+
+        // Base64 转 Uint8Array
+        function base64_to_bytes(base64) {
+            const binaryString = atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        // 矩形选框模式相关变量
+        let isRectSelectionMode = false;
+        let rectSelectionBox = { x: 0, y: 0, width: 0, height: 0 };
+        let isRectDragging = false;
+        let isRectResizing = false;
+        let rectResizeHandle = null;
+        let rectDragStart = { x: 0, y: 0 };
+        let initialRectBox = { x: 0, y: 0, width: 0, height: 0 };
+        let rectSelectionType = null; // 'circular', 'auto', 'smart'
+
+        // 进入矩形选框模式
+        function enterRectSelectionMode(type) {
+            if (!processor) return;
+            isRectSelectionMode = true;
+            rectSelectionType = type;
+
+            // 初始化选框为图像中心的一半大小
+            const canvas = document.getElementById('imageCanvas');
+            const width = canvas.width;
+            const height = canvas.height;
+            rectSelectionBox = {
+                x: width * 0.25,
+                y: height * 0.25,
+                width: width * 0.5,
+                height: height * 0.5
+            };
+
+            // 显示裁剪覆盖层作为选框覆盖层
+            const cropOverlay = document.getElementById('cropOverlay');
+            cropOverlay.style.display = 'block';
+
+            // 设置 canvas 内部尺寸
+            cropOverlay.width = width;
+            cropOverlay.height = height;
+
+            // 同步 CSS 显示尺寸
+            const canvasRect = canvas.getBoundingClientRect();
+            cropOverlay.style.width = canvasRect.width + 'px';
+            cropOverlay.style.height = canvasRect.height + 'px';
+
+            // 显示预览控制栏（使用确认抠图/取消按钮）
+            document.getElementById('maskPreviewControls').style.display = 'flex';
+            isMaskPreviewMode = true;
+
+            // 绘制选框
+            drawRectSelectionOverlay();
+
+            // 添加事件监听
+            setupRectSelectionEvents();
+        }
+
+        // 绘制矩形选框覆盖层
+        function drawRectSelectionOverlay() {
+            const cropOverlay = document.getElementById('cropOverlay');
+            const ctx = cropOverlay.getContext('2d');
+
+            // 清空覆盖层
+            ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
+
+            // 绘制半透明遮罩
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(0, 0, cropOverlay.width, cropOverlay.height);
+
+            // 清除选框区域的遮罩
+            ctx.clearRect(rectSelectionBox.x, rectSelectionBox.y, rectSelectionBox.width, rectSelectionBox.height);
+
+            // 绘制选框边框
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(rectSelectionBox.x, rectSelectionBox.y, rectSelectionBox.width, rectSelectionBox.height);
+            ctx.setLineDash([]);
+
+            // 绘制调整手柄
+            const handleSize = 16;
+            ctx.fillStyle = '#fff';
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+
+            // 四角和四边中点（8个手柄）
+            const handles = [
+                { x: rectSelectionBox.x - handleSize/2, y: rectSelectionBox.y - handleSize/2 }, // nw
+                { x: rectSelectionBox.x + rectSelectionBox.width/2 - handleSize/2, y: rectSelectionBox.y - handleSize/2 }, // n
+                { x: rectSelectionBox.x + rectSelectionBox.width - handleSize/2, y: rectSelectionBox.y - handleSize/2 }, // ne
+                { x: rectSelectionBox.x + rectSelectionBox.width - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height/2 - handleSize/2 }, // e
+                { x: rectSelectionBox.x + rectSelectionBox.width - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height - handleSize/2 }, // se
+                { x: rectSelectionBox.x + rectSelectionBox.width/2 - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height - handleSize/2 }, // s
+                { x: rectSelectionBox.x - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height - handleSize/2 }, // sw
+                { x: rectSelectionBox.x - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height/2 - handleSize/2 } // w
+            ];
+
+            handles.forEach(h => {
+                ctx.fillRect(h.x, h.y, handleSize, handleSize);
+                ctx.strokeRect(h.x, h.y, handleSize, handleSize);
+            });
+        }
+
+        // 设置矩形选框事件监听
+        function setupRectSelectionEvents() {
+            const cropOverlay = document.getElementById('cropOverlay');
+            const canvas = document.getElementById('imageCanvas');
+
+            // 移除旧的事件监听器
+            const newCropOverlay = cropOverlay.cloneNode(true);
+            cropOverlay.parentNode.replaceChild(newCropOverlay, cropOverlay);
+            const updatedCropOverlay = document.getElementById('cropOverlay');
+
+            // 重新绘制
+            drawRectSelectionOverlay();
+
+            const handleSize = 16;
+
+            // 鼠标按下
+            updatedCropOverlay.addEventListener('mousedown', (e) => {
+                if (!isRectSelectionMode) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const canvasCoords = displayToCanvasCoords(mouseX, mouseY, canvas);
+
+                // 检查是否点击了选框内部（拖动）
+                if (canvasCoords.x >= rectSelectionBox.x && canvasCoords.x <= rectSelectionBox.x + rectSelectionBox.width &&
+                    canvasCoords.y >= rectSelectionBox.y && canvasCoords.y <= rectSelectionBox.y + rectSelectionBox.height) {
+                    isRectDragging = true;
+                    dragStart = { x: canvasCoords.x, y: canvasCoords.y };
+                    initialRectBox = { ...rectSelectionBox };
+                    return;
+                }
+
+                // 检查是否点击了调整手柄
+                const halfSize = handleSize / 2;
+                const handles = {
+                    'nw': { x: rectSelectionBox.x, y: rectSelectionBox.y },
+                    'n': { x: rectSelectionBox.x + rectSelectionBox.width/2, y: rectSelectionBox.y },
+                    'ne': { x: rectSelectionBox.x + rectSelectionBox.width, y: rectSelectionBox.y },
+                    'e': { x: rectSelectionBox.x + rectSelectionBox.width, y: rectSelectionBox.y + rectSelectionBox.height/2 },
+                    'se': { x: rectSelectionBox.x + rectSelectionBox.width, y: rectSelectionBox.y + rectSelectionBox.height },
+                    's': { x: rectSelectionBox.x + rectSelectionBox.width/2, y: rectSelectionBox.y + rectSelectionBox.height },
+                    'sw': { x: rectSelectionBox.x, y: rectSelectionBox.y + rectSelectionBox.height },
+                    'w': { x: rectSelectionBox.x, y: rectSelectionBox.y + rectSelectionBox.height/2 }
+                };
+
+                for (const [handle, pos] of Object.entries(handles)) {
+                    if (Math.abs(canvasCoords.x - pos.x) < halfSize && Math.abs(canvasCoords.y - pos.y) < halfSize) {
+                        isRectResizing = true;
+                        rectResizeHandle = handle;
+                        dragStart = { x: canvasCoords.x, y: canvasCoords.y };
+                        initialRectBox = { ...rectSelectionBox };
+                        return;
+                    }
+                }
+            });
+
+            // 鼠标移动
+            updatedCropOverlay.addEventListener('mousemove', (e) => {
+                if (!isRectSelectionMode) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                // 将当前显示坐标转换为 Canvas 坐标
+                const currentCanvasCoords = displayToCanvasCoords(mouseX, mouseY, canvas);
+
+                // 计算差值（使用 Canvas 坐标）
+                const dx = currentCanvasCoords.x - dragStart.x;
+                const dy = currentCanvasCoords.y - dragStart.y;
+
+                if (isRectDragging) {
+                    rectSelectionBox.x = Math.max(0, Math.min(canvas.width - rectSelectionBox.width, initialRectBox.x + dx));
+                    rectSelectionBox.y = Math.max(0, Math.min(canvas.height - rectSelectionBox.height, initialRectBox.y + dy));
+                    drawRectSelectionOverlay();
+                } else if (isRectResizing) {
+                    const minSize = 20;
+
+                    switch (rectResizeHandle) {
+                        case 'nw':
+                            rectSelectionBox.x = Math.max(0, initialRectBox.x + dx);
+                            rectSelectionBox.y = Math.max(0, initialRectBox.y + dy);
+                            rectSelectionBox.width = Math.max(minSize, initialRectBox.width - dx);
+                            rectSelectionBox.height = Math.max(minSize, initialRectBox.height - dy);
+                            break;
+                        case 'ne':
+                            rectSelectionBox.y = Math.max(0, initialRectBox.y + dy);
+                            rectSelectionBox.width = Math.max(minSize, initialRectBox.width + dx);
+                            rectSelectionBox.height = Math.max(minSize, initialRectBox.height - dy);
+                            break;
+                        case 'se':
+                            rectSelectionBox.width = Math.max(minSize, initialRectBox.width + dx);
+                            rectSelectionBox.height = Math.max(minSize, initialRectBox.height + dy);
+                            break;
+                        case 'sw':
+                            rectSelectionBox.x = Math.max(0, initialRectBox.x + dx);
+                            rectSelectionBox.width = Math.max(minSize, initialRectBox.width - dx);
+                            rectSelectionBox.height = Math.max(minSize, initialRectBox.height + dy);
+                            break;
+                        case 'n':
+                            rectSelectionBox.y = Math.max(0, initialRectBox.y + dy);
+                            rectSelectionBox.height = Math.max(minSize, initialRectBox.height - dy);
+                            break;
+                        case 's':
+                            rectSelectionBox.height = Math.max(minSize, initialRectBox.height + dy);
+                            break;
+                        case 'w':
+                            rectSelectionBox.x = Math.max(0, initialRectBox.x + dx);
+                            rectSelectionBox.width = Math.max(minSize, initialRectBox.width - dx);
+                            break;
+                        case 'e':
+                            rectSelectionBox.width = Math.max(minSize, initialRectBox.width + dx);
+                            break;
+                    }
+
+                    rectSelectionBox.x = Math.max(0, Math.min(canvas.width - rectSelectionBox.width, rectSelectionBox.x));
+                    rectSelectionBox.y = Math.max(0, Math.min(canvas.height - rectSelectionBox.height, rectSelectionBox.y));
+                    drawRectSelectionOverlay();
+                }
+
+                // 更新鼠标样式
+                const canvasCoords = displayToCanvasCoords(mouseX, mouseY, canvas);
+                if (canvasCoords.x >= rectSelectionBox.x && canvasCoords.x <= rectSelectionBox.x + rectSelectionBox.width &&
+                    canvasCoords.y >= rectSelectionBox.y && canvasCoords.y <= rectSelectionBox.y + rectSelectionBox.height) {
+                    updatedCropOverlay.style.cursor = 'move';
+                } else {
+                    updatedCropOverlay.style.cursor = 'default';
+                }
+            });
+
+            // 鼠标释放
+            updatedCropOverlay.addEventListener('mouseup', () => {
+                isRectDragging = false;
+                isRectResizing = false;
+                rectResizeHandle = null;
+            });
+
+            updatedCropOverlay.addEventListener('mouseleave', () => {
+                isRectDragging = false;
+                isRectResizing = false;
+                rectResizeHandle = null;
+            });
+        }
+
+        // 退出矩形选框模式
+        function exitRectSelectionMode() {
+            isRectSelectionMode = false;
+            document.getElementById('cropOverlay').style.display = 'none';
+            document.getElementById('imageCanvas').style.cursor = 'default';
+        }
+
+        // 从矩形选框应用抠图
+        function applyMaskFromRectSelection() {
+            if (!isRectSelectionMode) return;
+
+            showLoading(true);
+
+            // 保存当前图像数据
+            maskPreviewImageData = processor.to_base64();
+
+            try {
+                const centerX = rectSelectionBox.x + rectSelectionBox.width / 2;
+                const centerY = rectSelectionBox.y + rectSelectionBox.height / 2;
+                const radius = Math.min(rectSelectionBox.width, rectSelectionBox.height) / 2;
+
+                switch (rectSelectionType) {
+                    case 'circular':
+                        processor.apply_circular_mask(centerX, centerY, radius, 2);
+                        break;
+                    case 'auto':
+                        // 获取选框中心点颜色作为目标颜色
+                        const pixels = processor.get_raw_pixels();
+                        const pixelIndex = Math.floor(centerY) * processor.get_width() * 4 + Math.floor(centerX) * 4;
+                        const r = pixels[pixelIndex];
+                        const g = pixels[pixelIndex + 1];
+                        const b = pixels[pixelIndex + 2];
+                        processor.auto_crop_by_color(r, g, b, 30, 2);
+                        break;
+                    case 'smart':
+                        processor.smart_crop(50, 2);
+                        break;
+                }
+
+                updateCanvas();
+                exitRectSelectionMode();
+
+                // 设置当前类型
+                currentMaskType = rectSelectionType;
+
+                alert('预览模式下，您可以查看抠图效果\n点击"确认抠图"应用，点击"取消"放弃');
+            } catch (error) {
+                console.error('Mask from rect selection error:', error);
+                alert(`预览失败: ${error.message}`);
+                if (maskPreviewImageData) {
+                    try {
+                        const originalBytes = base64_to_bytes(maskPreviewImageData);
+                        processor = ImageProcessor.new_from_bytes(originalBytes);
+                        updateCanvas();
+                    } catch (e) {
+                        console.error('Failed to restore image:', e);
+                    }
+                }
+                exitRectSelectionMode();
+                maskPreviewImageData = null;
+            }
+
+            showLoading(false);
+        }
+
         // 多边形抠图模式相关变量
         let isPolygonCropMode = false;
         let polygonPoints = [];
@@ -4437,6 +4845,12 @@
         // 切换多边形抠图模式
         window.togglePolygonCropMode = function() {
             if (!processor) return;
+
+            // 如果已经在预览模式，先取消预览
+            if (isMaskPreviewMode) {
+                cancelMaskPreview();
+                return;
+            }
 
             isPolygonCropMode = !isPolygonCropMode;
             const btn = document.getElementById('polygonCropBtn');
@@ -4446,7 +4860,7 @@
                 btn.classList.add('active');
                 polygonPoints = [];
                 canvas.style.cursor = 'crosshair';
-                alert('多边形抠图模式已启用\n\n点击画布添加顶点，至少需要3个点\n右键点击或双击完成抠图');
+                alert('多边形抠图模式已启用\n\n点击画布添加顶点，至少需要3个点\n右键点击或双击完成选择\n完成后可以预览抠图效果');
             } else {
                 btn.classList.remove('active');
                 polygonPoints = [];
@@ -4482,19 +4896,19 @@
             }
         });
         
-        // 右键点击完成多边形抠图
+        // 右键点击进入预览模式
         canvasElement.addEventListener('contextmenu', function(e) {
             if (isPolygonCropMode && polygonPoints.length >= 3) {
                 e.preventDefault();
-                applyPolygonMask();
+                enterPolygonMaskPreview();
             }
         });
-        
-        // 双击完成多边形抠图
+
+        // 双击进入预览模式
         canvasElement.addEventListener('dblclick', function(e) {
             if (isPolygonCropMode && polygonPoints.length >= 3) {
                 e.preventDefault();
-                applyPolygonMask();
+                enterPolygonMaskPreview();
             }
         });
         
@@ -4532,6 +4946,53 @@
             }
         }
         
+        // 进入多边形抠图预览模式
+        function enterPolygonMaskPreview() {
+            if (polygonPoints.length < 3) {
+                alert('至少需要3个顶点才能形成多边形');
+                return;
+            }
+
+            showLoading(true);
+
+            // 保存当前图像数据用于恢复（使用base64）
+            maskPreviewImageData = processor.to_base64();
+
+            // 转换顶点为平坦数组
+            const vertices = [];
+            for (const point of polygonPoints) {
+                vertices.push(point.x, point.y);
+            }
+
+            try {
+                // 应用多边形遮罩（带抗锯齿和平滑边缘）
+                processor.apply_polygon_mask(
+                    vertices,
+                    true,  // 抗锯齿
+                    true,  // 平滑边缘
+                    2      // 平滑半径
+                );
+
+                updateCanvas();
+
+                // 显示预览控制栏
+                showMaskPreviewControls();
+                currentMaskType = 'polygon';
+
+                alert('预览模式下，您可以查看抠图效果\n点击"确认抠图"应用，点击"取消"放弃');
+            } catch (error) {
+                console.error('Polygon mask preview error:', error);
+                alert(`预览失败: ${error.message}`);
+                if (maskPreviewImageData) {
+                    const originalBytes = base64_to_bytes(maskPreviewImageData);
+                    processor = ImageProcessor.new_from_bytes(originalBytes);
+                    updateCanvas();
+                }
+            }
+
+            showLoading(false);
+        }
+
         // 应用多边形遮罩
         function applyPolygonMask() {
             if (polygonPoints.length < 3) {
@@ -4573,29 +5034,38 @@
             showLoading(false);
         }
         
-        // 显示圆形抠图参数面板
+        // 显示圆形抠图参数面板（保留为备用）
         window.applyCircularMask = function() {
             if (!processor) return;
-            
+
+            // 进入矩形选框模式
+            enterRectSelectionMode('circular');
+            alert('圆形抠图模式\n\n拖动选框调整位置和大小\n点击"确认抠图"应用，点击"取消"放弃');
+        };
+
+        // 保留旧的参数面板函数作为备用
+        window.showCircularMaskParams = function() {
+            if (!processor) return;
+
             document.getElementById('circularMaskParams').style.display = 'block';
-            
+
             // 设置滑块范围
             const width = processor.get_width();
             const height = processor.get_height();
-            
+
             document.getElementById('circleCenterXSlider').max = width;
             document.getElementById('circleCenterXSlider').value = width / 2;
             document.getElementById('circleCenterXValue').textContent = Math.round(width / 2);
-            
+
             document.getElementById('circleCenterYSlider').max = height;
             document.getElementById('circleCenterYSlider').value = height / 2;
             document.getElementById('circleCenterYValue').textContent = Math.round(height / 2);
-            
+
             const maxRadius = Math.min(width, height) / 2;
             document.getElementById('circleRadiusSlider').max = maxRadius;
             document.getElementById('circleRadiusSlider').value = maxRadius * 0.6;
             document.getElementById('circleRadiusValue').textContent = Math.round(maxRadius * 0.6);
-            
+
             // 更新滑块显示值
             document.getElementById('circleCenterXSlider').oninput = function() {
                 document.getElementById('circleCenterXValue').textContent = this.value;
@@ -4623,7 +5093,8 @@
             showLoading(true);
 
             try {
-                saveToHistory();
+                // 保存当前图像数据用于恢复（使用base64）
+                maskPreviewImageData = processor.to_base64();
 
                 const centerX = parseFloat(document.getElementById('circleCenterXSlider').value);
                 const centerY = parseFloat(document.getElementById('circleCenterYSlider').value);
@@ -4634,10 +5105,20 @@
                 updateCanvas();
 
                 hideCircularMaskParams();
-                alert('圆形抠图完成！');
+
+                // 显示预览控制栏
+                showMaskPreviewControls();
+                currentMaskType = 'circular';
+
+                alert('预览模式下，您可以查看抠图效果\n点击"确认抠图"应用，点击"取消"放弃');
             } catch (error) {
-                console.error('Circular mask error:', error);
-                alert(`圆形抠图失败: ${error.message}`);
+                console.error('Circular mask preview error:', error);
+                alert(`预览失败: ${error.message}`);
+                if (maskPreviewImageData) {
+                    const originalBytes = base64_to_bytes(maskPreviewImageData);
+                    processor = ImageProcessor.new_from_bytes(originalBytes);
+                    updateCanvas();
+                }
             }
 
             showLoading(false);
@@ -4646,9 +5127,18 @@
         // 显示自动抠图参数面板
         window.applyAutoCropByColor = function() {
             if (!processor) return;
-            
+
+            // 进入矩形选框模式
+            enterRectSelectionMode('auto');
+            alert('自动抠图模式（基于颜色）\\n拖动选框调整位置和大小\n将使用选框中心点的颜色作为目标颜色\n点击"确认抠图"应用，点击"取消"放弃');
+        };
+
+        // 保留旧的参数面板函数作为备用
+        window.showAutoCropParams = function() {
+            if (!processor) return;
+
             document.getElementById('autoCropParams').style.display = 'block';
-            
+
             // 更新滑块显示值
             document.getElementById('toleranceSlider').oninput = function() {
                 document.getElementById('toleranceValue').textContent = this.value;
@@ -4673,7 +5163,8 @@
             showLoading(true);
 
             try {
-                saveToHistory();
+                // 保存当前图像数据用于恢复（使用base64）
+                maskPreviewImageData = processor.to_base64();
 
                 const colorHex = document.getElementById('targetColorPicker').value;
                 const tolerance = parseInt(document.getElementById('toleranceSlider').value);
@@ -4688,10 +5179,20 @@
                 updateCanvas();
 
                 hideAutoCropParams();
-                alert('自动抠图完成！');
+
+                // 显示预览控制栏
+                showMaskPreviewControls();
+                currentMaskType = 'auto';
+
+                alert('预览模式下，您可以查看抠图效果\n点击"确认抠图"应用，点击"取消"放弃');
             } catch (error) {
-                console.error('Auto crop error:', error);
-                alert(`自动抠图失败: ${error.message}`);
+                console.error('Auto crop preview error:', error);
+                alert(`预览失败: ${error.message}`);
+                if (maskPreviewImageData) {
+                    const originalBytes = base64_to_bytes(maskPreviewImageData);
+                    processor = ImageProcessor.new_from_bytes(originalBytes);
+                    updateCanvas();
+                }
             }
 
             showLoading(false);
@@ -4741,9 +5242,18 @@
         // 显示智能抠图参数面板
         window.applySmartCrop = function() {
             if (!processor) return;
-            
+
+            // 进入矩形选框模式
+            enterRectSelectionMode('smart');
+            alert('智能抠图模式\n拖动选框调整位置和大小\n将在选框区域内自动检测主体\n点击"确认抠图"应用，点击"取消"放弃');
+        };
+
+        // 保留旧的参数面板函数作为备用
+        window.showSmartCropParams = function() {
+            if (!processor) return;
+
             document.getElementById('smartCropParams').style.display = 'block';
-            
+
             // 更新滑块显示值
             document.getElementById('edgeThresholdSlider').oninput = function() {
                 document.getElementById('edgeThresholdValue').textContent = this.value;
@@ -4765,7 +5275,8 @@
             showLoading(true);
 
             try {
-                saveToHistory();
+                // 保存当前图像数据用于恢复（使用base64）
+                maskPreviewImageData = processor.to_base64();
 
                 const threshold = parseInt(document.getElementById('edgeThresholdSlider').value);
                 const featherRadius = parseFloat(document.getElementById('smartFeatherSlider').value);
@@ -4774,10 +5285,20 @@
                 updateCanvas();
 
                 hideSmartCropParams();
-                alert('智能抠图完成！');
+
+                // 显示预览控制栏
+                showMaskPreviewControls();
+                currentMaskType = 'smart';
+
+                alert('预览模式下，您可以查看抠图效果\n点击"确认抠图"应用，点击"取消"放弃');
             } catch (error) {
-                console.error('Smart crop error:', error);
-                alert(`智能抠图失败: ${error.message}`);
+                console.error('Smart crop preview error:', error);
+                alert(`预览失败: ${error.message}`);
+                if (maskPreviewImageData) {
+                    const originalBytes = base64_to_bytes(maskPreviewImageData);
+                    processor = ImageProcessor.new_from_bytes(originalBytes);
+                    updateCanvas();
+                }
             }
 
             showLoading(false);
