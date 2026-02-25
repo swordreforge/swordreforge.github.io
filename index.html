@@ -354,6 +354,17 @@
             }
         }
 
+        /* 半屏时隐藏工具栏左侧部分 */
+        @media (max-width: 50vw) {
+            .toolbar-left {
+                display: none !important;
+            }
+
+            .toolbar-divider {
+                display: none !important;
+            }
+        }
+
         .toolbar-actions {
             display: flex;
             align-items: center;
@@ -3010,46 +3021,68 @@
                 const uint8Array = new Uint8Array(arrayBuffer);
 
                 if (wasmModule) {
-                    processor = ImageProcessor.new_from_bytes(uint8Array);
-                    const width = processor.get_width();
-                    const height = processor.get_height();
+                    // 检查图片尺寸，限制最大尺寸为8192x8192
+                    const imgCheck = new Image();
+                    imgCheck.onload = () => {
+                        if (imgCheck.width > 8192 || imgCheck.height > 8192) {
+                            showLoading(false);
+                            alert(`图片尺寸过大！\n当前尺寸：${imgCheck.width} x ${imgCheck.height}\n最大支持：8192 x 8192\n请缩小图片后再试`);
+                            return;
+                        }
 
-                    // 保存原始处理器用于无级调节
-                    originalProcessor = ImageProcessor.new_from_bytes(uint8Array);
+                        // 继续加载图片
+                        try {
+                            processor = ImageProcessor.new_from_bytes(uint8Array);
+                            const width = processor.get_width();
+                            const height = processor.get_height();
 
-                    // 使用 get_base64() 获取图像数据并绘制到 Canvas
-                    const base64 = processor.to_base64();
+                            // 保存原始处理器用于无级调节
+                            originalProcessor = ImageProcessor.new_from_bytes(uint8Array);
 
-                    const canvas = document.getElementById('imageCanvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
+                            // 使用 get_base64() 获取图像数据并绘制到 Canvas
+                            const base64 = processor.to_base64();
 
-                    // 创建图像对象
-                    const img = new Image();
-                    img.onload = () => {
-                        ctx.drawImage(img, 0, 0);
-                        // 保存原始图像数据
-                        originalImageData = ctx.getImageData(0, 0, width, height);
-                        currentImage = {
-                            data: new Uint8ClampedArray(originalImageData.data),
-                            width,
-                            height
-                        };
+                            const canvas = document.getElementById('imageCanvas');
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-                        document.getElementById('emptyState').style.display = 'none';
-                        canvas.style.display = 'block';
+                            // 创建图像对象
+                            const img = new Image();
+                            img.onload = () => {
+                                ctx.drawImage(img, 0, 0);
+                                // 保存原始图像数据
+                                originalImageData = ctx.getImageData(0, 0, width, height);
+                                currentImage = {
+                                    data: new Uint8ClampedArray(originalImageData.data),
+                                    width,
+                                    height
+                                };
 
-                        document.getElementById('imageSize').textContent = `${width} x ${height}`;
-                        document.getElementById('imageFormat').textContent = file.type.split('/')[1].toUpperCase();
+                                document.getElementById('emptyState').style.display = 'none';
+                                canvas.style.display = 'block';
 
-                        enableButtons();
+                                document.getElementById('imageSize').textContent = `${width} x ${height}`;
+                                document.getElementById('imageFormat').textContent = file.type.split('/')[1].toUpperCase();
+
+                                enableButtons();
+                            };
+                            img.onerror = () => {
+                                console.error('Failed to load image from base64');
+                                alert('图片显示失败');
+                            };
+                            img.src = base64;
+                        } catch (error) {
+                            console.error('Failed to load image:', error);
+                            alert('图片加载失败，可能是尺寸过大导致内存不足');
+                        }
+                        showLoading(false);
                     };
-                    img.onerror = () => {
-                        console.error('Failed to load image from base64');
-                        alert('图片显示失败');
+                    imgCheck.onerror = () => {
+                        showLoading(false);
+                        alert('图片加载失败，请确保文件格式正确');
                     };
-                    img.src = base64;
+                    imgCheck.src = URL.createObjectURL(file);
                 }
             } catch (error) {
                 console.error('Failed to load image:', error);
