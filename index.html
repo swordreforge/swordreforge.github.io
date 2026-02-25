@@ -4572,9 +4572,25 @@
                 return;
             }
 
-            // 如果在多边形抠图模式，退出多边形模式
+            // 如果在多边形抠图模式，直接清理状态（不调用 togglePolygonCropMode 避免死循环）
             if (isPolygonCropMode) {
-                togglePolygonCropMode();
+                isPolygonCropMode = false;
+                const btn = document.getElementById('polygonCropBtn');
+                if (btn) btn.classList.remove('active');
+                polygonPoints = [];
+
+                const canvas = document.getElementById('imageCanvas');
+                if (canvas) canvas.style.cursor = 'default';
+
+                // 隐藏 cropOverlay 并清空
+                const cropOverlay = document.getElementById('cropOverlay');
+                if (cropOverlay) {
+                    cropOverlay.style.display = 'none';
+                    const ctx = cropOverlay.getContext('2d');
+                    ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
+                }
+
+                updateCanvas();
                 hideMaskPreviewControls();
                 currentMaskType = null;
                 maskPreviewImageData = null;
