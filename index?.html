@@ -1712,7 +1712,9 @@
                         <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: #e0e0e0; font-size: 0.9em;">
                             <span>字体选择</span>
                             <select id="fontSelect" style="padding: 4px; background: #444; color: #e0e0e0; border: 1px solid #555; border-radius: 4px; max-width: 180px;" disabled>
-                                <option value="default" selected>Minikin-1（默认）</option>
+                                <option value="builtin-0" selected>丁卯点阵体</option>
+                                <option value="builtin-1">Roboto 常规</option>
+                                <option value="builtin-2">站酷高端黑</option>
                             </select>
                         </label>
                     </div>
@@ -2622,9 +2624,6 @@
             document.getElementById('watermarkYSlider').disabled = !currentImage;
             document.getElementById('addWatermarkBtn').disabled = !currentImage || !watermarkBytes;
             document.getElementById('clearWatermarkBtn').disabled = !currentImage;
-
-            // 启用字体上传控件
-            document.getElementById('fontInput').disabled = !currentImage;
 
             // 启用旋转滑块
 
@@ -5908,13 +5907,22 @@
 
             // 字体映射：WASM 内嵌字体 -> 浏览器近似替代字体
             // 注意：WASM 使用内嵌字体，预览使用浏览器字体，可能不完全一致
-            let fontName = 'sans-serif'; // 默认字体
+            let fontName = 'monospace'; // 默认点阵字体替代
             if (fontSelect.startsWith('custom-')) {
                 // 自定义字体：使用通用字体族作为预览（无法在浏览器中加载自定义字体）
                 fontName = 'sans-serif';
             } else {
-                // 默认字体：使用通用字体作为预览
-                fontName = 'sans-serif';
+                const fontType = parseInt(fontSelect.replace('builtin-', ''));
+                if (fontType === 0) {
+                    // 丁卯点阵体 -> 使用等宽字体或点阵字体
+                    fontName = '"Courier New", monospace';
+                } else if (fontType === 1) {
+                    // Roboto -> 使用 Roboto 或无衬线字体
+                    fontName = 'Roboto, Arial, sans-serif';
+                } else if (fontType === 2) {
+                    // 站酷高端黑 -> 使用粗体中文字体
+                    fontName = '"Microsoft YaHei", "SimHei", sans-serif';
+                }
             }
 
             ctx.font = `${textBox.fontSize}px ${fontName}`;
@@ -5945,7 +5953,7 @@
             textBoxEl.style.width = (textWidth / scale.scaleX) + 'px';
             textBoxEl.style.height = (textHeight / scale.scaleY) + 'px';
             // 字体大小需要考虑缩放，但 WASM 和浏览器字体渲染有差异，添加补偿系数
-            const fontRenderRatio = 1.0; // 补偿系数，根据实际效果调整
+            const fontRenderRatio = 0.85; // 补偿系数，根据实际效果调整
             textBoxEl.style.fontSize = (textBox.fontSize / scale.scaleY * fontRenderRatio) + 'px';
             textBoxEl.style.color = textBox.color;
             textBoxEl.style.fontWeight = 'normal'; // 确保字体粗细正确
@@ -6008,13 +6016,22 @@
 
             // 字体映射：WASM 内嵌字体 -> 浏览器近似替代字体
             // 注意：WASM 使用内嵌字体，预览使用浏览器字体，可能不完全一致
-            let fontName = 'sans-serif'; // 默认字体
+            let fontName = 'monospace'; // 默认点阵字体替代
             if (fontSelect.startsWith('custom-')) {
                 // 自定义字体：使用通用字体族作为预览（无法在浏览器中加载自定义字体）
                 fontName = 'sans-serif';
             } else {
-                // 默认字体：使用通用字体作为预览
-                fontName = 'sans-serif';
+                const fontType = parseInt(fontSelect.replace('builtin-', ''));
+                if (fontType === 0) {
+                    // 丁卯点阵体 -> 使用等宽字体或点阵字体
+                    fontName = '"Courier New", monospace';
+                } else if (fontType === 1) {
+                    // Roboto -> 使用 Roboto 或无衬线字体
+                    fontName = 'Roboto, Arial, sans-serif';
+                } else if (fontType === 2) {
+                    // 站酷高端黑 -> 使用粗体中文字体
+                    fontName = '"Microsoft YaHei", "SimHei", sans-serif';
+                }
             }
 
             ctx.font = `${fontSize}px ${fontName}`;
@@ -6030,7 +6047,7 @@
             textBoxEl.textContent = text;
             // 字体大小需要考虑缩放，但 WASM 和浏览器字体渲染有差异，添加补偿系数
             // 调整补偿系数使预览字体大小匹配实际效果
-            const fontRenderRatio = 1.0; // 补偿系数，根据实际效果调整
+            const fontRenderRatio = 0.85; // 补偿系数，根据实际效果调整
             textBoxEl.style.fontSize = (fontSize / scale.scaleY * fontRenderRatio) + 'px';
             textBoxEl.style.color = textBox.color;
             textBoxEl.style.fontWeight = 'normal'; // 确保字体粗细正确
@@ -6210,15 +6227,19 @@ window.applyText = function() {
                 // 预览框的 top 是 textBox.y，调整基线偏移使预览和实际绘制对齐
                 const drawY = Math.floor(textBox.y + fontSize * 0 + offset); // 基线偏移设为0
 
-                // 判断是使用默认字体还是自定义字体
+                // 判断是使用内置字体还是自定义字体
                 if (fontSelect.startsWith('custom-')) {
                     // 使用自定义字体（动态注册的字体）
                     const fontName = fontSelect.replace('custom-', '');
                     processor.draw_text_with_font_name(text, drawX, drawY, fontSize, fontName, withShadow, r, g, b);
                 } else {
-                    // 使用默认字体
-                    const fontName = 'default';
-                    processor.draw_text_with_font_name(text, drawX, drawY, fontSize, fontName, withShadow, r, g, b);
+                    // 使用内置字体（兼容旧版）
+                    const fontType = parseInt(fontSelect.replace('builtin-', ''));
+                    if (withShadow) {
+                        processor.draw_text_with_shadow_and_color_and_font(text, drawX, drawY, fontSize, r, g, b, fontType);
+                    } else {
+                        processor.draw_text_with_color_and_font(text, drawX, drawY, fontSize, r, g, b, fontType);
+                    }
                 }
 
                 updateCanvas();
@@ -6406,8 +6427,8 @@ window.applyText = function() {
                 const customOptions = fontSelect.querySelectorAll('option[value^="custom-"]');
                 customOptions.forEach(option => option.remove());
 
-                // 重置为默认字体
-                fontSelect.value = 'default';
+                // 重置为第一个选项
+                fontSelect.value = 'builtin-0';
 
                 // 更新字体列表
                 updateRegisteredFontsList();

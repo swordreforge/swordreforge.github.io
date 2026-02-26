@@ -1710,9 +1710,11 @@
                     </div>
                     <div style="margin-bottom: 10px;">
                         <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: #e0e0e0; font-size: 0.9em;">
-                            <span>字体选择</span>
-                            <select id="fontSelect" style="padding: 4px; background: #444; color: #e0e0e0; border: 1px solid #555; border-radius: 4px; max-width: 180px;" disabled>
-                                <option value="default" selected>Minikin-1（默认）</option>
+                            <span>字体样式</span>
+                            <select id="fontSelect" style="padding: 4px; background: #444; color: #e0e0e0; border: 1px solid #555; border-radius: 4px; max-width: 150px;" disabled>
+                                <option value="0" selected>丁卯点阵体</option>
+                                <option value="1">Roboto 常规</option>
+                                <option value="2">站酷高端黑</option>
                             </select>
                         </label>
                     </div>
@@ -1731,28 +1733,6 @@
                         <button class="btn" onclick="addTextMode()" id="addTextBtn" disabled>添加文本</button>
                         <button class="btn btn-success" onclick="applyText()" id="applyTextBtn" style="display: none;">确认</button>
                         <button class="btn btn-danger" onclick="cancelTextMode()" id="cancelTextBtn" style="display: none;">取消</button>
-                    </div>
-                </div>
-
-                <div class="section">
-                    <h3>字体管理</h3>
-                    <div style="margin-bottom: 10px;">
-                        <label class="upload-area" id="fontUpload" style="padding: 15px; display: block; cursor: pointer;">
-                            <div style="display: flex; align-items: center; justify-content: center;">
-                                <span id="fontFileName" style="color: #888;">点击上传自定义字体</span>
-                            </div>
-                            <input type="file" id="fontInput" accept=".ttf,.otf,.woff,.woff2" style="display: none;" disabled>
-                        </label>
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        <label style="color: #e0e0e0; font-size: 0.85em; display: block; margin-bottom: 5px;">已注册字体</label>
-                        <div id="registeredFontsList" style="background: #2a2a2a; border: 1px solid #444; border-radius: 4px; padding: 8px; max-height: 150px; overflow-y: auto;">
-                            <div style="color: #666; font-size: 0.85em;">暂无自定义字体</div>
-                        </div>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn" onclick="applyUploadedFont()" id="applyFontBtn" disabled>注册字体</button>
-                        <button class="btn btn-danger" onclick="clearCustomFonts()" id="clearFontsBtn" disabled>清空自定义</button>
                     </div>
                 </div>
 
@@ -2018,70 +1998,27 @@
     </div>
 
     <script type="module">
-        // 全局变量声明
-        let wasmModule = null;
-        let processor = null;
-        let originalImageData = null;
-        let currentImage = null;
-
-        // 离屏 Canvas 用于双缓冲，避免闪屏
-        let offscreenCanvas = null;
-        let offscreenCtx = null;
-
-        // 历史记录管理
-        let historyStack = [];
-        let redoStack = [];
-        const MAX_HISTORY = 30;
-
-        // 加载 WASM 模块并初始化
-        async function loadWasmModule() {
-            try {
-                // 从 photon_wasm.js 导入初始化函数和所有导出
-                const { default: initWasm, ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint, wasm_register_font, wasm_is_font_registered, wasm_get_registered_fonts, wasm_unregister_font, wasm_clear_fonts } = await import('./pkg/photon_wasm.js?v=26');
-
-                // 调用初始化函数来加载 WASM 模块
-                await initWasm();
-
-                // 返回所有导出
-                return {
-                    ImageProcessor,
-                    BrushType,
-                    BlendMode,
-                    BrushConfig,
-                    BrushStroke,
-                    StrokePoint,
-                    // 字体注册函数
-                    wasm_register_font,
-                    wasm_is_font_registered,
-                    wasm_get_registered_fonts,
-                    wasm_unregister_font,
-                    wasm_clear_fonts
-                };
-            } catch (error) {
-                console.error('Failed to load WASM module:', error);
-                throw error;
-            }
-        }
-
-        // 加载 WASM 模块并初始化
-        const {
-            ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint,
-            wasm_register_font, wasm_is_font_registered, wasm_get_registered_fonts, wasm_unregister_font, wasm_clear_fonts
-        } = await loadWasmModule();
+        import init from './pkg/photon_wasm.js?v=24';
+        import { ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint } from './pkg/photon_wasm.js?v=24';
 
         // 将类型导出到全局 window 对象
         window.BrushType = BrushType;
         window.BlendMode = BlendMode;
         window.BrushConfig = BrushConfig;
         window.BrushStroke = BrushStroke;
-        window.StrokePoint = StrokePoint;
-
-        // 字体注册函数导出到全局
-        window.wasm_register_font = wasm_register_font;
-        window.wasm_is_font_registered = wasm_is_font_registered;
-        window.wasm_get_registered_fonts = wasm_get_registered_fonts;
-        window.wasm_unregister_font = wasm_unregister_font;
-        window.wasm_clear_fonts = wasm_clear_fonts;
+        window.StrokePoint = StrokePoint;        let wasmModule = null;
+        let processor = null;
+        let originalImageData = null;
+        let currentImage = null;
+        
+        // 离屏 Canvas 用于双缓冲，避免闪屏
+        let offscreenCanvas = null;
+        let offscreenCtx = null;
+        
+        // 历史记录管理
+        let historyStack = [];
+        let redoStack = [];
+        const MAX_HISTORY = 30;
 
         // 文本绘制相关变量
         let isTextMode = false;
@@ -2117,32 +2054,18 @@
         function saveToHistory() {
             if (!processor) return;
 
-            // 优化：使用 Blob URL 减少内存占用
-            const bytes = processor.get_bytes();
-            const blob = new Blob([bytes], { type: 'image/png' });
-            const url = URL.createObjectURL(blob);
-
             const state = {
-                url: url,
+                bytes: processor.get_bytes(),  // 使用 get_bytes() 代替 to_base64()，提升性能
                 width: processor.get_width(),
                 height: processor.get_height()
             };
 
             historyStack.push(state);
             if (historyStack.length > MAX_HISTORY) {
-                // 释放被移除状态的 Blob URL
-                const removedState = historyStack.shift();
-                if (removedState.url) {
-                    URL.revokeObjectURL(removedState.url);
-                }
+                historyStack.shift();
             }
 
             // 清空重做栈
-            redoStack.forEach(state => {
-                if (state.url) {
-                    URL.revokeObjectURL(state.url);
-                }
-            });
             redoStack = [];
 
             updateUndoRedoButtons();
@@ -2152,78 +2075,52 @@
         window.saveHistory = saveToHistory;
 
         // 撤销
-        window.undo = async function() {
+        window.undo = function() {
             if (historyStack.length === 0) return;
 
             // 保存当前状态到重做栈
-            const currentBytes = processor.get_bytes();
-            const currentBlob = new Blob([currentBytes], { type: 'image/png' });
-            const currentUrl = URL.createObjectURL(currentBlob);
-            
             redoStack.push({
-                url: currentUrl,
+                bytes: processor.get_bytes(),  // 使用 get_bytes() 代替 to_base64()，提升性能
                 width: processor.get_width(),
                 height: processor.get_height()
             });
 
             // 恢复上一个状态
             const state = historyStack.pop();
-            await restoreState(state);
+            restoreState(state);
 
             updateUndoRedoButtons();
         }
 
         // 重做
-        window.redo = async function() {
+        window.redo = function() {
             if (redoStack.length === 0) return;
 
             // 保存当前状态到历史栈
-            const currentBytes = processor.get_bytes();
-            const currentBlob = new Blob([currentBytes], { type: 'image/png' });
-            const currentUrl = URL.createObjectURL(currentBlob);
-            
             historyStack.push({
-                url: currentUrl,
+                bytes: processor.get_bytes(),  // 使用 get_bytes() 代替 to_base64()，提升性能
                 width: processor.get_width(),
                 height: processor.get_height()
             });
 
             // 恢复重做状态
             const state = redoStack.pop();
-            await restoreState(state);
+            restoreState(state);
 
             updateUndoRedoButtons();
         }
 
         // 恢复状态
-        async function restoreState(state) {
-            // state.url 现在是 Blob URL
-            if (state.url) {
-                try {
-                    const response = await fetch(state.url);
-                    const bytes = new Uint8Array(await response.arrayBuffer());
-                    processor = ImageProcessor.new_from_bytes(bytes);
-                    
-                    // 释放 Blob URL（因为我们已经获取了数据）
-                    URL.revokeObjectURL(state.url);
-                    state.url = null;
-                } catch (error) {
-                    console.error('Failed to restore state from Blob URL:', error);
-                    // 如果 Blob URL 失败，尝试从 bytes 恢复（向后兼容）
-                    if (state.bytes) {
-                        processor = ImageProcessor.new_from_bytes(state.bytes);
-                    }
-                }
-            } else if (state.bytes) {
-                // 兼容旧的格式
+        function restoreState(state) {
+            // state.bytes 现在是 Uint8Array，直接使用
+            if (state.bytes instanceof Uint8Array) {
                 processor = ImageProcessor.new_from_bytes(state.bytes);
-            } else if (state.base64) {
-                // 兼容更旧的 base64 格式
+            } else {
+                // 兼容旧的 base64 格式
                 const base64Data = state.base64.includes(',') ? state.base64.split(',')[1] : state.base64;
                 const uint8Array = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
                 processor = ImageProcessor.new_from_bytes(uint8Array);
             }
-            
             // 恢复状态时清除 WASM 内部的笔刷历史
             processor.clear_strokes();
             updateCanvas();
@@ -2253,20 +2150,18 @@
             updateTextBoxPreview();
         });
 
-        // 初始化 WASM 模块（WASM 已在 loadWasmModule 中加载）
+        // 初始化 WASM 模块
         async function initWasm() {
-            showLoading(true, '正在初始化应用...\n\nWebAssembly 模块已加载完成');
+            showLoading(true, '正在下载 WebAssembly 模块...\n\n包体大小约 5MB\n第一次使用请耐心等待\n后续访问将使用缓存，加载更快');
             try {
-                // WASM 模块已在 loadWasmModule 中加载并初始化
-                // 这里只需要启用按钮和初始化事件监听器
-                console.log('Initializing application...');
+                wasmModule = await init();
+                console.log('WebAssembly module loaded successfully');
                 enableButtons();
                 // 初始化全局事件监听器
                 initGlobalEvents();
-                console.log('Application initialized successfully');
             } catch (error) {
-                console.error('Failed to initialize application:', error);
-                alert('应用初始化失败');
+                console.error('Failed to load WebAssembly:', error);
+                alert('WebAssembly 模块加载失败，请确保服务器支持 WASM');
             }
             showLoading(false);
         }
@@ -2622,9 +2517,6 @@
             document.getElementById('watermarkYSlider').disabled = !currentImage;
             document.getElementById('addWatermarkBtn').disabled = !currentImage || !watermarkBytes;
             document.getElementById('clearWatermarkBtn').disabled = !currentImage;
-
-            // 启用字体上传控件
-            document.getElementById('fontInput').disabled = !currentImage;
 
             // 启用旋转滑块
 
@@ -3160,66 +3052,68 @@
                 const arrayBuffer = await file.arrayBuffer();
                 const uint8Array = new Uint8Array(arrayBuffer);
 
-                // 检查图片尺寸，限制最大尺寸为8192x8192
-                const imgCheck = new Image();
-                imgCheck.onload = () => {
-                    if (imgCheck.width > 8192 || imgCheck.height > 8192) {
+                if (wasmModule) {
+                    // 检查图片尺寸，限制最大尺寸为8192x8192
+                    const imgCheck = new Image();
+                    imgCheck.onload = () => {
+                        if (imgCheck.width > 8192 || imgCheck.height > 8192) {
+                            showLoading(false);
+                            alert(`图片尺寸过大！\n当前尺寸：${imgCheck.width} x ${imgCheck.height}\n最大支持：8192 x 8192\n请缩小图片后再试`);
+                            return;
+                        }
+
+                        // 继续加载图片
+                        try {
+                            processor = ImageProcessor.new_from_bytes(uint8Array);
+                            const width = processor.get_width();
+                            const height = processor.get_height();
+
+                            // 保存原始处理器用于无级调节
+                            originalProcessor = ImageProcessor.new_from_bytes(uint8Array);
+
+                            // 优化：使用 get_raw_pixels() + ImageData 直接渲染 Canvas（零拷贝优化）
+                            const canvas = document.getElementById('imageCanvas');
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+                            // 获取原始像素数据并直接创建 ImageData
+                            const pixels = processor.get_raw_pixels();
+                            const imageData = new ImageData(new Uint8ClampedArray(pixels), width, height);
+                            ctx.putImageData(imageData, 0, 0);
+
+                            // 保存原始图像数据
+                            originalImageData = ctx.getImageData(0, 0, width, height);
+                            currentImage = {
+                                data: new Uint8ClampedArray(originalImageData.data),
+                                width,
+                                height
+                            };
+
+                            document.getElementById('emptyState').style.display = 'none';
+                            canvas.style.display = 'block';
+
+                            document.getElementById('imageSize').textContent = `${width} x ${height}`;
+                            document.getElementById('imageFormat').textContent = file.type.split('/')[1].toUpperCase();
+
+                            enableButtons();
+                        } catch (error) {
+                            console.error('Failed to load image:', error);
+                            alert('图片加载失败，可能是尺寸过大导致内存不足');
+                        }
                         showLoading(false);
-                        alert(`图片尺寸过大！\n当前尺寸：${imgCheck.width} x ${imgCheck.height}\n最大支持：8192 x 8192\n请缩小图片后再试`);
-                        return;
-                    }
-
-                    // 继续加载图片
-                    try {
-                        processor = ImageProcessor.new_from_bytes(uint8Array);
-                        const width = processor.get_width();
-                        const height = processor.get_height();
-
-                        // 保存原始处理器用于无级调节
-                        originalProcessor = ImageProcessor.new_from_bytes(uint8Array);
-
-                        // 优化：使用 get_raw_pixels() + ImageData 直接渲染 Canvas（零拷贝优化）
-                        const canvas = document.getElementById('imageCanvas');
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-                        // 获取原始像素数据并直接创建 ImageData
-                        const pixels = processor.get_raw_pixels();
-                        const imageData = new ImageData(new Uint8ClampedArray(pixels), width, height);
-                        ctx.putImageData(imageData, 0, 0);
-
-                        // 保存原始图像数据
-                        originalImageData = ctx.getImageData(0, 0, width, height);
-                        currentImage = {
-                            data: new Uint8ClampedArray(originalImageData.data),
-                            width,
-                            height
-                        };
-
-                        document.getElementById('emptyState').style.display = 'none';
-                        canvas.style.display = 'block';
-
-                        document.getElementById('imageSize').textContent = `${width} x ${height}`;
-                        document.getElementById('imageFormat').textContent = file.type.split('/')[1].toUpperCase();
-
-                        enableButtons();
-                    } catch (error) {
-                        console.error('Failed to load image:', error);
-                        alert('图片加载失败，可能是尺寸过大导致内存不足');
-                    }
-                    showLoading(false);
-                };
-                imgCheck.onerror = () => {
-                    showLoading(false);
-                    alert('图片加载失败，请确保文件格式正确');
-                };
-                imgCheck.src = URL.createObjectURL(file);
+                    };
+                    imgCheck.onerror = () => {
+                        showLoading(false);
+                        alert('图片加载失败，请确保文件格式正确');
+                    };
+                    imgCheck.src = URL.createObjectURL(file);
+                }
             } catch (error) {
                 console.error('Failed to load image:', error);
                 alert('图片加载失败');
-                showLoading(false);
             }
+            showLoading(false);
         }
 
         // 应用滤镜
@@ -5901,20 +5795,22 @@
             const canvas = document.getElementById('imageCanvas');
             const canvasWidth = canvas.width;
             const canvasHeight = canvas.height;
-
+            
             // 使用 Canvas 测量文本宽度，提高精度
             const ctx = canvas.getContext('2d');
-            const fontSelect = document.getElementById('fontSelect').value;
-
+            const fontType = parseInt(document.getElementById('fontSelect').value);
             // 字体映射：WASM 内嵌字体 -> 浏览器近似替代字体
             // 注意：WASM 使用内嵌字体，预览使用浏览器字体，可能不完全一致
-            let fontName = 'sans-serif'; // 默认字体
-            if (fontSelect.startsWith('custom-')) {
-                // 自定义字体：使用通用字体族作为预览（无法在浏览器中加载自定义字体）
-                fontName = 'sans-serif';
-            } else {
-                // 默认字体：使用通用字体作为预览
-                fontName = 'sans-serif';
+            let fontName = 'monospace'; // 默认点阵字体替代
+            if (fontType === 0) {
+                // 丁卯点阵体 -> 使用等宽字体或点阵字体
+                fontName = '"Courier New", monospace';
+            } else if (fontType === 1) {
+                // Roboto -> 使用 Roboto 或无衬线字体
+                fontName = 'Roboto, Arial, sans-serif';
+            } else if (fontType === 2) {
+                // 站酷高端黑 -> 使用粗体中文字体
+                fontName = '"Microsoft YaHei", "SimHei", sans-serif';
             }
 
             ctx.font = `${textBox.fontSize}px ${fontName}`;
@@ -5931,13 +5827,13 @@
             // 显示文本框
             const textBoxEl = document.getElementById('textBox');
             textBoxEl.style.display = 'flex';
-
+            
             // 获取画布在容器中的实际位置（考虑 flex 布局的居中偏移）
             const canvasRect = canvas.getBoundingClientRect();
             const containerRect = canvasContainer.getBoundingClientRect();
             const canvasOffsetX = canvasRect.left - containerRect.left;
             const canvasOffsetY = canvasRect.top - containerRect.top;
-
+            
             // 将原始像素坐标转换为 CSS 像素，并加上画布在容器中的偏移
             textBoxEl.style.left = (canvasOffsetX + textBox.x / scale.scaleX) + 'px';
             textBoxEl.style.top = (canvasOffsetY + textBox.y / scale.scaleY) + 'px';
@@ -5945,7 +5841,7 @@
             textBoxEl.style.width = (textWidth / scale.scaleX) + 'px';
             textBoxEl.style.height = (textHeight / scale.scaleY) + 'px';
             // 字体大小需要考虑缩放，但 WASM 和浏览器字体渲染有差异，添加补偿系数
-            const fontRenderRatio = 1.0; // 补偿系数，根据实际效果调整
+            const fontRenderRatio = 0.85; // 补偿系数，根据实际效果调整
             textBoxEl.style.fontSize = (textBox.fontSize / scale.scaleY * fontRenderRatio) + 'px';
             textBoxEl.style.color = textBox.color;
             textBoxEl.style.fontWeight = 'normal'; // 确保字体粗细正确
@@ -6000,21 +5896,23 @@
             const text = document.getElementById('textInput').value;
             const fontSize = parseInt(document.getElementById('fontSizeSlider').value);
             const offset = parseInt(document.getElementById('textOffsetSlider').value);
-            const fontSelect = document.getElementById('fontSelect').value;
 
             // 重新测量文本宽度
             const canvas = document.getElementById('imageCanvas');
             const ctx = canvas.getContext('2d');
-
+            const fontType = parseInt(document.getElementById('fontSelect').value);
             // 字体映射：WASM 内嵌字体 -> 浏览器近似替代字体
             // 注意：WASM 使用内嵌字体，预览使用浏览器字体，可能不完全一致
-            let fontName = 'sans-serif'; // 默认字体
-            if (fontSelect.startsWith('custom-')) {
-                // 自定义字体：使用通用字体族作为预览（无法在浏览器中加载自定义字体）
-                fontName = 'sans-serif';
-            } else {
-                // 默认字体：使用通用字体作为预览
-                fontName = 'sans-serif';
+            let fontName = 'monospace'; // 默认点阵字体替代
+            if (fontType === 0) {
+                // 丁卯点阵体 -> 使用等宽字体或点阵字体
+                fontName = '"Courier New", monospace';
+            } else if (fontType === 1) {
+                // Roboto -> 使用 Roboto 或无衬线字体
+                fontName = 'Roboto, Arial, sans-serif';
+            } else if (fontType === 2) {
+                // 站酷高端黑 -> 使用粗体中文字体
+                fontName = '"Microsoft YaHei", "SimHei", sans-serif';
             }
 
             ctx.font = `${fontSize}px ${fontName}`;
@@ -6030,7 +5928,7 @@
             textBoxEl.textContent = text;
             // 字体大小需要考虑缩放，但 WASM 和浏览器字体渲染有差异，添加补偿系数
             // 调整补偿系数使预览字体大小匹配实际效果
-            const fontRenderRatio = 1.0; // 补偿系数，根据实际效果调整
+            const fontRenderRatio = 0.85; // 补偿系数，根据实际效果调整
             textBoxEl.style.fontSize = (fontSize / scale.scaleY * fontRenderRatio) + 'px';
             textBoxEl.style.color = textBox.color;
             textBoxEl.style.fontWeight = 'normal'; // 确保字体粗细正确
@@ -6039,13 +5937,13 @@
             textBoxEl.style.fontFamily = fontName;
             textBoxEl.style.width = (textWidth / scale.scaleX) + 'px';
             textBoxEl.style.height = (fontSize / scale.scaleY * fontRenderRatio) + 'px';
-
+            
             // 获取画布在容器中的实际位置（考虑 flex 布局的居中偏移）
             const canvasRect = canvas.getBoundingClientRect();
             const containerRect = document.getElementById('canvasContainer').getBoundingClientRect();
             const canvasOffsetX = canvasRect.left - containerRect.left;
             const canvasOffsetY = canvasRect.top - containerRect.top;
-
+            
             // 添加画布偏移，确保预览框跟随画布位置
             textBoxEl.style.left = (canvasOffsetX + textBox.x / scale.scaleX) + 'px';
             textBoxEl.style.top = (canvasOffsetY + textBox.y / scale.scaleY) + 'px';
@@ -6184,7 +6082,7 @@ window.applyText = function() {
                 const fontSize = parseInt(document.getElementById('fontSizeSlider').value);
                 const colorHex = document.getElementById('textColorPicker').value;
                 const withShadow = document.getElementById('shadowCheckbox').checked;
-                const fontSelect = document.getElementById('fontSelect').value;
+                const fontType = parseInt(document.getElementById('fontSelect').value);
 
                 // 验证参数
                 if (!text || text.trim() === '') {
@@ -6194,6 +6092,11 @@ window.applyText = function() {
                 }
                 if (fontSize < 1 || fontSize > 1000) {
                     alert('字体大小必须在 1 到 1000 之间');
+                    showLoading(false);
+                    return;
+                }
+                if (isNaN(fontType) || fontType < 0 || fontType > 2) {
+                    alert('字体类型无效');
                     showLoading(false);
                     return;
                 }
@@ -6210,15 +6113,10 @@ window.applyText = function() {
                 // 预览框的 top 是 textBox.y，调整基线偏移使预览和实际绘制对齐
                 const drawY = Math.floor(textBox.y + fontSize * 0 + offset); // 基线偏移设为0
 
-                // 判断是使用默认字体还是自定义字体
-                if (fontSelect.startsWith('custom-')) {
-                    // 使用自定义字体（动态注册的字体）
-                    const fontName = fontSelect.replace('custom-', '');
-                    processor.draw_text_with_font_name(text, drawX, drawY, fontSize, fontName, withShadow, r, g, b);
+                if (withShadow) {
+                    processor.draw_text_with_shadow_and_color_and_font(text, drawX, drawY, fontSize, r, g, b, fontType);
                 } else {
-                    // 使用默认字体
-                    const fontName = 'default';
-                    processor.draw_text_with_font_name(text, drawX, drawY, fontSize, fontName, withShadow, r, g, b);
+                    processor.draw_text_with_color_and_font(text, drawX, drawY, fontSize, r, g, b, fontType);
                 }
 
                 updateCanvas();
@@ -6250,177 +6148,6 @@ window.applyText = function() {
             document.getElementById('applyTextBtn').style.display = 'none';
             document.getElementById('cancelTextBtn').style.display = 'none';
         };
-
-        // ==================== 字体管理功能 ====================
-
-        // 字体管理相关变量
-        let uploadedFontData = null;
-        let uploadedFontName = null;
-
-        // 初始化字体上传
-        const fontUpload = document.getElementById('fontUpload');
-        const fontInput = document.getElementById('fontInput');
-        const fontFileName = document.getElementById('fontFileName');
-
-        fontUpload.addEventListener('click', (e) => {
-            e.stopPropagation();
-            fontInput.click();
-        });
-
-        fontInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                loadFontFile(file);
-            }
-        });
-
-        // 加载字体文件
-        async function loadFontFile(file) {
-            try {
-                const arrayBuffer = await file.arrayBuffer();
-                uploadedFontData = new Uint8Array(arrayBuffer);
-                uploadedFontName = file.name.replace(/\.(ttf|otf|woff|woff2)$/i, '');
-
-                fontFileName.textContent = file.name;
-                fontFileName.style.color = '#4aaa6b';
-
-                document.getElementById('applyFontBtn').disabled = false;
-            } catch (error) {
-                console.error('加载字体文件失败:', error);
-                alert('加载字体文件失败');
-            }
-        }
-
-        // 应用上传的字体（注册到 WASM）
-        window.applyUploadedFont = function() {
-            if (!uploadedFontData || !uploadedFontName) {
-                alert('请先上传字体文件');
-                return;
-            }
-
-            try {
-                // 检查字体是否已注册
-                if (wasm_is_font_registered(uploadedFontName)) {
-                    if (!confirm(`字体 "${uploadedFontName}" 已存在，是否覆盖？`)) {
-                        return;
-                    }
-                }
-
-                // 注册字体到 WASM
-                wasm_register_font(uploadedFontName, uploadedFontData);
-
-                // 更新字体列表显示
-                updateRegisteredFontsList();
-
-                // 将自定义字体添加到字体选择下拉框
-                addCustomFontToSelect(uploadedFontName);
-
-                // 选中这个新字体
-                const fontSelect = document.getElementById('fontSelect');
-                fontSelect.value = `custom-${uploadedFontName}`;
-
-                // 清空上传数据
-                uploadedFontData = null;
-                uploadedFontName = null;
-                fontFileName.textContent = '点击上传自定义字体';
-                fontFileName.style.color = '#888';
-                document.getElementById('applyFontBtn').disabled = false;
-
-                alert(`字体 "${uploadedFontName}" 注册成功！`);
-            } catch (error) {
-                console.error('字体注册失败:', error);
-                alert(`字体注册失败: ${error.message}`);
-            }
-        };
-
-        // 更新已注册字体列表显示
-        function updateRegisteredFontsList() {
-            const fontsList = document.getElementById('registeredFontsList');
-            try {
-                const fonts = wasm_get_registered_fonts();
-
-                if (fonts.length === 0) {
-                    fontsList.innerHTML = '<div style="color: #666; font-size: 0.85em;">暂无自定义字体</div>';
-                    document.getElementById('clearFontsBtn').disabled = true;
-                } else {
-                    fontsList.innerHTML = fonts.map(font => `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #3a3a3a;">
-                            <span style="color: #e0e0e0; font-size: 0.9em;">${font}</span>
-                            <button onclick="removeFont('${font}')" style="background: #8b3a3a; color: white; border: none; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 0.8em;">删除</button>
-                        </div>
-                    `).join('');
-                    document.getElementById('clearFontsBtn').disabled = false;
-                }
-            } catch (error) {
-                console.error('获取字体列表失败:', error);
-                fontsList.innerHTML = '<div style="color: #ff6b6b; font-size: 0.85em;">获取字体列表失败</div>';
-            }
-        }
-
-        // 添加自定义字体到字体选择下拉框
-        function addCustomFontToSelect(fontName) {
-            const fontSelect = document.getElementById('fontSelect');
-            const option = document.createElement('option');
-            option.value = `custom-${fontName}`;
-            option.textContent = `自定义: ${fontName}`;
-            fontSelect.appendChild(option);
-        }
-
-        // 删除单个字体
-        window.removeFont = function(fontName) {
-            if (!confirm(`确定要删除字体 "${fontName}" 吗？`)) {
-                return;
-            }
-
-            try {
-                wasm_unregister_font(fontName);
-
-                // 从下拉框中移除
-                const fontSelect = document.getElementById('fontSelect');
-                const option = fontSelect.querySelector(`option[value="custom-${fontName}"]`);
-                if (option) {
-                    option.remove();
-                }
-
-                // 更新字体列表
-                updateRegisteredFontsList();
-
-                alert(`字体 "${fontName}" 已删除`);
-            } catch (error) {
-                console.error('删除字体失败:', error);
-                alert(`删除字体失败: ${error.message}`);
-            }
-        };
-
-        // 清空所有自定义字体
-        window.clearCustomFonts = function() {
-            if (!confirm('确定要清空所有自定义字体吗？此操作不可恢复。')) {
-                return;
-            }
-
-            try {
-                wasm_clear_fonts();
-
-                // 从下拉框中移除所有自定义字体选项
-                const fontSelect = document.getElementById('fontSelect');
-                const customOptions = fontSelect.querySelectorAll('option[value^="custom-"]');
-                customOptions.forEach(option => option.remove());
-
-                // 重置为默认字体
-                fontSelect.value = 'default';
-
-                // 更新字体列表
-                updateRegisteredFontsList();
-
-                alert('所有自定义字体已清空');
-            } catch (error) {
-                console.error('清空字体失败:', error);
-                alert(`清空字体失败: ${error.message}`);
-            }
-        };
-
-        // 页面加载时初始化字体列表
-        updateRegisteredFontsList();
 
         // 更新画布（使用离屏 Canvas 和内存视图优化）
         let updateCanvasPromise = null;
