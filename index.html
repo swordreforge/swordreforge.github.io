@@ -2168,6 +2168,135 @@
             }
         }
 
+        // ==================== Image 对象管理器 ====================
+        class ImageManager {
+            constructor() {
+                this.images = new Map();
+            }
+
+            create(src) {
+                const img = new Image();
+                img.onload = () => {
+                    this.images.delete(img);
+                };
+                img.onerror = () => {
+                    this.images.delete(img);
+                };
+                img.src = src;
+                this.images.set(img, true);
+                return img;
+            }
+
+            destroy(img) {
+                if (this.images.has(img)) {
+                    img.onload = null;
+                    img.onerror = null;
+                    img.src = '';
+                    this.images.delete(img);
+                }
+            }
+
+            destroyAll() {
+                this.images.forEach((_, img) => {
+                    img.onload = null;
+                    img.onerror = null;
+                    img.src = '';
+                });
+                this.images.clear();
+            }
+
+            getCount() {
+                return this.images.size;
+            }
+        }
+
+        // ==================== 定时器管理器 ====================
+        class TimerManager {
+            constructor() {
+                this.timers = new Set();
+            }
+
+            setTimeout(callback, delay) {
+                const id = window.setTimeout(() => {
+                    this.timers.delete(id);
+                    callback();
+                }, delay);
+                this.timers.add(id);
+                return id;
+            }
+
+            clearTimeout(id) {
+                window.clearTimeout(id);
+                this.timers.delete(id);
+            }
+
+            clearTimeoutAll() {
+                this.timers.forEach(id => {
+                    window.clearTimeout(id);
+                });
+                this.timers.clear();
+            }
+
+            getCount() {
+                return this.timers.size;
+            }
+        }
+
+        // ==================== Resize 监听器管理器 ====================
+        class ResizeManager {
+            constructor() {
+                this.handlers = new Map();
+            }
+
+            add(element, handler) {
+                if (!this.handlers.has(element)) {
+                    this.handlers.set(element, new Set());
+                }
+                this.handlers.get(element).add(handler);
+                window.addEventListener('resize', handler);
+            }
+
+            remove(element, handler) {
+                if (this.handlers.has(element)) {
+                    const handlers = this.handlers.get(element);
+                    if (handlers.has(handler)) {
+                        window.removeEventListener('resize', handler);
+                        handlers.delete(handler);
+                    }
+                    if (handlers.size === 0) {
+                        this.handlers.delete(element);
+                    }
+                }
+            }
+
+            removeAll(element) {
+                if (this.handlers.has(element)) {
+                    const handlers = this.handlers.get(element);
+                    handlers.forEach(handler => {
+                        window.removeEventListener('resize', handler);
+                    });
+                    this.handlers.delete(element);
+                }
+            }
+
+            removeAll() {
+                this.handlers.forEach((handlers, element) => {
+                    handlers.forEach(handler => {
+                        window.removeEventListener('resize', handler);
+                    });
+                });
+                this.handlers.clear();
+            }
+
+            getCount() {
+                let count = 0;
+                this.handlers.forEach(handlers => {
+                    count += handlers.size;
+                });
+                return count;
+            }
+        }
+
         // ==================== IndexedDB 连接管理 ====================
         class FontDBManager {
             constructor() {
@@ -2335,6 +2464,10 @@
                 this.isWatermarkDragging = false;
                 this.isWatermarkResizing = false;
                 this.lastBrushPoint = null;
+
+                // 定时器 ID
+                this.adjustmentTimeout = null;
+                this.rotationTimeout = null;
             }
 
             resetModes() {
@@ -2400,12 +2533,55 @@
                 this.clearImageData();
                 this.clearCanvas();
                 this.clearProcessor();
+
+                // 清理定时器
+                this.adjustmentTimeout = null;
+                this.rotationTimeout = null;
+            }
+        }
+
+        // ==================== DOM 批量更新管理器 ====================
+        class DOMUpdateManager {
+            constructor() {
+                this.pendingUpdates = new Map();
+                this.updateScheduled = false;
+            }
+
+            schedule(id, value) {
+                this.pendingUpdates.set(id, value);
+
+                if (!this.updateScheduled) {
+                    this.updateScheduled = true;
+                    requestAnimationFrame(() => {
+                        this.pendingUpdates.forEach((value, id) => {
+                            const el = document.getElementById(id);
+                            if (el) el.textContent = value;
+                        });
+                        this.pendingUpdates.clear();
+                        this.updateScheduled = false;
+                    });
+                }
+            }
+
+            flush() {
+                if (this.updateScheduled) {
+                    this.pendingUpdates.forEach((value, id) => {
+                        const el = document.getElementById(id);
+                        if (el) el.textContent = value;
+                    });
+                    this.pendingUpdates.clear();
+                    this.updateScheduled = false;
+                }
             }
         }
 
         // 创建全局管理器实例
         const eventManager = new EventManager();
         const blobURLManager = new BlobURLManager();
+        const imageManager = new ImageManager();
+        const timerManager = new TimerManager();
+        const resizeManager = new ResizeManager();
+        const domUpdateManager = new DOMUpdateManager();
         const fontDBManager = new FontDBManager();
         const appState = new AppState();
 
@@ -2419,7 +2595,9 @@
             }
 
             blobURLManager.revokeAll();
-
+            imageManager.destroyAll();
+            timerManager.clearTimeoutAll();
+            resizeManager.removeAll();
             fontDBManager.close();
 
             console.log('应用已清理');
@@ -4344,7 +4522,6 @@
         };
 
         // 应用无级调节
-        let adjustmentTimeout = null;
         window.applyAdjustments = function() {
             if (!appState.processor) return;
 
@@ -4365,21 +4542,21 @@
             const greenChannelOffset = parseInt(document.getElementById('greenChannelSlider').value);
             const blueChannelOffset = parseInt(document.getElementById('blueChannelSlider').value);
 
-            // 更新显示值
-            document.getElementById('brightnessValue').textContent = brightness;
-            document.getElementById('contrastValue').textContent = contrast;
-            document.getElementById('saturationValue').textContent = saturation;
-            document.getElementById('hueValue').textContent = hue;
-            document.getElementById('lightnessValue').textContent = lightness;
-            document.getElementById('gammaRedValue').textContent = gammaRed.toFixed(1);
-            document.getElementById('gammaGreenValue').textContent = gammaGreen.toFixed(1);
-            document.getElementById('gammaBlueValue').textContent = gammaBlue.toFixed(1);
-            document.getElementById('sharpenValue').textContent = sharpenStrength.toFixed(1);
-            document.getElementById('noiseReductionValue').textContent = noiseReductionStrength.toFixed(1);
-            document.getElementById('noiseValue').textContent = noiseStrength.toFixed(1);
-            document.getElementById('redChannelValue').textContent = redChannelOffset;
-            document.getElementById('greenChannelValue').textContent = greenChannelOffset;
-            document.getElementById('blueChannelValue').textContent = blueChannelOffset;
+            // 使用批量更新管理器更新显示值
+            domUpdateManager.schedule('brightnessValue', brightness);
+            domUpdateManager.schedule('contrastValue', contrast);
+            domUpdateManager.schedule('saturationValue', saturation);
+            domUpdateManager.schedule('hueValue', hue);
+            domUpdateManager.schedule('lightnessValue', lightness);
+            domUpdateManager.schedule('gammaRedValue', gammaRed.toFixed(1));
+            domUpdateManager.schedule('gammaGreenValue', gammaGreen.toFixed(1));
+            domUpdateManager.schedule('gammaBlueValue', gammaBlue.toFixed(1));
+            domUpdateManager.schedule('sharpenValue', sharpenStrength.toFixed(1));
+            domUpdateManager.schedule('noiseReductionValue', noiseReductionStrength.toFixed(1));
+            domUpdateManager.schedule('noiseValue', noiseStrength.toFixed(1));
+            domUpdateManager.schedule('redChannelValue', redChannelOffset);
+            domUpdateManager.schedule('greenChannelValue', greenChannelOffset);
+            domUpdateManager.schedule('blueChannelValue', blueChannelOffset);
 
             // 应用调整
             try {
@@ -4463,8 +4640,8 @@
                 updateCanvas();
                 
                 // 防抖动保存历史记录（用户停止调节 500ms 后保存）
-                clearTimeout(adjustmentTimeout);
-                adjustmentTimeout = setTimeout(() => {
+                timerManager.clearTimeout(appState.adjustmentTimeout);
+                appState.adjustmentTimeout = timerManager.setTimeout(() => {
                     saveToHistory();
                 }, 500);
             } catch (error) {
@@ -4566,7 +4743,6 @@
         };
 
         // 任意角度旋转（带防抖和优化）
-        let rotationTimeout = null;
         let isRotating = false;
         window.applyRotation = function() {
             if (!appState.processor || isRotating) return;
@@ -4575,8 +4751,8 @@
             document.getElementById('rotationValue').textContent = angle;
 
             // 防抖：用户停止调节 800ms 后才应用旋转（增加防抖时间以减少卡顿）
-            clearTimeout(rotationTimeout);
-            rotationTimeout = setTimeout(() => {
+            timerManager.clearTimeout(appState.rotationTimeout);
+            appState.rotationTimeout = timerManager.setTimeout(() => {
                 if (angle !== 0 && appState.processor && !isRotating) {
                     isRotating = true;
                     showLoading(true);
@@ -6250,11 +6426,10 @@
         window.clearImage = function() {
             if (!appState.currentImage) return;
 
-            // 清空处理器
-            appState.processor = null;
-            appState.originalProcessor = null;
-            appState.currentImage = null;
-            appState.originalImageData = null;
+            // 清空处理器和图像数据
+            appState.clearProcessor();
+            appState.clearImageData();
+            appState.clearCanvas();
 
             // 重置文件输入框，确保可以重复选择同一文件
             document.getElementById('fileInput').value = '';
