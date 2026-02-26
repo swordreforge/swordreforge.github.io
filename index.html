@@ -2600,8 +2600,96 @@
             resizeManager.removeAll();
             fontDBManager.close();
 
+            // 停止内存监控
+            stopMemoryMonitor();
+
             console.log('应用已清理');
         }
+
+        // ==================== 内存监控 ====================
+        /**
+         * 监控内存使用情况
+         * @returns {Object|null} 内存使用信息
+         */
+        function monitorMemory() {
+            if (window.performance && window.performance.memory) {
+                const memory = window.performance.memory;
+                const memoryInfo = {
+                    used: Math.round(memory.usedJSHeapSize / 1024 / 1024) + ' MB',
+                    total: Math.round(memory.totalJSHeapSize / 1024 / 1024) + ' MB',
+                    limit: Math.round(memory.jsHeapSizeLimit / 1024 / 1024) + ' MB',
+                    usedRaw: memory.usedJSHeapSize,
+                    totalRaw: memory.totalJSHeapSize,
+                    limitRaw: memory.jsHeapSizeLimit
+                };
+                console.log('📊 内存使用:', memoryInfo);
+                return memoryInfo;
+            } else {
+                console.warn('⚠️ 内存监控不可用（仅 Chrome/Edge 支持）');
+                return null;
+            }
+        }
+
+        /**
+         * 内存泄漏检测
+         * @returns {Object} 检测结果
+         */
+        function detectMemoryLeak() {
+            const info = monitorMemory();
+            if (!info) return { status: 'unsupported' };
+
+            const usage = (info.usedRaw / info.limitRaw) * 100;
+            const status = usage > 80 ? 'critical' : usage > 60 ? 'warning' : 'normal';
+
+            const result = {
+                status: status,
+                usage: usage.toFixed(2) + '%',
+                used: info.used,
+                total: info.total,
+                limit: info.limit
+            };
+
+            if (status === 'critical') {
+                console.error('🔴 严重内存使用过高！可能存在内存泄漏', result);
+            } else if (status === 'warning') {
+                console.warn('🟡 内存使用较高', result);
+            } else {
+                console.log('🟢 内存使用正常', result);
+            }
+
+            return result;
+        }
+
+        // 启动内存监控（每 10 秒检查一次）
+        let memoryMonitorInterval = null;
+        function startMemoryMonitor(intervalMs = 10000) {
+            if (memoryMonitorInterval) {
+                clearInterval(memoryMonitorInterval);
+            }
+            memoryMonitorInterval = setInterval(() => {
+                detectMemoryLeak();
+            }, intervalMs);
+            console.log('✅ 内存监控已启动（间隔: ' + intervalMs + 'ms）');
+        }
+
+        // 停止内存监控
+        function stopMemoryMonitor() {
+            if (memoryMonitorInterval) {
+                clearInterval(memoryMonitorInterval);
+                memoryMonitorInterval = null;
+                console.log('⏹️ 内存监控已停止');
+            }
+        }
+
+        // 将内存监控函数暴露到全局，便于调试
+        window.monitorMemory = monitorMemory;
+        window.detectMemoryLeak = detectMemoryLeak;
+        window.startMemoryMonitor = startMemoryMonitor;
+        window.stopMemoryMonitor = stopMemoryMonitor;
+
+        // 初始内存检查
+        console.log('🔍 初始内存状态:');
+        monitorMemory();
 
         // 在页面卸载时执行清理
         window.addEventListener('beforeunload', cleanupApplication);
@@ -2815,20 +2903,48 @@
             updateUndoRedoButtons();
         }
 
-        // 更新字体大小显示和文本框预览
+        // 防抖工具函数：用于优化频繁触发的事件
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // 节流工具函数：用于限制函数调用频率
+        function throttle(func, limit) {
+            let inThrottle;
+            return function executedFunction(...args) {
+                if (!inThrottle) {
+                    func(...args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
+        // 创建防抖版本的updateTextBoxPreview
+        const debouncedUpdateTextBoxPreview = debounce(updateTextBoxPreview, 16);
+
+        // 更新字体大小显示和文本框预览（使用防抖优化）
         document.getElementById('fontSizeSlider').addEventListener('input', function() {
             document.getElementById('fontSizeValue').textContent = this.value;
-            updateTextBoxPreview();
+            debouncedUpdateTextBoxPreview();
         });
 
-        // 文本输入框实时更新预览
+        // 文本输入框实时更新预览（使用防抖优化）
         document.getElementById('textInput').addEventListener('input', function() {
-            updateTextBoxPreview();
+            debouncedUpdateTextBoxPreview();
         });
 
-        // 颜色选择器实时更新预览
+        // 颜色选择器实时更新预览（使用防抖优化）
         document.getElementById('textColorPicker').addEventListener('input', function() {
-            updateTextBoxPreview();
+            debouncedUpdateTextBoxPreview();
         });
 
         // 初始化 WASM 模块（WASM 已在 loadWasmModule 中加载）
@@ -3419,11 +3535,11 @@
             showLoading(false);
         }
 
-        // 水印大小滑块更新
-        watermarkScaleSlider.addEventListener('input', function() {
-            document.getElementById('watermarkScaleValue').textContent = this.value;
+        // 水印大小滑块更新（使用防抖优化）
+        const debouncedUpdateWatermarkScale = debounce(function() {
+            document.getElementById('watermarkScaleValue').textContent = watermarkScaleSlider.value;
             if (appState.processor && appState.watermarkBytes) {
-                const scale = this.value / 100;
+                const scale = watermarkScaleSlider.value / 100;
                 const tempImg = new Image();
                 const blob = new Blob([appState.watermarkBytes]);
                 const url = blobURLManager.create(blob);
@@ -3441,28 +3557,54 @@
 
                 tempImg.src = url;
             }
+        }, 32);
+
+        watermarkScaleSlider.addEventListener('input', function() {
+            // 立即更新显示值，防抖处理复杂操作
+            document.getElementById('watermarkScaleValue').textContent = this.value;
+            debouncedUpdateWatermarkScale();
         });
 
-        // 水印位置滑块更新
-        watermarkXSlider.addEventListener('input', function() {
+        // 水印位置滑块更新（使用防抖优化）
+        const debouncedUpdateWatermarkX = debounce(function() {
             if (appState.processor) {
                 const width = appState.processor.get_width();
-                const x = Math.floor(width * this.value / 100);
+                const x = Math.floor(width * watermarkXSlider.value / 100);
                 document.getElementById('watermarkXValue').textContent = x;
                 // 更新实际水印位置
                 appState.watermarkPreview.x = x;
                 updateWatermarkPreview();
             }
+        }, 16);
+
+        watermarkXSlider.addEventListener('input', function() {
+            if (appState.processor) {
+                const width = appState.processor.get_width();
+                const x = Math.floor(width * this.value / 100);
+                document.getElementById('watermarkXValue').textContent = x;
+                // 使用防抖处理预览更新
+                debouncedUpdateWatermarkX();
+            }
         });
+
+        const debouncedUpdateWatermarkY = debounce(function() {
+            if (appState.processor) {
+                const height = appState.processor.get_height();
+                const y = Math.floor(height * watermarkYSlider.value / 100);
+                document.getElementById('watermarkYValue').textContent = y;
+                // 更新实际水印位置
+                appState.watermarkPreview.y = y;
+                updateWatermarkPreview();
+            }
+        }, 16);
 
         watermarkYSlider.addEventListener('input', function() {
             if (appState.processor) {
                 const height = appState.processor.get_height();
                 const y = Math.floor(height * this.value / 100);
                 document.getElementById('watermarkYValue').textContent = y;
-                // 更新实际水印位置
-                appState.watermarkPreview.y = y;
-                updateWatermarkPreview();
+                // 使用防抖处理预览更新
+                debouncedUpdateWatermarkY();
             }
         });
 
@@ -7130,16 +7272,30 @@ window.applyText = function() {
         // 更新画布（使用离屏 Canvas 和内存视图优化）
         let updateCanvasPromise = null;
         let updateCanvasScheduled = false;
+        let lastUpdateTime = 0;
+        const MIN_UPDATE_INTERVAL = 16; // 最小更新间隔16ms（约60fps）
+        let cachedFileSizeStr = ''; // 缓存文件大小字符串，避免不必要的DOM更新
 
         function updateCanvas() {
             if (!appState.processor) return;
+
+            const now = performance.now();
+            const timeSinceLastUpdate = now - lastUpdateTime;
 
             // 使用 requestAnimationFrame 实现节流，避免短时间内多次调用
             if (updateCanvasScheduled) {
                 return; // 已经有更新的请求在队列中
             }
 
+            // 如果距离上次更新时间太短，推迟更新
+            if (timeSinceLastUpdate < MIN_UPDATE_INTERVAL) {
+                requestAnimationFrame(updateCanvas);
+                return;
+            }
+
             updateCanvasScheduled = true;
+            lastUpdateTime = now;
+
             requestAnimationFrame(() => {
                 updateCanvasScheduled = false;
 
@@ -7157,19 +7313,26 @@ window.applyText = function() {
             canvas.width = width;
             canvas.height = height;
 
-            // 初始化或更新离屏 Canvas
-            if (!appState.offscreenCanvas || appState.offscreenCanvas.width !== width || appState.offscreenCanvas.height !== height) {
+            // 初始化或更新离屏 Canvas（使用尺寸缓存优化检查）
+            if (!appState.offscreenCanvas ||
+                !appState.offscreenCanvasWidth ||
+                appState.offscreenCanvasWidth !== width ||
+                !appState.offscreenCanvasHeight ||
+                appState.offscreenCanvasHeight !== height) {
                 appState.offscreenCanvas = document.createElement('canvas');
                 appState.offscreenCanvas.width = width;
                 appState.offscreenCanvas.height = height;
                 appState.offscreenCtx = appState.offscreenCanvas.getContext('2d', { willReadFrequently: true });
+                // 缓存尺寸信息
+                appState.offscreenCanvasWidth = width;
+                appState.offscreenCanvasHeight = height;
             }
 
             // 使用 get_raw_pixels() 获取原始 RGBA 像素数据
             const pixels = appState.processor.get_raw_pixels();
             const expectedLength = width * height * 4;
 
-            // 验证像素数据长度
+            // 验证像素数据长度并优化ImageData创建
             if (pixels.length !== expectedLength) {
                 console.warn(`Pixel data length mismatch: expected ${expectedLength}, got ${pixels.length}`);
                 // 尝试修复：截断或填充
@@ -7179,22 +7342,31 @@ window.applyText = function() {
                 const imageData = new ImageData(adjustedPixels, width, height);
                 appState.offscreenCtx.putImageData(imageData, 0, 0);
             } else {
-                // 直接使用原始像素数据
-                const imageData = new ImageData(new Uint8ClampedArray(pixels), width, height);
+                // 优化：检查pixels是否已经是Uint8ClampedArray，避免不必要的数组复制
+                let imageData;
+                if (pixels instanceof Uint8ClampedArray) {
+                    imageData = new ImageData(pixels, width, height);
+                } else {
+                    imageData = new ImageData(new Uint8ClampedArray(pixels), width, height);
+                }
                 appState.offscreenCtx.putImageData(imageData, 0, 0);
             }
 
             // 将离屏 Canvas 内容绘制到主画布（快速合成，不会闪烁）
             ctx.drawImage(appState.offscreenCanvas, 0, 0);
 
-            // 更新文件大小显示
+            // 更新文件大小显示（只在值变化时更新DOM）
             const fileSize = Number(appState.processor.get_estimated_filesize());
             const fileSizeKB = (fileSize / 1024).toFixed(2);
             const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
             const fileSizeStr = fileSize > 1024 * 1024
                 ? `${fileSizeMB} MB`
                 : `${fileSizeKB} KB`;
-            document.getElementById('fileSize').textContent = fileSizeStr;
+            // 只在文件大小变化时更新DOM
+            if (cachedFileSizeStr !== fileSizeStr) {
+                cachedFileSizeStr = fileSizeStr;
+                document.getElementById('fileSize').textContent = fileSizeStr;
+            }
         });
         }
 
