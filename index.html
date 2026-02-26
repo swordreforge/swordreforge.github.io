@@ -649,7 +649,7 @@
         }
 
         .loading {
-            display: none;
+            display: flex;
             position: fixed;
             top: 0;
             left: 0;
@@ -6806,6 +6806,14 @@ window.applyText = function() {
                 alert('创建画布失败: ' + error.message);
             }
         }
+
+        // 页面加载完成后，先隐藏加载动画（因为现在默认是可见的）
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadingEl = document.getElementById('loading');
+            if (loadingEl) {
+                loadingEl.style.display = 'none';
+            }
+        });
 
         // 初始化
         initWasm();
