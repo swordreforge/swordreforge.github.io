@@ -2066,6 +2066,10 @@
                 if (hasSharedArrayBuffer) {
                     try {
                         const numThreads = navigator.hardwareConcurrency || 4;
+                        // 显示友好的加载提示
+                        const loadingEl = document.getElementById('loading');
+                        const messageEl = document.getElementById('loadingMessage');
+                        messageEl.textContent = `正在初始化多线程加速模块（${numThreads} 线程）...`;
                         await initThreadPool(numThreads);
                         console.log(`✓ WASM thread pool initialized with ${numThreads} threads (parallelization enabled)`);
                     } catch (threadError) {
