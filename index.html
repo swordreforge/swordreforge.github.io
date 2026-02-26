@@ -2033,6 +2033,11 @@
         let redoStack = [];
         const MAX_HISTORY = 30;
 
+        // IndexedDB 配置（字体持久化）
+        const DB_NAME = 'PhotonFontDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'fonts';
+
         // 加载 WASM 模块并初始化
         async function loadWasmModule() {
             try {
@@ -2082,6 +2087,9 @@
         window.wasm_get_registered_fonts = wasm_get_registered_fonts;
         window.wasm_unregister_font = wasm_unregister_font;
         window.wasm_clear_fonts = wasm_clear_fonts;
+
+        // 从 IndexedDB 恢复持久化的字体
+        restoreFontsFromDB();
 
         // 文本绘制相关变量
         let isTextMode = false;
@@ -6253,6 +6261,75 @@ window.applyText = function() {
 
         // ==================== 字体管理功能 ====================
 
+        // 初始化 IndexedDB
+        async function initFontDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'name' });
+                    }
+                };
+            });
+        }
+
+        // 保存字体到 IndexedDB
+        async function saveFontToDB(name, data) {
+            const db = await initFontDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.put({ name, data, timestamp: Date.now() });
+
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // 从 IndexedDB 加载所有字体
+        async function loadFontsFromDB() {
+            const db = await initFontDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // 从 IndexedDB 删除字体
+        async function deleteFontFromDB(name) {
+            const db = await initFontDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.delete(name);
+
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // 清空 IndexedDB 中的所有字体
+        async function clearFontsFromDB() {
+            const db = await initFontDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.clear();
+
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
         // 字体管理相关变量
         let uploadedFontData = null;
         let uploadedFontName = null;
@@ -6294,7 +6371,7 @@ window.applyText = function() {
         }
 
         // 应用上传的字体（注册到 WASM）
-        window.applyUploadedFont = function() {
+        window.applyUploadedFont = async function() {
             if (!uploadedFontData || !uploadedFontName) {
                 alert('请先上传字体文件');
                 return;
@@ -6312,6 +6389,9 @@ window.applyText = function() {
 
                 // 注册字体到 WASM
                 wasm_register_font(uploadedFontName, uploadedFontData);
+
+                // 保存到 IndexedDB（持久化）
+                await saveFontToDB(uploadedFontName, uploadedFontData);
 
                 // 更新字体列表显示
                 updateRegisteredFontsList();
@@ -6370,14 +6450,48 @@ window.applyText = function() {
             fontSelect.appendChild(option);
         }
 
+        // 从 IndexedDB 恢复字体
+        async function restoreFontsFromDB() {
+            try {
+                const fonts = await loadFontsFromDB();
+
+                for (const font of fonts) {
+                    try {
+                        // 注册字体到 WASM
+                        wasm_register_font(font.name, font.data);
+
+                        // 添加到字体选择下拉框
+                        addCustomFontToSelect(font.name);
+
+                        console.log(`字体 "${font.name}" 已恢复`);
+                    } catch (error) {
+                        console.error(`恢复字体 "${font.name}" 失败:`, error);
+                    }
+                }
+
+                // 更新字体列表显示
+                updateRegisteredFontsList();
+
+                if (fonts.length > 0) {
+                    console.log(`已恢复 ${fonts.length} 个字体`);
+                }
+            } catch (error) {
+                console.error('从数据库恢复字体失败:', error);
+            }
+        }
+
         // 删除单个字体
-        window.removeFont = function(fontName) {
+        window.removeFont = async function(fontName) {
             if (!confirm(`确定要删除字体 "${fontName}" 吗？`)) {
                 return;
             }
 
             try {
+                // 从 WASM 注销字体
                 wasm_unregister_font(fontName);
+
+                // 从 IndexedDB 删除
+                await deleteFontFromDB(fontName);
 
                 // 从下拉框中移除
                 const fontSelect = document.getElementById('fontSelect');
@@ -6397,13 +6511,17 @@ window.applyText = function() {
         };
 
         // 清空所有自定义字体
-        window.clearCustomFonts = function() {
+        window.clearCustomFonts = async function() {
             if (!confirm('确定要清空所有自定义字体吗？此操作不可恢复。')) {
                 return;
             }
 
             try {
+                // 清空 WASM 中的字体
                 wasm_clear_fonts();
+
+                // 清空 IndexedDB
+                await clearFontsFromDB();
 
                 // 从下拉框中移除所有自定义字体选项
                 const fontSelect = document.getElementById('fontSelect');
