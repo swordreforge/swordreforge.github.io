@@ -2018,6 +2018,15 @@
     </div>
 
     <script type="module">
+        // 过滤 wasm-bindgen-rayon 的弃用警告
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && args[0].includes && args[0].includes('using deprecated parameters')) {
+                return;
+            }
+            originalWarn.apply(console, args);
+        };
+
         // 全局变量声明
         let wasmModule = null;
         let processor = null;
@@ -2041,11 +2050,33 @@
         // 加载 WASM 模块并初始化
         async function loadWasmModule() {
             try {
+                // 检测SharedArrayBuffer支持（并行化需要）
+                const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
+                console.log('SharedArrayBuffer support:', hasSharedArrayBuffer);
+
                 // 从 photon_wasm.js 导入初始化函数和所有导出
-                const { default: initWasm, ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint, wasm_register_font, wasm_is_font_registered, wasm_get_registered_fonts, wasm_unregister_font, wasm_clear_fonts } = await import('./pkg/photon_wasm.js?v=26');
+                const { default: initWasm, ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint, wasm_register_font, wasm_is_font_registered, wasm_get_registered_fonts, wasm_unregister_font, wasm_clear_fonts, initThreadPool } = await import('./pkg/photon_wasm.js?v=27');
 
                 // 调用初始化函数来加载 WASM 模块
                 await initWasm();
+                console.log('WASM module loaded successfully');
+
+                // 只在支持SharedArrayBuffer时尝试初始化线程池
+                if (hasSharedArrayBuffer) {
+                    try {
+                        const numThreads = navigator.hardwareConcurrency || 4;
+                        await initThreadPool(numThreads);
+                        console.log(`✓ WASM thread pool initialized with ${numThreads} threads (parallelization enabled)`);
+                    } catch (threadError) {
+                        console.warn('⚠ Thread pool initialization failed:', threadError.message);
+                        console.info('Running in single-threaded mode (parallelization disabled)');
+                        console.info('To enable parallelization, the server must send these headers:');
+                        console.info('  Cross-Origin-Opener-Policy: same-origin');
+                        console.info('  Cross-Origin-Embedder-Policy: require-corp');
+                    }
+                } else {
+                    console.info('ℹ SharedArrayBuffer not available, running in single-threaded mode');
+                }
 
                 // 返回所有导出
                 return {
@@ -2243,6 +2274,28 @@
             document.getElementById('redoBtn').disabled = redoStack.length === 0;
             document.getElementById('toolbarUndoBtn').disabled = historyStack.length === 0;
             document.getElementById('toolbarRedoBtn').disabled = redoStack.length === 0;
+        }
+
+        // 清空历史记录并释放所有 Blob URL
+        function clearHistory() {
+            // 释放历史栈中的 Blob URL
+            historyStack.forEach(state => {
+                if (state.url) {
+                    URL.revokeObjectURL(state.url);
+                }
+            });
+            historyStack = [];
+
+            // 释放重做栈中的 Blob URL
+            redoStack.forEach(state => {
+                if (state.url) {
+                    URL.revokeObjectURL(state.url);
+                }
+            });
+            redoStack = [];
+
+            // 更新按钮状态
+            updateUndoRedoButtons();
         }
 
         // 更新字体大小显示和文本框预览
@@ -3211,6 +3264,9 @@
                         document.getElementById('imageSize').textContent = `${width} x ${height}`;
                         document.getElementById('imageFormat').textContent = file.type.split('/')[1].toUpperCase();
 
+                        // 清空历史记录，防止用户通过撤销/重做回到之前的图片
+                        clearHistory();
+
                         enableButtons();
                     } catch (error) {
                         console.error('Failed to load image:', error);
@@ -3605,7 +3661,7 @@
                 showLoading(true);
                 saveToHistory();
                 try {
-                    processor.apply_horizontal_strips(parseInt(numStrips));
+                    processor.apply_strips(parseInt(numStrips), true);
                     updateCanvas();
                 } catch (error) {
                     console.error('Horizontal strips error:', error);
@@ -3622,7 +3678,7 @@
                 showLoading(true);
                 saveToHistory();
                 try {
-                    processor.apply_vertical_strips(parseInt(numStrips));
+                    processor.apply_strips(parseInt(numStrips), false);
                     updateCanvas();
                 } catch (error) {
                     console.error('Vertical strips error:', error);
@@ -3642,7 +3698,7 @@
                     showLoading(true);
                     saveToHistory();
                     try {
-                        processor.apply_color_horizontal_strips(parseInt(numStrips), rgb[0], rgb[1], rgb[2]);
+                        processor.apply_strips(parseInt(numStrips), true, rgb[0], rgb[1], rgb[2]);
                         updateCanvas();
                     } catch (error) {
                         console.error('Color horizontal strips error:', error);
@@ -3663,7 +3719,7 @@
                     showLoading(true);
                     saveToHistory();
                     try {
-                        processor.apply_color_vertical_strips(parseInt(numStrips), rgb[0], rgb[1], rgb[2]);
+                        processor.apply_strips(parseInt(numStrips), false, rgb[0], rgb[1], rgb[2]);
                         updateCanvas();
                     } catch (error) {
                         console.error('Color vertical strips error:', error);
@@ -6728,9 +6784,8 @@ window.applyText = function() {
                         const file = new File([blob], 'white-canvas.png', { type: 'image/png' });
                         loadImage(file);
 
-                        // 重置历史记录
-                        historyStack = [];
-                        redoStack = [];
+                        // 清空历史记录（loadImage 中已经调用了 clearHistory）
+                        // 这里不需要重复调用
 
                         // 关闭下拉菜单
                         const dropdown = document.getElementById('newCanvasDropdown');

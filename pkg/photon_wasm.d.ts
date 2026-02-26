@@ -1,0 +1,4185 @@
+/* tslint:disable */
+/* eslint-disable */
+
+/**
+ * 混合模式
+ */
+export enum BlendMode {
+    Normal = 0,
+    Multiply = 1,
+    Screen = 2,
+    Overlay = 3,
+    SoftLight = 4,
+    HardLight = 5,
+    Difference = 6,
+    Exclusion = 7,
+    Lighten = 8,
+    Darken = 9,
+}
+
+/**
+ * 笔刷配置
+ */
+export class BrushConfig {
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     * 创建默认基础画笔配置
+     */
+    static default_basic(): BrushConfig;
+    constructor(brush_type: BrushType, base_width: number, color_r: number, color_g: number, color_b: number, color_a: number, blend_mode: BlendMode, smoothness: number, pressure_sensitivity: number);
+    /**
+     * 基础宽度（像素）
+     */
+    base_width: number;
+    /**
+     * 混合模式
+     */
+    blend_mode: BlendMode;
+    /**
+     * 笔刷类型
+     */
+    brush_type: BrushType;
+    color_a: number;
+    color_b: number;
+    color_g: number;
+    /**
+     * 颜色（RGBA）
+     */
+    color_r: number;
+    /**
+     * 压感强度（0.0 - 1.0）
+     */
+    pressure_sensitivity: number;
+    /**
+     * 平滑度（0.0 - 1.0）
+     */
+    smoothness: number;
+}
+
+/**
+ * 笔划数据
+ */
+export class BrushStroke {
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     * 添加一个点到笔划
+     */
+    add_point(point: StrokePoint): void;
+    /**
+     * 清除所有点
+     */
+    clear_points(): void;
+    /**
+     * 获取笔刷配置
+     */
+    get_config(): BrushConfig;
+    constructor(config: BrushConfig);
+    /**
+     * 获取点数量
+     */
+    point_count(): number;
+}
+
+/**
+ * 笔刷类型
+ */
+export enum BrushType {
+    /**
+     * 基础画笔
+     */
+    Basic = 0,
+    /**
+     * 铅笔风格
+     */
+    Pencil = 1,
+    /**
+     * 马克笔风格
+     */
+    Marker = 2,
+    /**
+     * 水彩笔风格
+     */
+    Watercolor = 3,
+    /**
+     * 橡皮擦
+     */
+    Eraser = 4,
+}
+
+/**
+ * 颜色空间枚举，用于明度调整
+ */
+export enum ColorSpace {
+    /**
+     * HSL 颜色空间
+     */
+    Hsl = 0,
+    /**
+     * LCH 颜色空间
+     */
+    Lch = 1,
+    /**
+     * HSV 颜色空间
+     */
+    Hsv = 2,
+    /**
+     * HSLuv 颜色空间
+     */
+    Hsluv = 3,
+}
+
+export class ImageProcessor {
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     * 添加点到当前笔划
+     */
+    add_stroke_point(x: number, y: number, pressure: number): void;
+    /**
+     * 调整亮度（统一接口）
+     *
+     * # 参数
+     * * `level` - 亮度级别（正值变亮，负值变暗）
+     */
+    adjust_lightness(level: number): void;
+    /**
+     * 调整饱和度（统一接口）
+     *
+     * # 参数
+     * * `level` - 饱和度级别（正值增加饱和度，负值减少饱和度）
+     */
+    adjust_saturation(level: number): void;
+    alter_blue_channel(amt: number): void;
+    alter_green_channel(amt: number): void;
+    alter_red_channel(amt: number): void;
+    apply_all_adjustments(brightness: number, contrast: number, saturation: number, hue: number, lightness: number, lightness_color_space: ColorSpace, gamma_red: number, gamma_green: number, gamma_blue: number, sharpen_strength: number, noise_reduction_strength: number): void;
+    apply_b_grayscale(): void;
+    apply_box_blur(): void;
+    apply_brightness(level: number): void;
+    /**
+     * 应用圆形遮罩
+     *
+     * # 参数
+     * * `center_x` - 圆心 X 坐标
+     * * `center_y` - 圆心 Y 坐标
+     * * `radius` - 圆半径
+     * * `feather_radius` - 羽化半径（像素）
+     */
+    apply_circular_mask(center_x: number, center_y: number, radius: number, feather_radius: number): void;
+    apply_color_noise_with_strength(r_factor: number, g_factor: number, b_factor: number, strength: number): void;
+    apply_colorize(): void;
+    apply_contrast(level: number): void;
+    apply_decompose_max(): void;
+    apply_decompose_min(): void;
+    apply_desaturate(): void;
+    apply_detect_135_deg_lines(): void;
+    apply_detect_45_deg_lines(): void;
+    apply_detect_horizontal_lines(): void;
+    apply_detect_vertical_lines(): void;
+    apply_dither(depth: number): void;
+    apply_duotone(r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): void;
+    apply_edge_detection(): void;
+    apply_edge_one(): void;
+    apply_emboss(): void;
+    apply_frosted_glass(): void;
+    apply_gamma(red: number, green: number, blue: number): void;
+    apply_gaussian_blur(radius: number): void;
+    apply_gradient(): void;
+    apply_grayscale(): void;
+    apply_grayscale_human_corrected(): void;
+    apply_grayscale_shades(num_shades: number): void;
+    apply_halftone(): void;
+    apply_hue(level: number): void;
+    apply_identity(): void;
+    apply_inc_brightness(brightness: number): void;
+    apply_invert(): void;
+    apply_laplace(): void;
+    apply_lightness(level: number, color_space: ColorSpace): void;
+    apply_lix(): void;
+    apply_neue(): void;
+    apply_noise(strength: number): void;
+    apply_noise_reduction(strength: number): void;
+    apply_normalize(): void;
+    apply_oil(radius: number, intensity: number): void;
+    apply_pink_noise(): void;
+    apply_pixelate(pixel_size: number): void;
+    /**
+     * 应用多边形遮罩（不规则形状抠图）
+     *
+     * # 参数
+     * * `vertices` - 多边形顶点坐标数组 [x1, y1, x2, y2, ...]
+     * * `anti_aliased` - 是否启用抗锯齿
+     * * `smooth_edges` - 是否平滑边缘
+     * * `smoothing_radius` - 平滑半径（像素）
+     */
+    apply_polygon_mask(vertices: Float32Array, anti_aliased: boolean, smooth_edges: boolean, smoothing_radius: number): void;
+    apply_preset_filter(filter_name: string): void;
+    apply_prewitt_horizontal(): void;
+    apply_primary(): void;
+    apply_ryo(): void;
+    apply_saturation(level: number): void;
+    apply_sepia(): void;
+    apply_sharpen(strength: number): void;
+    apply_sobel_global(): void;
+    apply_sobel_horizontal(): void;
+    apply_sobel_vertical(): void;
+    apply_solarize(): void;
+    /**
+     * 应用条纹效果，支持水平和垂直方向，可选颜色
+     *
+     * # 参数
+     * * `num_strips` - 条纹数量
+     * * `horizontal` - 是否为水平方向（true=水平，false=垂直）
+     * * `color_r` - 条纹颜色 R 分量（可选，默认白色）
+     * * `color_g` - 条纹颜色 G 分量（可选，默认白色）
+     * * `color_b` - 条纹颜色 B 分量（可选，默认白色）
+     */
+    apply_strips(num_strips: number, horizontal: boolean, color_r?: number | null, color_g?: number | null, color_b?: number | null): void;
+    apply_threshold(threshold: number): void;
+    apply_tint(r: number, g: number, b: number): void;
+    /**
+     * 应用水印，支持缩放、旋转、透明度等高级选项
+     *
+     * # 参数
+     * * `watermark_bytes` - 水印图像的字节数据
+     * * `x` - 水印 X 坐标
+     * * `y` - 水印 Y 坐标
+     * * `scale` - 缩放比例（可选，默认 1.0）
+     * * `opacity` - 透明度（可选，默认 1.0，范围 0.0-1.0）
+     * * `rotation` - 旋转角度（可选，默认 0.0，度）
+     */
+    apply_watermark(watermark_bytes: Uint8Array, x: bigint, y: bigint, scale?: number | null, opacity?: number | null, rotation?: number | null): void;
+    /**
+     * 应用水印带混合模式（便捷方法，保持向后兼容）
+     *
+     * # 参数
+     * * `watermark_bytes` - 水印图像的字节数据
+     * * `x` - 水印 X 坐标
+     * * `y` - 水印 Y 坐标
+     * * `scale` - 缩放比例
+     * * `blend_mode` - 混合模式（当前实现中暂不使用，仅用于接口兼容）
+     */
+    apply_watermark_with_blend(watermark_bytes: Uint8Array, x: bigint, y: bigint, scale: number, _blend_mode: string): void;
+    /**
+     * 自动抠图 - 基于颜色
+     *
+     * # 参数
+     * * `target_r` - 目标颜色 R 分量
+     * * `target_g` - 目标颜色 G 分量
+     * * `target_b` - 目标颜色 B 分量
+     * * `tolerance` - 颜色容差（0-255）
+     * * `feather_radius` - 边缘羽化半径
+     */
+    auto_crop_by_color(target_r: number, target_g: number, target_b: number, tolerance: number, feather_radius: number): void;
+    /**
+     * 开始一笔新画
+     */
+    begin_stroke(config: BrushConfig): void;
+    /**
+     * 混合两张图像（支持任意大小的图像）
+     *
+     * 这个函数会自动调整第二张图像的大小以匹配第一张图像，然后使用指定的混合模式进行混合。
+     *
+     * # 参数
+     * * `overlay_bytes` - 要混合的第二张图像的字节数据
+     * * `blend_mode` - 混合模式，支持以下模式：
+     *   - "overlay": 叠加混合
+     *   - "over": 覆盖混合
+     *   - "atop": 顶部混合
+     *   - "xor": 异或混合
+     *   - "plus": 加法混合
+     *   - "multiply": 正片叠底
+     *   - "burn": 线性加深
+     *   - "difference": 差值混合
+     *   - "soft_light": 柔光混合
+     *   - "screen": 滤色混合
+     *   - "hard_light": 强光混合
+     *   - "dodge": 颜色减淡
+     *   - "exclusion": 排除混合
+     *   - "lighten": 变亮混合
+     *   - "darken": 变暗混合
+     *
+     * # 示例
+     * ```no_run
+     * // 在两张图像之间应用叠加混合
+     * let overlay_bytes = std::fs::read("overlay.png").unwrap();
+     * processor.blend_images(&overlay_bytes, "overlay");
+     * ```
+     * 混合两张图像，支持可选的缩放参数
+     *
+     * # 参数
+     * * `overlay_bytes` - 要混合的第二张图像的字节数据
+     * * `blend_mode` - 混合模式
+     * * `scale` - 缩放比例（可选，默认 1.0，表示自动匹配主图像尺寸）
+     */
+    blend_images(overlay_bytes: Uint8Array, blend_mode: string, scale?: number | null): void;
+    /**
+     * 混合两张图像带缩放参数（便捷方法，保持向后兼容）
+     *
+     * # 参数
+     * * `overlay_bytes` - 要混合的第二张图像的字节数据
+     * * `scale` - 缩放比例（0.1 ~ 2.0），1.0 表示不缩放
+     * * `blend_mode` - 混合模式
+     */
+    blend_images_with_scale(overlay_bytes: Uint8Array, scale: number, blend_mode: string): void;
+    /**
+     * 清除所有笔划
+     */
+    clear_strokes(): void;
+    crop(x1: number, y1: number, x2: number, y2: number): void;
+    /**
+     * HSL 变暗（便捷方法）
+     */
+    darken_hsl(level: number): void;
+    /**
+     * HSL 减少饱和度（便捷方法）
+     */
+    desaturate_hsl(level: number): void;
+    /**
+     * 直接绘制一笔（简化接口）
+     */
+    draw_stroke(points_js: any, r: number, g: number, b: number, a: number, width: number): void;
+    /**
+     * 绘制文本，支持可选参数控制字体、阴影和颜色
+     *
+     * # 参数
+     * * `text` - 要绘制的文本
+     * * `x` - X 坐标
+     * * `y` - Y 坐标
+     * * `font_size` - 字体大小
+     * * `font_type` - 字体类型（可选，默认 0）：目前所有选项都使用默认字体
+     * * `has_shadow` - 是否绘制阴影（可选，默认 false）
+     * * `color_r` - 文本颜色 R 分量（可选，默认黑色）
+     * * `color_g` - 文本颜色 G 分量（可选，默认黑色）
+     * * `color_b` - 文本颜色 B 分量（可选，默认黑色）
+     */
+    draw_text(text: string, x: number, y: number, font_size: number, _font_type?: number | null, has_shadow?: boolean | null, color_r?: number | null, color_g?: number | null, color_b?: number | null): void;
+    /**
+     * 绘制带颜色的文本，支持选择字体类型（便捷方法）
+     *
+     * # 参数
+     * * `text` - 要绘制的文本
+     * * `x` - X 坐标
+     * * `y` - Y 坐标
+     * * `font_size` - 字体大小
+     * * `r` - 文本颜色 R 分量
+     * * `g` - 文本颜色 G 分量
+     * * `b` - 文本颜色 B 分量
+     * * `font_type` - 字体类型：目前所有选项都使用默认字体
+     */
+    draw_text_with_color_and_font(text: string, x: number, y: number, font_size: number, r: number, g: number, b: number, _font_type: number): void;
+    /**
+     * 使用动态注册的字体名称绘制文本（支持阴影和颜色）
+     *
+     * # 参数
+     * * `text` - 要绘制的文本
+     * * `x` - X 坐标
+     * * `y` - Y 坐标
+     * * `font_size` - 字体大小
+     * * `font_name` - 已注册的字体名称
+     * * `has_shadow` - 是否绘制阴影
+     * * `color_r` - 文本颜色 R 分量（可选，默认黑色）
+     * * `color_g` - 文本颜色 G 分量（可选，默认黑色）
+     * * `color_b` - 文本颜色 B 分量（可选，默认黑色）
+     */
+    draw_text_with_font_name(text: string, x: number, y: number, font_size: number, font_name: string, has_shadow?: boolean | null, color_r?: number | null, color_g?: number | null, color_b?: number | null): void;
+    /**
+     * 绘制带阴影和颜色的文本，支持选择字体类型（便捷方法）
+     *
+     * # 参数
+     * * `text` - 要绘制的文本
+     * * `x` - X 坐标
+     * * `y` - Y 坐标
+     * * `font_size` - 字体大小
+     * * `r` - 文本颜色 R 分量
+     * * `g` - 文本颜色 G 分量
+     * * `b` - 文本颜色 B 分量
+     * * `font_type` - 字体类型：目前所有选项都使用默认字体
+     */
+    draw_text_with_shadow_and_color_and_font(text: string, x: number, y: number, font_size: number, r: number, g: number, b: number, _font_type: number): void;
+    /**
+     * 结束当前笔划并渲染
+     */
+    end_stroke(): void;
+    flip_horizontal(): void;
+    flip_vertical(): void;
+    get_bytes(): Uint8Array;
+    get_estimated_filesize(): bigint;
+    get_height(): number;
+    /**
+     * 获取原始像素数据（RGBA 格式，每个像素 4 字节）
+     */
+    get_raw_pixels(): Uint8Array;
+    /**
+     * 获取历史笔划数量
+     */
+    get_stroke_count(): number;
+    get_width(): number;
+    /**
+     * 色相旋转（统一接口，支持 HSL、HSV、LCH 颜色空间）
+     *
+     * # 参数
+     * * `degrees` - 旋转角度（度）
+     * * `color_space` - 颜色空间：0=HSL, 1=HSV, 2=LCH
+     */
+    hue_rotate(degrees: number, color_space: number): void;
+    /**
+     * HSL 色相旋转（便捷方法）
+     */
+    hue_rotate_hsl(degrees: number): void;
+    /**
+     * HSL 变亮（便捷方法）
+     */
+    lighten_hsl(level: number): void;
+    constructor(width: number, height: number, data: Uint8Array);
+    static new_from_bytes(bytes: Uint8Array): ImageProcessor;
+    /**
+     * 创建指定大小的白色画布
+     */
+    static new_white_canvas(width: number, height: number): ImageProcessor;
+    offset_blue(offset_amt: number): void;
+    offset_green(offset_amt: number): void;
+    offset_red(offset_amt: number): void;
+    /**
+     * 优化图像边缘（自动边缘检测和优化）
+     *
+     * 这个方法会对当前图像的边缘进行优化，使边缘更加平滑自然
+     *
+     * # 参数
+     * * `smoothing_radius` - 平滑半径（像素），推荐值 1-5
+     */
+    refine_edges(smoothing_radius: number): void;
+    remove_blue_channel(): void;
+    remove_green_channel(): void;
+    remove_red_channel(): void;
+    reset(): void;
+    resize(new_width: number, new_height: number): void;
+    rotate_90(): void;
+    /**
+     * 任意角度旋转
+     * angle: 旋转角度（度），支持 -360 到 360
+     */
+    rotate_any(angle: number): void;
+    /**
+     * HSL 增加饱和度（便捷方法）
+     */
+    saturate_hsl(level: number): void;
+    /**
+     * 智能抠图 - 自动检测主体并进行抠图
+     *
+     * 这个方法会尝试自动检测图像中的主体并创建遮罩
+     *
+     * # 参数
+     * * `threshold` - 边缘检测阈值（0-255）
+     * * `feather_radius` - 边缘羽化半径
+     */
+    smart_crop(threshold: number, feather_radius: number): void;
+    swap_gb_channels(): void;
+    swap_rb_channels(): void;
+    swap_rg_channels(): void;
+    to_base64(): string;
+    to_jpeg(quality: number): string;
+    to_png(): string;
+    to_webp(quality: number): string;
+    /**
+     * 撤销最后一笔
+     */
+    undo_stroke(): boolean;
+}
+
+/**
+ * Provides the image's height, width, and contains the image's raw pixels.
+ * For use when communicating between JS and WASM, and also natively.
+ */
+export class PhotonImage {
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     * Convert the PhotonImage to base64.
+     */
+    get_base64(): string;
+    /**
+     * Convert the PhotonImage to raw bytes. Returns PNG.
+     */
+    get_bytes(): Uint8Array;
+    /**
+     * Convert the PhotonImage to raw bytes. Returns a JPEG.
+     */
+    get_bytes_jpeg(quality: number): Uint8Array;
+    /**
+     * Convert the PhotonImage to raw bytes. Returns a WEBP.
+     */
+    get_bytes_webp(): Uint8Array;
+    /**
+     * Convert the PhotonImage to raw bytes. Returns a WEBP with specified quality.
+     * # Arguments
+     * * `quality` - WebP quality (0-100). Higher means better quality but larger file.
+     *   - 0-50: Low quality, small file size
+     *   - 51-75: Medium quality (recommended for web)
+     *   - 76-100: High quality, larger file size
+     *
+     * Note: The image 0.24.x crate's WebPEncoder currently only supports lossless encoding.
+     * The quality parameter is reserved for future use when the crate adds lossy encoding support.
+     * Currently, all images are encoded in lossless mode regardless of the quality value.
+     * For quality control, consider using JPEG format with `get_bytes_jpeg()` instead.
+     */
+    get_bytes_webp_with_quality(_quality: number): Uint8Array;
+    /**
+     * Calculates estimated filesize and returns number of bytes
+     */
+    get_estimated_filesize(): bigint;
+    /**
+     * Get the height of the PhotonImage.
+     */
+    get_height(): number;
+    /**
+     * Convert the PhotonImage's raw pixels to JS-compatible ImageData.
+     */
+    get_image_data(): ImageData;
+    /**
+     * Get the PhotonImage's pixels as a Vec of u8s.
+     */
+    get_raw_pixels(): Uint8Array;
+    /**
+     * Get the width of the PhotonImage.
+     */
+    get_width(): number;
+    /**
+     * Create a new PhotonImage from a Vec of u8s, which represent raw pixels.
+     */
+    constructor(raw_pixels: Uint8Array, width: number, height: number);
+    /**
+     * Create a new PhotonImage from a base64 string.
+     */
+    static new_from_base64(base64: string): PhotonImage;
+    /**
+     * Create a new PhotonImage from a Blob/File.
+     */
+    static new_from_blob(blob: Blob): PhotonImage;
+    /**
+     * Create a new PhotonImage from a byteslice.
+     */
+    static new_from_byteslice(vec: Uint8Array): PhotonImage;
+    /**
+     * Create a new PhotonImage from a HTMLImageElement
+     */
+    static new_from_image(image: HTMLImageElement): PhotonImage;
+    /**
+     * Convert ImageData to raw pixels, and update the PhotonImage's raw pixels to this.
+     */
+    set_imgdata(img_data: ImageData): void;
+}
+
+/**
+ * RGB color type.
+ */
+export class Rgb {
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     * Get the Blue value.
+     */
+    get_blue(): number;
+    /**
+     * Get the Green value.
+     */
+    get_green(): number;
+    /**
+     * Get the Red value.
+     */
+    get_red(): number;
+    /**
+     * Create a new RGB struct.
+     */
+    constructor(r: number, g: number, b: number);
+    /**
+     * Set the Blue value.
+     */
+    set_blue(b: number): void;
+    /**
+     * Get the Green value.
+     */
+    set_green(g: number): void;
+    /**
+     * Set the Red value.
+     */
+    set_red(r: number): void;
+}
+
+/**
+ * RGBA color type.
+ */
+export class Rgba {
+    free(): void;
+    [Symbol.dispose](): void;
+    /**
+     * Get the alpha value for this color.
+     */
+    get_alpha(): number;
+    /**
+     * Get the Blue value.
+     */
+    get_blue(): number;
+    /**
+     * Get the Green value.
+     */
+    get_green(): number;
+    /**
+     * Get the Red value.
+     */
+    get_red(): number;
+    /**
+     * Create a new RGBA struct.
+     */
+    constructor(r: number, g: number, b: number, a: number);
+    /**
+     * Set the alpha value.
+     */
+    set_alpha(a: number): void;
+    /**
+     * Set the Blue value.
+     */
+    set_blue(b: number): void;
+    /**
+     * Get the Green value.
+     */
+    set_green(g: number): void;
+    /**
+     * Set the Red value.
+     */
+    set_red(r: number): void;
+}
+
+export enum SamplingFilter {
+    Nearest = 1,
+    Triangle = 2,
+    CatmullRom = 3,
+    Gaussian = 4,
+    Lanczos3 = 5,
+}
+
+/**
+ * 笔划点
+ */
+export class StrokePoint {
+    free(): void;
+    [Symbol.dispose](): void;
+    constructor(x: number, y: number, pressure: number, timestamp: bigint);
+    /**
+     * 压感（0.0 - 1.0）
+     */
+    pressure: number;
+    /**
+     * 时间戳（毫秒）
+     */
+    timestamp: bigint;
+    /**
+     * X 坐标
+     */
+    x: number;
+    /**
+     * Y 坐标
+     */
+    y: number;
+}
+
+/**
+ * Add randomized noise to an image.
+ * This function adds a Gaussian Noise Sample to each pixel through incrementing each channel by a randomized offset.
+ * This randomized offset is generated by creating a randomized thread pool.
+ * **[WASM SUPPORT IS AVAILABLE]**: Randomized thread pools cannot be created with WASM, but
+ * a workaround using js_sys::Math::random works now.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example:
+ * use photon_rs::native::open_image;
+ * use photon_rs::noise::add_noise_rand;
+ * use photon_rs::PhotonImage;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * add_noise_rand(&mut img);
+ * ```
+ */
+export function add_noise_rand(photon_image: PhotonImage): void;
+
+/**
+ * Add randomized noise to an image with adjustable strength.
+ * This function adds Gaussian noise to each pixel by incrementing each channel by a randomized offset.
+ * The maximum offset is controlled by the strength parameter.
+ * **[WASM SUPPORT IS AVAILABLE]**
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `strength` - Noise strength. Range: 0.0 to 10.0.
+ *   - 0.0: No noise
+ *   - 1.0: Subtle noise (max offset 0-15)
+ *   - 5.0: Moderate noise (max offset 0-75)
+ *   - 10.0: Strong noise (max offset 0-150, equivalent to add_noise_rand)
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to add noise with strength 2.0:
+ * use photon_rs::native::open_image;
+ * use photon_rs::noise::add_noise_rand_with_strength;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * add_noise_rand_with_strength(&mut img, 2.0);
+ * ```
+ */
+export function add_noise_rand_with_strength(photon_image: PhotonImage, strength: number): void;
+
+/**
+ * Adjust the brightness of an image by a factor.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `brightness` - A u8 to add or subtract to the brightness. To increase
+ * the brightness, pass a positive number (up to 255). To decrease the brightness,
+ * pass a negative number instead.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::effects::adjust_brightness;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * adjust_brightness(&mut img, 10_i16);
+ * ```
+ */
+export function adjust_brightness(photon_image: PhotonImage, brightness: number): void;
+
+/**
+ * Adjust the contrast of an image by a factor.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage that contains a view into the image.
+ * * `contrast` - An f32 factor used to adjust contrast. Between [-255.0, 255.0]. The algorithm will
+ * clamp results if passed factor is out of range.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::effects::adjust_contrast;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * adjust_contrast(&mut img, 30_f32);
+ * ```
+ */
+export function adjust_contrast(photon_image: PhotonImage, contrast: number): void;
+
+/**
+ * Increment or decrement every pixel's Blue channel by a constant.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `amt` - The amount to increment or decrement the channel's value by for that pixel.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to increase the Blue channel for all pixels by 10:
+ * use photon_rs::channels::alter_blue_channel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * alter_blue_channel(&mut img, 10_i16);
+ * ```
+ */
+export function alter_blue_channel(img: PhotonImage, amt: number): void;
+
+/**
+ * Alter a select channel by incrementing or decrementing its value by a constant.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `channel` - The channel you wish to alter, it should be either 0, 1 or 2,
+ * representing R, G, or B respectively. (O=Red, 1=Green, 2=Blue)
+ * * `amount` - The amount to increment/decrement the channel's value by for that pixel.
+ * A positive value will increment/decrement the channel's value, a negative value will decrement the channel's value.
+ *
+ * ## Example
+ *
+ * ```no_run
+ * // For example, to increase the Red channel for all pixels by 10:
+ * use photon_rs::channels::alter_channel;
+ * use photon_rs::native::{open_image};
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * alter_channel(&mut img, 0_usize, 10_i16);
+ * ```
+ *
+ * Adds a constant to a select R, G, or B channel's value.
+ *
+ * ### Decrease a channel's value
+ * // For example, to decrease the Green channel for all pixels by 20:
+ * ```no_run
+ * use photon_rs::channels::alter_channel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * alter_channel(&mut img, 1_usize, -20_i16);
+ * ```
+ * **Note**: Note the use of a minus symbol when decreasing the channel.
+ */
+export function alter_channel(img: PhotonImage, channel: number, amt: number): void;
+
+/**
+ * Increment all 3 channels' values by adding an amt to each channel per pixel.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `r_amt` - The amount to increment/decrement the Red channel by.
+ * * `g_amt` - The amount to increment/decrement the Green channel by.
+ * * `b_amt` - The amount to increment/decrement the Blue channel by.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to increase the values of the Red channel by 10, the Green channel by 20,
+ * // and the Blue channel by 50:
+ * use photon_rs::channels::alter_channels;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * alter_channels(&mut img, 10_i16, 20_i16, 50_i16);
+ * ```
+ */
+export function alter_channels(img: PhotonImage, r_amt: number, g_amt: number, b_amt: number): void;
+
+/**
+ * Increment or decrement every pixel's Green channel by a constant.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `amt` - The amount to increment/decrement the channel's value by for that pixel.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to increase the Green channel for all pixels by 20:
+ * use photon_rs::channels::alter_green_channel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * alter_green_channel(&mut img, 20_i16);
+ * ```
+ */
+export function alter_green_channel(img: PhotonImage, amt: number): void;
+
+/**
+ * Increment or decrement every pixel's Red channel by a constant.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage. See the PhotonImage struct for details.
+ * * `amt` - The amount to increment or decrement the channel's value by for that pixel.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to increase the Red channel for all pixels by 10:
+ * use photon_rs::channels::alter_red_channel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * alter_red_channel(&mut img, 10_i16);
+ * ```
+ */
+export function alter_red_channel(photon_image: PhotonImage, amt: number): void;
+
+/**
+ * Increment/decrement two channels' values simultaneously by adding an amt to each channel per pixel.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `channel1` - A usize from 0 to 2 that represents either the R, G or B channels.
+ * * `amt1` - The amount to increment/decrement the channel's value by for that pixel.
+ * * `channel2` -A usize from 0 to 2 that represents either the R, G or B channels.
+ * * `amt2` - The amount to increment/decrement the channel's value by for that pixel.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to increase the values of the Red and Blue channels per pixel:
+ * use photon_rs::channels::alter_two_channels;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * alter_two_channels(&mut img, 0_usize, 10_i16, 2_usize, 20_i16);
+ * ```
+ */
+export function alter_two_channels(img: PhotonImage, channel1: number, amt1: number, channel2: number, amt2: number): void;
+
+/**
+ * Apply a gradient to an image.
+ */
+export function apply_gradient(image: PhotonImage): void;
+
+/**
+ * 应用遮罩到图像
+ */
+export function apply_mask_to_image(image_bytes: Uint8Array, mask: Uint8Array, width: number, height: number): void;
+
+/**
+ * 自动抠图 - 基于颜色的智能抠图
+ */
+export function auto_crop_by_color(image_bytes: Uint8Array, width: number, height: number, target_r: number, target_g: number, target_b: number, tolerance: number, feather_radius: number): Uint8Array;
+
+/**
+ * Convert an image to grayscale by setting a pixel's 3 RGB values to the Blue channel's value.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::monochrome::b_grayscale;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * b_grayscale(&mut img);
+ * ```
+ */
+export function b_grayscale(photon_image: PhotonImage): void;
+
+/**
+ * Convert a base64 string to a PhotonImage.
+ */
+export function base64_to_image(base64: string): PhotonImage;
+
+/**
+ * Convert a base64 string to a Vec of u8s.
+ */
+export function base64_to_vec(base64: string): Uint8Array;
+
+/**
+ * Blend two images together.
+ *
+ * The `blend_mode` (3rd param) determines which blending mode to use; change this for varying effects.
+ * The blend modes available include: `overlay`, `over`, `atop`, `xor`, `plus`, `multiply`, `burn`,
+ * `difference`, `soft_light`, `screen`, `hard_light`, `dodge`, `exclusion`, `lighten`, `darken` (more to come)
+ * NOTE: The first image must be smaller than the second image passed as params.
+ * If the first image were larger than the second, then there would be overflowing pixels which would have no corresponding pixels
+ * in the second image.
+ * # Arguments
+ * * `img` - A DynamicImage that contains a view into the image.
+ * * `img2` - The 2nd DynamicImage to be blended with the first.
+ * * `blend_mode` - The blending mode to use. See above for complete list of blend modes available.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to blend two images with the `multiply` blend mode:
+ * use photon_rs::multiple::blend;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * let img2 = open_image("img2.jpg").expect("File should open");
+ * blend(&mut img, &img2, "multiply");
+ * ```
+ */
+export function blend(photon_image: PhotonImage, photon_image2: PhotonImage, blend_mode: string): void;
+
+/**
+ * Apply a box blur effect.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply a box blur effect:
+ * use photon_rs::conv::box_blur;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * box_blur(&mut img);
+ * ```
+ */
+export function box_blur(photon_image: PhotonImage): void;
+
+/**
+ * Increased contrast filter effect.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::cali;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * cali(&mut img);
+ * ```
+ */
+export function cali(img: PhotonImage): void;
+
+/**
+ * Horizontal strips. Divide an image into a series of equal-width strips, for an artistic effect. Sepcify a color as well.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `num_strips` - The numbder of strips
+ * * `color` - Color of strips.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to draw blue horizontal strips on a `PhotonImage`:
+ * use photon_rs::effects::color_horizontal_strips;
+ * use photon_rs::native::open_image;
+ * use photon_rs::Rgb;
+ *
+ * let color = Rgb::new(255u8, 0u8, 0u8);
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * color_horizontal_strips(&mut img, 8u8, color);
+ * ```
+ */
+export function color_horizontal_strips(photon_image: PhotonImage, num_strips: number, color: Rgb): void;
+
+/**
+ * Vertical strips. Divide an image into a series of equal-width strips, for an artistic effect. Sepcify a color as well.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `num_strips` - The numbder of strips
+ * * `color` - Color of strips.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to draw red vertical strips on a `PhotonImage`:
+ * use photon_rs::effects::color_vertical_strips;
+ * use photon_rs::native::open_image;
+ * use photon_rs::Rgb;
+ *
+ * let color = Rgb::new(255u8, 0u8, 0u8);
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * color_vertical_strips(&mut img, 8u8, color);
+ * ```
+ */
+export function color_vertical_strips(photon_image: PhotonImage, num_strips: number, color: Rgb): void;
+
+/**
+ * Colorizes the green channels of the image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to colorize an image of type `PhotonImage`:
+ * use photon_rs::effects::colorize;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * colorize(&mut img);
+ * ```
+ */
+export function colorize(photon_image: PhotonImage): void;
+
+/**
+ * 创建圆形遮罩（带抗锯齿）
+ */
+export function create_circular_mask(width: number, height: number, center_x: number, center_y: number, radius: number, feather_radius: number): Uint8Array;
+
+export function create_gradient(width: number, height: number): PhotonImage;
+
+/**
+ * 创建多边形遮罩
+ *
+ * # 参数
+ * * `width` - 图像宽度
+ * * `height` - 图像高度
+ * * `vertices` - 多边形顶点坐标数组 [x1, y1, x2, y2, ...]
+ * * `anti_aliased` - 是否启用抗锯齿
+ *
+ * # 返回
+ * 遮罩像素数据（灰度图，每个像素 1 字节）
+ */
+export function create_polygon_mask(width: number, height: number, vertices: Float32Array, anti_aliased: boolean): Uint8Array;
+
+/**
+ * Crop an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to crop an image at (0, 0) to (500, 800)
+ * use photon_rs::native::{open_image};
+ * use photon_rs::transform::crop;
+ * use photon_rs::PhotonImage;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * let cropped_img: PhotonImage = crop(&img, 0_u32, 0_u32, 500_u32, 800_u32);
+ * // Write the contents of this image in JPG format.
+ * ```
+ */
+export function crop(photon_image: PhotonImage, x1: number, y1: number, x2: number, y2: number): PhotonImage;
+
+export function crop_img_browser(source_canvas: HTMLCanvasElement, width: number, height: number, left: number, top: number): HTMLCanvasElement;
+
+/**
+ * Darken the image by a specified amount in the HSL colour space.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to darken the image by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Darkening by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to darken an image by 10% in the HSL colour space:
+ * use photon_rs::colour_spaces::darken_hsl;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * darken_hsl(&mut img, 0.1_f32);
+ * ```
+ */
+export function darken_hsl(img: PhotonImage, level: number): void;
+
+/**
+ * Darken the image by a specified amount in the HSLuv colour space.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to darken the image by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Darkening by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to darken an image by 10% in the HSLuv colour space:
+ * use photon_rs::colour_spaces::darken_hsluv;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * darken_hsluv(&mut img, 0.1_f32);
+ * ```
+ */
+export function darken_hsluv(img: PhotonImage, level: number): void;
+
+/**
+ * Darken the image's colours by a specified amount in the HSV colour space.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to darken the image by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Darkening by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to darken an image by 10% in the HSV colour space:
+ * use photon_rs::colour_spaces::darken_hsv;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * darken_hsv(&mut img, 0.1_f32);
+ * ```
+ */
+export function darken_hsv(img: PhotonImage, level: number): void;
+
+/**
+ * Darken the image by a specified amount in the LCh colour space.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to darken the image by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Darkening by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to darken an image by 10% in the LCh colour space:
+ * use photon_rs::colour_spaces::darken_lch;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * darken_lch(&mut img, 0.1_f32);
+ * ```
+ */
+export function darken_lch(img: PhotonImage, level: number): void;
+
+/**
+ * Decrease the brightness of an image by a constant.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `brightness` - A u8 to subtract from the brightness. It should be a positive number,
+ * and this value will then be subtracted from the brightness.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::effects::dec_brightness;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * dec_brightness(&mut img, 10_u8);
+ * ```
+ */
+export function dec_brightness(photon_image: PhotonImage, brightness: number): void;
+
+/**
+ * Uses a max. decomposition algorithm to convert an image to greyscale.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to decompose an image with max decomposition:
+ * use photon_rs::monochrome::decompose_max;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * decompose_max(&mut img);
+ * ```
+ */
+export function decompose_max(img: PhotonImage): void;
+
+/**
+ * Uses a min. decomposition algorithm to convert an image to greyscale.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to decompose an image with min decomposition:
+ * use photon_rs::monochrome::decompose_min;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * decompose_min(&mut img);
+ * ```
+ */
+export function decompose_min(img: PhotonImage): void;
+
+/**
+ * Desaturate an image by getting the min/max of each pixel's RGB values.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to desaturate an image:
+ * use photon_rs::monochrome::desaturate;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * desaturate(&mut img);
+ * ```
+ */
+export function desaturate(img: PhotonImage): void;
+
+/**
+ * Desaturate the image by a specified amount in the HSL colour space.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to desaturate the image by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Desaturating by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to desaturate an image by 10% in the LCh colour space:
+ * use photon_rs::colour_spaces::desaturate_hsl;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * desaturate_hsl(&mut img, 0.1_f32);
+ * ```
+ */
+export function desaturate_hsl(img: PhotonImage, level: number): void;
+
+/**
+ * Desaturate the image by a specified amount in the HSLuv colour space.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to desaturate the image by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Desaturating by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to desaturate an image by 10% in the HSLuv colour space:
+ * use photon_rs::colour_spaces::desaturate_hsluv;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * desaturate_hsluv(&mut img, 0.1_f32);
+ * ```
+ */
+export function desaturate_hsluv(img: PhotonImage, level: number): void;
+
+/**
+ * Desaturate the image by a specified amount in the HSV colour space.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to desaturate the image by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Desaturating by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to desaturate an image by 10% in the HSV colour space:
+ * use photon_rs::colour_spaces::desaturate_hsv;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * desaturate_hsv(&mut img, 0.1_f32);
+ * ```
+ */
+export function desaturate_hsv(img: PhotonImage, level: number): void;
+
+/**
+ * Desaturate the image by a specified amount in the LCh colour space.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to desaturate the image by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Desaturating by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to desaturate an image by 10% in the LCh colour space:
+ * use photon_rs::colour_spaces::desaturate_lch;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * desaturate_lch(&mut img, 0.1_f32);
+ * ```
+ */
+export function desaturate_lch(img: PhotonImage, level: number): void;
+
+/**
+ * Detect lines at a 135 degree angle in an image, and highlight these only.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to display the lines at a 135 degree angle in an image:
+ * use photon_rs::conv::detect_135_deg_lines;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * detect_135_deg_lines(&mut img);
+ * ```
+ */
+export function detect_135_deg_lines(photon_image: PhotonImage): void;
+
+/**
+ * Detect lines at a forty five degree angle in an image, and highlight these only.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to display the lines at a forty five degree angle in an image:
+ * use photon_rs::conv::detect_45_deg_lines;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * detect_45_deg_lines(&mut img);
+ * ```
+ */
+export function detect_45_deg_lines(photon_image: PhotonImage): void;
+
+/**
+ * Detect horizontal lines in an image, and highlight these only.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to display the horizontal lines in an image:
+ * use photon_rs::conv::detect_horizontal_lines;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * detect_horizontal_lines(&mut img);
+ * ```
+ */
+export function detect_horizontal_lines(photon_image: PhotonImage): void;
+
+/**
+ * Detect vertical lines in an image, and highlight these only.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to display the vertical lines in an image:
+ * use photon_rs::conv::detect_vertical_lines;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * detect_vertical_lines(&mut img);
+ * ```
+ */
+export function detect_vertical_lines(photon_image: PhotonImage): void;
+
+/**
+ * Applies Floyd-Steinberg dithering to an image.
+ * Only RGB channels are processed, alpha remains unchanged.
+ * # Arguments
+ * * `photon_image` - A PhotonImage that contains a view into the image.
+ * * `depth` - bits per channel. Clamped between 1 and 8.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to turn an image of type `PhotonImage` into a dithered image:
+ * use photon_rs::effects::dither;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * let depth = 1;
+ * dither(&mut img, depth);
+ * ```
+ */
+export function dither(photon_image: PhotonImage, depth: number): void;
+
+/**
+ * Applies Ordered Dithering (Bayer Matrix) to an image.
+ * This is faster than Floyd-Steinberg dithering and produces better results for some images.
+ * Only RGB channels are processed, alpha remains unchanged.
+ * # Arguments
+ * * `photon_image` - A PhotonImage that contains a view into the image.
+ * * `depth` - bits per channel. Clamped between 1 and 8.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to turn an image of type `PhotonImage` into a dithered image:
+ * use photon_rs::effects::dither_ordered;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * let depth = 1;
+ * dither_ordered(&mut img, depth);
+ * ```
+ */
+export function dither_ordered(photon_image: PhotonImage, depth: number): void;
+
+/**
+ * Greyscale effect with increased contrast.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::dramatic;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * dramatic(&mut img);
+ * ```
+ */
+export function dramatic(img: PhotonImage): void;
+
+/**
+ * Add text to an image.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `text` - Text string to be drawn to the image.
+ * * `x` - x-coordinate of where first letter's 1st pixel should be drawn.
+ * * `y` - y-coordinate of where first letter's 1st pixel should be drawn.
+ * * `font_size` - Font size in pixels of the text to be drawn.
+ * * `font_name` - Name of the registered font to use.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example to draw the string "Welcome to Photon!" at 10, 10:
+ * use photon_rs::native::open_image;
+ * use photon_rs::text::draw_text;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * // Make sure to register a font first
+ * photon_rs::text::register_font("my-font", font_data);
+ * draw_text(&mut img, "Welcome to Photon!", 10_i32, 10_i32, 90_f32, "my-font");
+ * ```
+ */
+export function draw_text(photon_img: PhotonImage, text: string, x: number, y: number, font_size: number, font_name: string): void;
+
+/**
+ * Add bordered-text to an image.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `text` - Text string to be drawn to the image.
+ * * `x` - x-coordinate of where first letter's 1st pixel should be drawn.
+ * * `y` - y-coordinate of where first letter's 1st pixel should be drawn.
+ * * `font_size` - Font size in pixels of the text to be drawn.
+ * * `font_name` - Name of the registered font to use.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example to draw the string "Welcome to Photon!" at 10, 10:
+ * use photon_rs::native::open_image;
+ * use photon_rs::text::draw_text_with_border;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * // Make sure to register a font first
+ * photon_rs::text::register_font("my-font", font_data);
+ * draw_text_with_border(&mut img, "Welcome to Photon!", 10_i32, 10_i32, 90_f32, "my-font");
+ * ```
+ */
+export function draw_text_with_border(photon_img: PhotonImage, text: string, x: number, y: number, font_size: number, font_name: string): void;
+
+/**
+ * Add bordered-text to an image with custom color.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `text` - Text string to be drawn to the image.
+ * * `x` - x-coordinate of where first letter's 1st pixel should be drawn.
+ * * `y` - y-coordinate of where first letter's 1st pixel should be drawn.
+ * * `font_size` - Font size in pixels of the text to be drawn.
+ * * `r` - Red channel (0-255).
+ * * `g` - Green channel (0-255).
+ * * `b` - Blue channel (0-255).
+ * * `font_name` - Name of the registered font to use.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example to draw red text with border at 10, 10:
+ * use photon_rs::native::open_image;
+ * use photon_rs::text::draw_text_with_border_and_color;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * // Make sure to register a font first
+ * photon_rs::text::register_font("my-font", font_data);
+ * draw_text_with_border_and_color(&mut img, "Hello!", 10_i32, 10_i32, 90_f32, 255u8, 0u8, 0u8, "my-font");
+ * ```
+ */
+export function draw_text_with_border_and_color(photon_img: PhotonImage, text: string, x: number, y: number, font_size: number, r: number, g: number, b: number, font_name: string): void;
+
+/**
+ * Add text to an image with custom color.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `text` - Text string to be drawn to the image.
+ * * `x` - x-coordinate of where first letter's 1st pixel should be drawn.
+ * * `y` - y-coordinate of where first letter's 1st pixel should be drawn.
+ * * `font_size` - Font size in pixels of the text to be drawn.
+ * * `r` - Red channel (0-255).
+ * * `g` - Green channel (0-255).
+ * * `b` - Blue channel (0-255).
+ * * `font_name` - Name of the registered font to use.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example to draw red text at 10, 10:
+ * use photon_rs::native::open_image;
+ * use photon_rs::text::draw_text_with_color;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * // Make sure to register a font first
+ * photon_rs::text::register_font("my-font", font_data);
+ * draw_text_with_color(&mut img, "Hello!", 10_i32, 10_i32, 90_f32, 255u8, 0u8, 0u8, "my-font");
+ * ```
+ */
+export function draw_text_with_color(photon_img: PhotonImage, text: string, x: number, y: number, font_size: number, r: number, g: number, b: number, font_name: string): void;
+
+export function duotone(photon_image: PhotonImage, color_a: Rgb, color_b: Rgb): void;
+
+/**
+ * Duotone effect with purple tones.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::duotone_horizon;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * duotone_horizon(&mut img);
+ * ```
+ */
+export function duotone_horizon(img: PhotonImage): void;
+
+/**
+ * Duotone effect with a lilac hue
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::duotone_lilac;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * duotone_lilac(&mut img);
+ * ```
+ */
+export function duotone_lilac(img: PhotonImage): void;
+
+/**
+ * A duotone ochre tint effect
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::duotone_ochre;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * duotone_ochre(&mut img);
+ * ```
+ */
+export function duotone_ochre(img: PhotonImage): void;
+
+/**
+ * A duotone filter with a user-specified color and a gray color
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `rgb_color` - RGB color
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::duotone_tint;
+ * use photon_rs::native::open_image;
+ * use photon_rs::Rgb;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * let rgb_color = Rgb::new(12, 12, 10);
+ * duotone_tint(&mut img, rgb_color);
+ * ```
+ */
+export function duotone_tint(img: PhotonImage, rgb_color: Rgb): void;
+
+/**
+ * Duotone effect with blue and purple tones.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::duotone_violette;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * duotone_violette(&mut img);
+ * ```
+ */
+export function duotone_violette(img: PhotonImage): void;
+
+/**
+ * Apply edge detection to an image, to create a dark version with its edges highlighted.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to increase the Red channel for all pixels by 10:
+ * use photon_rs::conv::edge_detection;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * edge_detection(&mut img);
+ * ```
+ */
+export function edge_detection(photon_image: PhotonImage): void;
+
+/**
+ * Preset edge effect.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply this effect:
+ * use photon_rs::conv::edge_one;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * edge_one(&mut img);
+ * ```
+ */
+export function edge_one(photon_image: PhotonImage): void;
+
+/**
+ * Apply an emboss effect to an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply an emboss effect:
+ * use photon_rs::conv::emboss;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * emboss(&mut img);
+ * ```
+ */
+export function emboss(photon_image: PhotonImage): void;
+
+/**
+ * Apply a filter to an image. Over 20 filters are available.
+ * The filters are as follows:
+ * * **oceanic**: Add an aquamarine-tinted hue to an image.
+ * * **islands**: Aquamarine tint.
+ * * **marine**: Add a green/blue mixed hue to an image.
+ * * **seagreen**: Dark green hue, with tones of blue.
+ * * **flagblue**: Royal blue tint
+ * * **liquid**: Blue-inspired tint.
+ * * **diamante**: Custom filter with a blue/turquoise tint.
+ * * **radio**: Fallout-style radio effect.
+ * * **twenties**: Slight-blue tinted historical effect.
+ * * **rosetint**: Rose-tinted filter.
+ * * **mauve**: Purple-infused filter.
+ * * **bluechrome**: Blue monochrome effect.
+ * * **vintage**: Vintage filter with a red tint.
+ * * **perfume**: Increase the blue channel, with moderate increases in the Red and Green channels.
+ * * **serenity**: Custom filter with an increase in the Blue channel's values.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `filter_name` - The filter's name. Choose from the selection above, eg: "oceanic"
+ * # Example
+ *
+ * ```no_run
+ * // For example, to add a filter called "vintage" to an image:
+ * use photon_rs::filters::filter;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * filter(&mut img, "vintage");
+ * ```
+ */
+export function filter(img: PhotonImage, filter_name: string): void;
+
+/**
+ * Apply a red hue, with increased contrast and brightness.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::firenze;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * firenze(&mut img);
+ * ```
+ */
+export function firenze(img: PhotonImage): void;
+
+/**
+ * Flip an image horizontally.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to flip an image horizontally:
+ * use photon_rs::native::open_image;
+ * use photon_rs::transform::fliph;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * fliph(&mut img);
+ * ```
+ */
+export function fliph(photon_image: PhotonImage): void;
+
+/**
+ * Flip an image vertically.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to flip an image vertically:
+ * use photon_rs::native::open_image;
+ * use photon_rs::transform::flipv;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * flipv(&mut img);
+ * ```
+ */
+export function flipv(photon_image: PhotonImage): void;
+
+/**
+ * Turn an image into an frosted glass see through
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to turn an image of type `PhotonImage` into frosted glass see through:
+ * use photon_rs::effects::frosted_glass;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * frosted_glass(&mut img);
+ * ```
+ */
+export function frosted_glass(photon_image: PhotonImage): void;
+
+/**
+ * Convert an image to grayscale by setting a pixel's 3 RGB values to the Green channel's value.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::monochrome::g_grayscale;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * g_grayscale(&mut img);
+ * ```
+ */
+export function g_grayscale(photon_image: PhotonImage): void;
+
+/**
+ * Applies gamma correction to an image.
+ * # Arguments
+ * * `photon_image` - A PhotonImage that contains a view into the image.
+ * * `red` - Gamma value for red channel.
+ * * `green` - Gamma value for green channel.
+ * * `blue` - Gamma value for blue channel.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to turn an image of type `PhotonImage` into a gamma corrected image:
+ * use photon_rs::colour_spaces::gamma_correction;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * gamma_correction(&mut img, 2.2, 2.2, 2.2);
+ * ```
+ */
+export function gamma_correction(photon_image: PhotonImage, red: number, green: number, blue: number): void;
+
+/**
+ * Gaussian blur in linear time.
+ *
+ * Reference: http://blog.ivank.net/fastest-gaussian-blur.html
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage
+ * * `radius` - blur radius
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::conv::gaussian_blur;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * gaussian_blur(&mut img, 3_i32);
+ * ```
+ */
+export function gaussian_blur(photon_image: PhotonImage, radius: number): void;
+
+/**
+ * 获取默认字体名称
+ *
+ * # 返回
+ * 返回默认字体的名称字符串
+ */
+export function get_default_font_name(): string;
+
+/**
+ * Get the ImageData from a 2D canvas context
+ */
+export function get_image_data(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): ImageData;
+
+/**
+ * Apply a vintage, golden hue to an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::golden;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * golden(&mut img);
+ * ```
+ */
+export function golden(img: PhotonImage): void;
+
+/**
+ * Convert an image to grayscale using the conventional averaging algorithm.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to convert an image of type `PhotonImage` to grayscale:
+ * use photon_rs::monochrome::grayscale;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * grayscale(&mut img);
+ * ```
+ */
+export function grayscale(img: PhotonImage): void;
+
+/**
+ * Convert an image to grayscale with a human corrected factor, to account for human vision.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to convert an image of type `PhotonImage` to grayscale with a human corrected factor:
+ * use photon_rs::monochrome::grayscale_human_corrected;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * grayscale_human_corrected(&mut img);
+ * ```
+ */
+export function grayscale_human_corrected(img: PhotonImage): void;
+
+/**
+ * Employ only a limited number of gray shades in an image.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `num_shades` - The number of grayscale shades to be displayed in the image.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to limit an image to four shades of gray only:
+ * use photon_rs::monochrome::grayscale_shades;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * grayscale_shades(&mut img, 4_u8);
+ * ```
+ */
+export function grayscale_shades(photon_image: PhotonImage, num_shades: number): void;
+
+/**
+ * Halftoning effect.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * # Example
+ *
+ * ```no_run
+ * // For example:
+ * use photon_rs::effects::halftone;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * halftone(&mut img);
+ * ```
+ */
+export function halftone(photon_image: PhotonImage): void;
+
+/**
+ * Horizontal strips. Divide an image into a series of equal-height strips, for an artistic effect.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `num_strips` - The number of strips
+ * # Example
+ *
+ * ```no_run
+ * // For example, to draw horizontal strips on a `PhotonImage`:
+ * use photon_rs::effects::horizontal_strips;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * horizontal_strips(&mut img, 8u8);
+ * ```
+ */
+export function horizontal_strips(photon_image: PhotonImage, num_strips: number): void;
+
+/**
+ * Image manipulation effects in the HSL colour space.
+ *
+ * Effects include:
+ * * **saturate** - Saturation increase.
+ * * **desaturate** - Desaturate the image.
+ * * **shift_hue** - Hue rotation by a specified number of degrees.
+ * * **darken** - Decrease the brightness.
+ * * **lighten** - Increase the brightness.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired to be applied. Choose from: `saturate`, `desaturate`, `shift_hue`, `darken`, `lighten`
+ * * `amt` - A float value from 0 to 1 which represents the amount the effect should be increased by.
+ * # Example
+ * ```no_run
+ * // For example to increase the saturation by 10%:
+ * use photon_rs::colour_spaces::hsl;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * hsl(&mut img, "saturate", 0.1_f32);
+ * ```
+ */
+export function hsl(photon_image: PhotonImage, mode: string, amt: number): void;
+
+/**
+ * Image manipulation effects in the HSLuv colour space
+ *
+ * Effects include:
+ * * **saturate** - Saturation increase.
+ * * **desaturate** - Desaturate the image.
+ * * **shift_hue** - Hue rotation by a specified number of degrees.
+ * * **darken** - Decrease the brightness.
+ * * **lighten** - Increase the brightness.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired to be applied. Choose from: `saturate`, `desaturate`, `shift_hue`, `darken`, `lighten`
+ * * `amt` - A float value from 0 to 1 which represents the amount the effect should be increased by.
+ * # Example
+ * ```no_run
+ * // For example to increase the saturation by 10%:
+ * use photon_rs::colour_spaces::hsluv;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * hsluv(&mut img, "saturate", 0.1_f32);
+ * ```
+ */
+export function hsluv(photon_image: PhotonImage, mode: string, amt: number): void;
+
+/**
+ * Image manipulation in the HSV colour space.
+ *
+ * Effects include:
+ * * **saturate** - Saturation increase.
+ * * **desaturate** - Desaturate the image.
+ * * **shift_hue** - Hue rotation by a specified number of degrees.
+ * * **darken** - Decrease the brightness.
+ * * **lighten** - Increase the brightness.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired to be applied. Choose from: `saturate`, `desaturate`, `shift_hue`, `darken`, `lighten`
+ * * `amt` - A float value from 0 to 1 which represents the amount the effect should be increased by.
+ *
+ * # Example
+ * ```no_run
+ * // For example to increase the saturation by 10%:
+ * use photon_rs::colour_spaces::hsv;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * hsv(&mut img, "saturate", 0.1_f32);
+ * ```
+ */
+export function hsv(photon_image: PhotonImage, mode: string, amt: number): void;
+
+/**
+ * Shift hue by a specified number of degrees in the HSL colour space.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `mode` - A float value from 0 to 1 which is the amount to shift the hue by, or hue rotate by.
+ *
+ * # Example
+ * ```no_run
+ * // For example to hue rotate/shift the hue by 120 degrees in the HSL colour space:
+ * use photon_rs::colour_spaces::hue_rotate_hsl;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * hue_rotate_hsl(&mut img, 120_f32);
+ * ```
+ */
+export function hue_rotate_hsl(img: PhotonImage, degrees: number): void;
+
+/**
+ * Shift hue by a specified number of degrees in the HSLuv colour space.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `mode` - A float value from 0 to 1 which is the amount to shift the hue by, or hue rotate by.
+ *
+ * # Example
+ * ```no_run
+ * // For example to hue rotate/shift the hue by 120 degrees in the HSL colour space:
+ * use photon_rs::colour_spaces::hue_rotate_hsluv;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * hue_rotate_hsluv(&mut img, 120_f32);
+ * ```
+ */
+export function hue_rotate_hsluv(img: PhotonImage, degrees: number): void;
+
+/**
+ * Shift hue by a specified number of degrees in the HSV colour space.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `mode` - A float value from 0 to 1 which is the amount to shift the hue by, or hue rotate by.
+ *
+ * # Example
+ * ```no_run
+ * // For example to hue rotate/shift the hue by 120 degrees in the HSV colour space:
+ * use photon_rs::colour_spaces::hue_rotate_hsv;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * hue_rotate_hsv(&mut img, 120_f32);
+ * ```
+ */
+export function hue_rotate_hsv(img: PhotonImage, degrees: number): void;
+
+/**
+ * Shift hue by a specified number of degrees in the LCh colour space.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `mode` - A float value from 0 to 1 which is the amount to shift the hue by, or hue rotate by.
+ *
+ * # Example
+ * ```no_run
+ * // For example to hue rotate/shift the hue by 120 degrees in the HSL colour space:
+ * use photon_rs::colour_spaces::hue_rotate_lch;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * hue_rotate_lch(&mut img, 120_f32);
+ * ```
+ */
+export function hue_rotate_lch(img: PhotonImage, degrees: number): void;
+
+/**
+ * Apply an identity kernel convolution to an image.
+ *
+ * # Arguments
+ * * `img` -A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply an identity kernel convolution:
+ * use photon_rs::conv::identity;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * identity(&mut img);
+ * ```
+ */
+export function identity(photon_image: PhotonImage): void;
+
+/**
+ * Increase the brightness of an image by a constant.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `brightness` - A u8 to add to the brightness.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::effects::inc_brightness;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * inc_brightness(&mut img, 10_u8);
+ * ```
+ */
+export function inc_brightness(photon_image: PhotonImage, brightness: number): void;
+
+export function init(): void;
+
+export function initThreadPool(num_threads: number): Promise<any>;
+
+/**
+ * Invert RGB value of an image.
+ *
+ * # Arguments
+ * * `photon_image` - A DynamicImage that contains a view into the image.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::channels::invert;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * invert(&mut img);
+ * ```
+ */
+export function invert(photon_image: PhotonImage): void;
+
+/**
+ * 检查默认字体是否已初始化
+ */
+export function is_default_font_initialized(): boolean;
+
+/**
+ * Apply a standard laplace convolution.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply a laplace effect:
+ * use photon_rs::conv::laplace;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * laplace(&mut img);
+ * ```
+ */
+export function laplace(photon_image: PhotonImage): void;
+
+/**
+ * Image manipulation effects in the LCh colour space
+ *
+ * Effects include:
+ * * **saturate** - Saturation increase.
+ * * **desaturate** - Desaturate the image.
+ * * **shift_hue** - Hue rotation by a specified number of degrees.
+ * * **darken** - Decrease the brightness.
+ * * **lighten** - Increase the brightness.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired to be applied. Choose from: `saturate`, `desaturate`, `shift_hue`, `darken`, `lighten`
+ * * `amt` - A float value from 0 to 1 which represents the amount the effect should be increased by.
+ * # Example
+ * ```no_run
+ * // For example to increase the saturation by 10%:
+ * use photon_rs::colour_spaces::lch;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * lch(&mut img, "saturate", 0.1_f32);
+ * ```
+ */
+export function lch(photon_image: PhotonImage, mode: string, amt: number): void;
+
+/**
+ * Lighten an image by a specified amount in the HSL colour space.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to lighten the image by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Lightening by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to lighten an image by 10% in the HSL colour space:
+ * use photon_rs::colour_spaces::lighten_hsl;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * lighten_hsl(&mut img, 0.1_f32);
+ * ```
+ */
+export function lighten_hsl(img: PhotonImage, level: number): void;
+
+/**
+ * Lighten an image by a specified amount in the HSLuv colour space.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to lighten the image by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Lightening by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to lighten an image by 10% in the HSLuv colour space:
+ * use photon_rs::colour_spaces::lighten_hsluv;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * lighten_hsluv(&mut img, 0.1_f32);
+ * ```
+ */
+export function lighten_hsluv(img: PhotonImage, level: number): void;
+
+/**
+ * Lighten an image by a specified amount in the HSV colour space.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to lighten the image by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Lightening by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to lighten an image by 10% in the HSV colour space:
+ * use photon_rs::colour_spaces::lighten_hsv;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * lighten_hsv(&mut img, 0.1_f32);
+ * ```
+ */
+export function lighten_hsv(img: PhotonImage, level: number): void;
+
+/**
+ * Lighten an image by a specified amount in the LCh colour space.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to lighten the image by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Lightening by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to lighten an image by 10% in the LCh colour space:
+ * use photon_rs::colour_spaces::lighten_lch;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * lighten_lch(&mut img, 0.1_f32);
+ * ```
+ */
+export function lighten_lch(img: PhotonImage, level: number): void;
+
+/**
+ * Solarization on the Red and Green channels.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::lix;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * lix(&mut img);
+ * ```
+ */
+export function lix(photon_image: PhotonImage): void;
+
+/**
+ * Apply a lofi effect to an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::lofi;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * lofi(&mut img);
+ * ```
+ */
+export function lofi(img: PhotonImage): void;
+
+/**
+ * Mix image with a single color, supporting passing `opacity`.
+ * The algorithm comes from Jimp. See `function mix` and `function colorFn` at following link:
+ * https://github.com/oliver-moran/jimp/blob/29679faa597228ff2f20d34c5758e4d2257065a3/packages/plugin-color/src/index.js
+ * Specifically, result_value = (mix_color_value - origin_value) * opacity + origin_value =
+ * mix_color_value * opacity + (1 - opacity) * origin_value for each
+ * of RGB channel.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage that contains a view into the image.
+ * * `mix_color` - the color to be mixed in, as an RGB value.
+ * * `opacity` - the opacity of color when mixed to image. Float value from 0 to 1.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to mix an image with rgb (50, 255, 254) and opacity 0.4:
+ * use photon_rs::Rgb;
+ * use photon_rs::colour_spaces::mix_with_colour;
+ * use photon_rs::native::open_image;
+ *
+ * let mix_colour = Rgb::new(50_u8, 255_u8, 254_u8);
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * mix_with_colour(&mut img, mix_colour, 0.4_f32);
+ * ```
+ */
+export function mix_with_colour(photon_image: PhotonImage, mix_colour: Rgb, opacity: number): void;
+
+/**
+ * Apply a monochrome effect of a certain colour.
+ *
+ * It does so by averaging the R, G, and B values of a pixel, and then adding a
+ * separate value to that averaged value for each channel to produce a tint.
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `r_offset` - The value to add to the Red channel per pixel.
+ * * `g_offset` - The value to add to the Green channel per pixel.
+ * * `b_offset` - The value to add to the Blue channel per pixel.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply a monochrome effect to an image:
+ * use photon_rs::monochrome::monochrome;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * monochrome(&mut img, 40_u32, 50_u32, 100_u32);
+ * ```
+ */
+export function monochrome(img: PhotonImage, r_offset: number, g_offset: number, b_offset: number): void;
+
+/**
+ * Monochrome tint effect with increased contrast
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `rgb_color` - RGB color
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::monochrome_tint;
+ * use photon_rs::native::open_image;
+ * use photon_rs::Rgb;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * let rgb_color = Rgb::new(12, 12, 10);
+ * monochrome_tint(&mut img, rgb_color);
+ * ```
+ */
+export function monochrome_tint(img: PhotonImage, rgb_color: Rgb): void;
+
+/**
+ * Adds multiple offsets to the image by a certain number of pixels (on two channels).
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `offset` - The offset is added to the pixels in the image.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to add a 30-pixel offset to both the red and blue channels:
+ * use photon_rs::effects::multiple_offsets;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * multiple_offsets(&mut img, 30_u32, 0_usize, 2_usize);
+ * ```
+ */
+export function multiple_offsets(photon_image: PhotonImage, offset: number, channel_index: number, channel_index2: number): void;
+
+/**
+ * Solarization on the Blue channel.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::neue;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * neue(&mut img);
+ * ```
+ */
+export function neue(photon_image: PhotonImage): void;
+
+/**
+ * Noise reduction.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to noise reduct an image:
+ * use photon_rs::conv::noise_reduction;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * noise_reduction(&mut img);
+ * ```
+ * Adds a constant to a select R, G, or B channel's value.
+ */
+export function noise_reduction(photon_image: PhotonImage): void;
+
+/**
+ * Noise reduction with adjustable strength.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `strength` - Noise reduction strength. Range: 0.0 to 10.0.
+ *   - 0.0: No noise reduction
+ *   - 1.0: Standard noise reduction (equivalent to noise_reduction())
+ *   - >1.0: Stronger noise reduction (more smoothing)
+ *   - <1.0: Subtle noise reduction (preserves more detail)
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply noise reduction with strength 2.0:
+ * use photon_rs::conv::noise_reduction_with_strength;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * noise_reduction_with_strength(&mut img, 2.0);
+ * ```
+ */
+export function noise_reduction_with_strength(photon_image: PhotonImage, strength: number): void;
+
+/**
+ * Normalizes an image by remapping its range of pixels values. Only RGB
+ * channels are processed and each channel is stretched to \[0, 255\] range
+ * independently. This process is also known as contrast stretching.
+ * # Arguments
+ * * `photon_image` - A PhotonImage that contains a view into the image.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to turn an image of type `PhotonImage` into a normalized image:
+ * use photon_rs::effects::normalize;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * normalize(&mut img);
+ * ```
+ */
+export function normalize(photon_image: PhotonImage): void;
+
+/**
+ * Apply a greyscale effect with increased contrast.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::obsidian;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * obsidian(&mut img);
+ * ```
+ */
+export function obsidian(img: PhotonImage): void;
+
+/**
+ * Adds an offset to the image by a certain number of pixels.
+ *
+ * This creates an RGB shift effect.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `channel_index`: The index of the channel to increment. 0 for red, 1 for green and 2 for blue.
+ * * `offset` - The offset is added to the pixels in the image.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to offset pixels by 30 pixels on the red channel:
+ * use photon_rs::effects::offset;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * offset(&mut img, 0_usize, 30_u32);
+ * ```
+ */
+export function offset(photon_image: PhotonImage, channel_index: number, offset: number): void;
+
+/**
+ * Adds an offset to the blue channel by a certain number of pixels.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `offset_amt` - The offset you want to move the blue channel by.
+ * # Example
+ * // For example, to add an offset to the green channel by 40 pixels.
+ *
+ * ```no_run
+ * use photon_rs::effects::offset_blue;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * offset_blue(&mut img, 40_u32);
+ * ```
+ */
+export function offset_blue(img: PhotonImage, offset_amt: number): void;
+
+/**
+ * Adds an offset to the green channel by a certain number of pixels.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `offset` - The offset you want to move the green channel by.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to add an offset to the green channel by 30 pixels.
+ * use photon_rs::effects::offset_green;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * offset_green(&mut img, 30_u32);
+ * ```
+ */
+export function offset_green(img: PhotonImage, offset_amt: number): void;
+
+/**
+ * Adds an offset to the red channel by a certain number of pixels.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `offset` - The offset you want to move the red channel by.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to add an offset to the red channel by 30 pixels.
+ * use photon_rs::effects::offset_red;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * offset_red(&mut img, 30_u32);
+ * ```
+ */
+export function offset_red(img: PhotonImage, offset_amt: number): void;
+
+/**
+ * Turn an image into an oil painting
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `radius` - Radius of each paint particle
+ * * `intesnity` - How artsy an Image should be
+ * # Example
+ *
+ * ```no_run
+ * // For example, to oil an image of type `PhotonImage`:
+ * use photon_rs::effects::oil;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * oil(&mut img, 4i32, 55.0);
+ * ```
+ */
+export function oil(photon_image: PhotonImage, radius: number, intensity: number): void;
+
+/**
+ * Convert a HTML5 Canvas Element to a PhotonImage.
+ *
+ * This converts the ImageData found in the canvas context to a PhotonImage,
+ * which can then have effects or filters applied to it.
+ */
+export function open_image(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): PhotonImage;
+
+/**
+ * Apply padding on the left side of the PhotonImage
+ * A padded PhotonImage is returned.
+ * # Arguments
+ * * `img` - A PhotonImage. See the PhotonImage struct for details.
+ * * `padding` - The amount of padding to be applied to the PhotonImage.
+ * * `padding_rgba` - Tuple containing the RGBA code for padding color.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply a padding of 10 pixels on the bottom of a PhotonImage:
+ * use photon_rs::transform::padding_bottom;
+ * use photon_rs::native::open_image;
+ * use photon_rs::Rgba;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * let rgba = Rgba::new(200_u8, 100_u8, 150_u8, 255_u8);
+ * padding_bottom(&img, 10_u32, rgba);
+ * ```
+ */
+export function padding_bottom(img: PhotonImage, padding: number, padding_rgba: Rgba): PhotonImage;
+
+/**
+ * Apply padding on the left side of the PhotonImage
+ * A padded PhotonImage is returned.
+ * # Arguments
+ * * `img` - A PhotonImage. See the PhotonImage struct for details.
+ * * `padding` - The amount of padding to be applied to the PhotonImage.
+ * * `padding_rgba` - Tuple containing the RGBA code for padding color.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply a padding of 10 pixels on the left side of a PhotonImage:
+ * use photon_rs::transform::padding_left;
+ * use photon_rs::native::open_image;
+ * use photon_rs::Rgba;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * let rgba = Rgba::new(200_u8, 100_u8, 150_u8, 255_u8);
+ * padding_left(&img, 10_u32, rgba);
+ * ```
+ */
+export function padding_left(img: PhotonImage, padding: number, padding_rgba: Rgba): PhotonImage;
+
+/**
+ * Apply padding on the left side of the PhotonImage
+ * A padded PhotonImage is returned.
+ * # Arguments
+ * * `img` - A PhotonImage. See the PhotonImage struct for details.
+ * * `padding` - The amount of padding to be applied to the PhotonImage.
+ * * `padding_rgba` - Tuple containing the RGBA code for padding color.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply a padding of 10 pixels on the right side of a PhotonImage:
+ * use photon_rs::transform::padding_right;
+ * use photon_rs::native::open_image;
+ * use photon_rs::Rgba;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * let rgba = Rgba::new(200_u8, 100_u8, 150_u8, 255_u8);
+ * padding_right(&img, 10_u32, rgba);
+ * ```
+ */
+export function padding_right(img: PhotonImage, padding: number, padding_rgba: Rgba): PhotonImage;
+
+/**
+ * Apply padding on the left side of the PhotonImage
+ * A padded PhotonImage is returned.
+ * # Arguments
+ * * `img` - A PhotonImage. See the PhotonImage struct for details.
+ * * `padding` - The amount of padding to be applied to the PhotonImage.
+ * * `padding_rgba` - Tuple containing the RGBA code for padding color.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply a padding of 10 pixels on the top of a PhotonImage:
+ * use photon_rs::transform::padding_top;
+ * use photon_rs::native::open_image;
+ * use photon_rs::Rgba;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * let rgba = Rgba::new(200_u8, 100_u8, 150_u8, 255_u8);
+ * padding_top(&img, 10_u32, rgba);
+ * ```
+ */
+export function padding_top(img: PhotonImage, padding: number, padding_rgba: Rgba): PhotonImage;
+
+/**
+ * Apply uniform padding around the PhotonImage
+ * A padded PhotonImage is returned.
+ * # Arguments
+ * * `img` - A PhotonImage. See the PhotonImage struct for details.
+ * * `padding` - The amount of padding to be applied to the PhotonImage.
+ * * `padding_rgba` - Tuple containing the RGBA code for padding color.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply a padding of 10 pixels around a PhotonImage:
+ * use photon_rs::transform::padding_uniform;
+ * use photon_rs::native::open_image;
+ * use photon_rs::Rgba;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * let rgba = Rgba::new(200_u8, 100_u8, 150_u8, 255_u8);
+ * padding_uniform(&img, 10_u32, rgba);
+ * ```
+ */
+export function padding_uniform(img: PhotonImage, padding: number, padding_rgba: Rgba): PhotonImage;
+
+/**
+ * Apply a rose tint to an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::pastel_pink;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * pastel_pink(&mut img);
+ * ```
+ */
+export function pastel_pink(img: PhotonImage): void;
+
+/**
+ * Add pink-tinted noise to an image.
+ *
+ * **[WASM SUPPORT IS AVAILABLE]**: Randomized thread pools cannot be created with WASM, but
+ * a workaround using js_sys::Math::random works now.
+ * # Arguments
+ * * `name` - A PhotonImage that contains a view into the image.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to add pink-tinted noise to an image:
+ * use photon_rs::native::open_image;
+ * use photon_rs::noise::pink_noise;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * pink_noise(&mut img);
+ * ```
+ */
+export function pink_noise(photon_image: PhotonImage): void;
+
+/**
+ * Pixelize an image.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage that contains a view into the image.
+ * * `pixel_size` - Targeted pixel size of generated image.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to turn an image of type `PhotonImage` into a pixelized image with 50 pixels blocks:
+ * use photon_rs::effects::pixelize;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * pixelize(&mut img, 50);
+ * ```
+ */
+export function pixelize(photon_image: PhotonImage, pixel_size: number): void;
+
+/**
+ * Apply a horizontal Prewitt convolution to an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply a horizontal Prewitt convolution effect:
+ * use photon_rs::conv::prewitt_horizontal;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * prewitt_horizontal(&mut img);
+ * ```
+ */
+export function prewitt_horizontal(photon_image: PhotonImage): void;
+
+/**
+ * Reduces an image to the primary colours.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to add a primary colour effect to an image of type `DynamicImage`:
+ * use photon_rs::effects::primary;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * primary(&mut img);
+ * ```
+ */
+export function primary(img: PhotonImage): void;
+
+/**
+ * Place a PhotonImage onto a 2D canvas.
+ */
+export function putImageData(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, new_image: PhotonImage): void;
+
+/**
+ * Convert an image to grayscale by setting a pixel's 3 RGB values to the Red channel's value.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::monochrome::r_grayscale;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * r_grayscale(&mut img);
+ * ```
+ */
+export function r_grayscale(photon_image: PhotonImage): void;
+
+/**
+ * 自动边缘优化 - 对遮罩进行平滑处理（使用可分离高斯模糊优化）
+ */
+export function refine_mask_edges(mask: Uint8Array, width: number, height: number, smoothing_radius: number): void;
+
+/**
+ * Remove the Blue channel's influence in an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `min_filter` - Only remove the channel if the current pixel's channel value is less than this minimum filter.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to remove the blue channel for blue channel pixel values less than 50:
+ * use photon_rs::channels::remove_blue_channel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * remove_blue_channel(&mut img, 50_u8);
+ * ```
+ */
+export function remove_blue_channel(img: PhotonImage, min_filter: number): void;
+
+/**
+ * Set a certain channel to zero, thus removing the channel's influence in the pixels' final rendered colour.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `channel` - The channel to be removed; must be a usize from 0 to 2, with 0 representing Red, 1 representing Green, and 2 representing Blue.
+ * * `min_filter` - Minimum filter. Value between 0 and 255. Only remove the channel if the current pixel's channel value is less than this minimum filter. To completely
+ * remove the channel, set this value to 255, to leave the channel as is, set to 0, and to set a channel to zero for a pixel whose red value is greater than 50,
+ * then channel would be 0 and min_filter would be 50.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to remove the Red channel with a min_filter of 100:
+ * use photon_rs::channels::remove_channel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * remove_channel(&mut img, 0_usize, 100_u8);
+ * ```
+ */
+export function remove_channel(img: PhotonImage, channel: number, min_filter: number): void;
+
+/**
+ * Remove the Green channel's influence in an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `min_filter` - Only remove the channel if the current pixel's channel value is less than this minimum filter.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to remove the green channel for green channel pixel values less than 50:
+ * use photon_rs::channels::remove_green_channel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * remove_green_channel(&mut img, 50_u8);
+ * ```
+ */
+export function remove_green_channel(img: PhotonImage, min_filter: number): void;
+
+/**
+ * Remove the Red channel's influence in an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `min_filter` - Only remove the channel if the current pixel's channel value is less than this minimum filter.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to remove the red channel for red channel pixel values less than 50:
+ * use photon_rs::channels::remove_red_channel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * remove_red_channel(&mut img, 50_u8);
+ * ```
+ */
+export function remove_red_channel(img: PhotonImage, min_filter: number): void;
+
+/**
+ * Resample the PhotonImage.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage. See the PhotonImage struct for details.
+ * * `dst_width` - Target width.
+ * * `dst_height` - Target height.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to resample a PhotonImage to 1920x1080 size:
+ * use photon_rs::native::open_image;
+ * use photon_rs::transform::resample;
+ *
+ * let img = open_image("img.jpg").expect("File should open");
+ * let rotated_img = resample(&img, 1920, 1080);
+ * ```
+ */
+export function resample(img: PhotonImage, dst_width: number, dst_height: number): PhotonImage;
+
+/**
+ * Resize an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `width` - New width.
+ * * `height` - New height.
+ * * `sampling_filter` - Nearest = 1, Triangle = 2, CatmullRom = 3, Gaussian = 4, Lanczos3 = 5
+ */
+export function resize(photon_img: PhotonImage, width: number, height: number, sampling_filter: SamplingFilter): PhotonImage;
+
+/**
+ * Resize an image on the web.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `width` - New width.
+ * * `height` - New height.
+ * * `sampling_filter` - Nearest = 1, Triangle = 2, CatmullRom = 3, Gaussian = 4, Lanczos3 = 5
+ */
+export function resize_img_browser(photon_img: PhotonImage, width: number, height: number, sampling_filter: SamplingFilter): HTMLCanvasElement;
+
+/**
+ * Rotate the PhotonImage on an arbitrary angle
+ * A rotated PhotonImage is returned.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage. See the PhotonImage struct for details.
+ * * `angle` - Rotation angle in degrees.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to rotate a PhotonImage by 30 degrees:
+ * use photon_rs::native::open_image;
+ * use photon_rs::transform::rotate;
+ *
+ * let img = open_image("img.jpg").expect("File should open");
+ * let rotated_img = rotate(&img, 30.0);
+ * ```
+ */
+export function rotate(photon_img: PhotonImage, angle: number): PhotonImage;
+
+/**
+ * ! [temp] Check if WASM is supported.
+ */
+export function run(): void;
+
+/**
+ * Solarization on the Red and Blue channels.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::filters::ryo;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * ryo(&mut img);
+ * ```
+ */
+export function ryo(photon_image: PhotonImage): void;
+
+/**
+ * Increase the image's saturation by converting each pixel's colour to the HSL colour space
+ * and increasing the colour's saturation.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to increase the saturation by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Increasing saturation by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to increase saturation by 10% in the HSL colour space:
+ * use photon_rs::colour_spaces::saturate_hsl;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * saturate_hsl(&mut img, 0.1_f32);
+ * ```
+ */
+export function saturate_hsl(img: PhotonImage, level: number): void;
+
+/**
+ * Increase the image's saturation in the HSLuv colour space.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to increase the saturation by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Increasing saturation by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to increase saturation by 40% in the HSLuv colour space:
+ * use photon_rs::colour_spaces::saturate_hsluv;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * saturate_hsluv(&mut img, 0.4_f32);
+ * ```
+ */
+export function saturate_hsluv(img: PhotonImage, level: number): void;
+
+/**
+ * Increase the image's saturation in the HSV colour space.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level by which to increase the saturation by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Increasing saturation by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to increase saturation by 30% in the HSV colour space:
+ * use photon_rs::colour_spaces::saturate_hsv;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * saturate_hsv(&mut img, 0.3_f32);
+ * ```
+ */
+export function saturate_hsv(img: PhotonImage, level: number): void;
+
+/**
+ * Increase the image's saturation in the LCh colour space.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `level` - Float value from 0 to 1 representing the level to which to increase the saturation by.
+ * The `level` must be from 0 to 1 in floating-point, `f32` format.
+ * Increasing saturation by 80% would be represented by a `level` of 0.8
+ *
+ * # Example
+ * ```no_run
+ * // For example to increase saturation by 40% in the Lch colour space:
+ * use photon_rs::colour_spaces::saturate_lch;
+ * use photon_rs::native::open_image;
+ *
+ * // Open the image. A PhotonImage is returned.
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * saturate_lch(&mut img, 0.4_f32);
+ * ```
+ */
+export function saturate_lch(img: PhotonImage, level: number): void;
+
+/**
+ * Resize image using seam carver.
+ * Resize only if new dimensions are smaller, than original image.
+ * # NOTE: This is still experimental feature, and pretty slow.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `width` - New width.
+ * * `height` - New height.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, resize image using seam carver:
+ * use photon_rs::native::open_image;
+ * use photon_rs::transform::seam_carve;
+ * use photon_rs::PhotonImage;
+ *
+ * let img = open_image("img.jpg").expect("File should open");
+ * let result: PhotonImage = seam_carve(&img, 100_u32, 100_u32);
+ * ```
+ */
+export function seam_carve(img: PhotonImage, width: number, height: number): PhotonImage;
+
+/**
+ * Selectively change pixel colours which are similar to the reference colour provided.
+ *
+ * Similarity between two colours is calculated via the CIE76 formula.
+ * Only changes the color of a pixel if its similarity to the reference colour is within the range in the algorithm.
+ * For example, with this function, a user can change the color of all blue pixels by mixing them with red by 10%.
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `ref_color` - The `RGB` value of the reference color (to be compared to)
+ * * `new_color` - The `RGB` value of the new color (to be mixed with the matched pixels)
+ * * `fraction` - The amount of mixing the new colour with the matched pixels
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to only change the color of pixels that are similar to the RGB value RGB{200, 120, 30} by mixing RGB{30, 120, 200} with 25%:
+ * use photon_rs::Rgb;
+ * use photon_rs::channels::selective_color_convert;
+ * use photon_rs::native::open_image;
+ *
+ * let ref_color = Rgb::new(200, 120, 30);
+ * let new_color = Rgb::new(30, 120, 200);
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * selective_color_convert(&mut img, ref_color, new_color, 0.25);
+ * ```
+ */
+export function selective_color_convert(photon_image: PhotonImage, ref_color: Rgb, new_color: Rgb, fraction: number): void;
+
+/**
+ * Selectively desaturate pixel colours which are similar to the reference colour provided.
+ *
+ * Similarity between two colours is calculated via the CIE76 formula.
+ * Only desaturates the hue of a pixel if its similarity to the reference colour is within the range in the algorithm.
+ * For example, if a user wishes all pixels that are blue to be desaturated by 0.1, they can selectively specify  only the blue pixels to be changed.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `ref_color` - The `RGB` value of the reference color (to be compared to)
+ * * `amt` - The amount of desaturate the colour by.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to only desaturate the pixels that are similar to the RGB value RGB{20, 40, 60}:
+ * use photon_rs::Rgb;
+ * use photon_rs::channels::selective_desaturate;
+ * use photon_rs::native::open_image;
+ *
+ * let ref_color = Rgb::new(20_u8, 40_u8, 60_u8);
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * selective_desaturate(&mut img, ref_color, 0.1_f32);
+ * ```
+ */
+export function selective_desaturate(img: PhotonImage, ref_color: Rgb, amt: number): void;
+
+/**
+ * Selectively changes a pixel to greyscale if it is *not* visually similar or close to the colour specified.
+ * Only changes the colour of a pixel if its RGB values are within a specified range.
+ *
+ * (Similarity between two colours is calculated via the CIE76 formula.)
+ * For example, if a user wishes all pixels that are *NOT* blue to be displayed in greyscale, they can selectively specify only the blue pixels to be
+ * kept in the photo.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `ref_color` - The `RGB` value of the reference color (to be compared to)
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to greyscale all pixels that are *not* visually similar to the RGB colour RGB{20, 40, 60}:
+ * use photon_rs::Rgb;
+ * use photon_rs::channels::selective_greyscale;
+ * use photon_rs::native::open_image;
+ *
+ * let ref_color = Rgb::new(20_u8, 40_u8, 60_u8);
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * selective_greyscale(img, ref_color);
+ * ```
+ */
+export function selective_greyscale(photon_image: PhotonImage, ref_color: Rgb): void;
+
+/**
+ * Selective hue rotation.
+ *
+ * Only rotate the hue of a pixel if its RGB values are within a specified range.
+ * This function only rotates a pixel's hue to another  if it is visually similar to the colour specified.
+ * For example, if a user wishes all pixels that are blue to be changed to red, they can selectively specify  only the blue pixels to be changed.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `ref_color` - The `RGB` value of the reference color (to be compared to)
+ * * `degrees` - The amount of degrees to hue rotate by.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to only rotate the pixels that are of RGB value RGB{20, 40, 60}:
+ * use photon_rs::Rgb;
+ * use photon_rs::channels::selective_hue_rotate;
+ * use photon_rs::native::open_image;
+ *
+ * let ref_color = Rgb::new(20_u8, 40_u8, 60_u8);
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * selective_hue_rotate(&mut img, ref_color, 180_f32);
+ * ```
+ */
+export function selective_hue_rotate(photon_image: PhotonImage, ref_color: Rgb, degrees: number): void;
+
+/**
+ * Selectively lighten an image.
+ *
+ * Only lighten the hue of a pixel if its colour matches or is similar to the RGB colour specified.
+ * For example, if a user wishes all pixels that are blue to be lightened, they can selectively specify  only the blue pixels to be changed.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `ref_color` - The `RGB` value of the reference color (to be compared to)
+ * * `amt` - The level from 0 to 1 to lighten the hue by. Increasing by 10% would have an `amt` of 0.1
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to only lighten the pixels that are of or similar to RGB value RGB{20, 40, 60}:
+ * use photon_rs::Rgb;
+ * use photon_rs::channels::selective_lighten;
+ * use photon_rs::native::open_image;
+ *
+ * let ref_color = Rgb::new(20_u8, 40_u8, 60_u8);
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * selective_lighten(&mut img, ref_color, 0.2_f32);
+ * ```
+ */
+export function selective_lighten(img: PhotonImage, ref_color: Rgb, amt: number): void;
+
+/**
+ * Selectively saturate pixel colours which are similar to the reference colour provided.
+ *
+ * Similarity between two colours is calculated via the CIE76 formula.
+ * Only saturates the hue of a pixel if its similarity to the reference colour is within the range in the algorithm.
+ * For example, if a user wishes all pixels that are blue to have an increase in saturation by 10%, they can selectively specify only the blue pixels to be changed.
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `ref_color` - The `RGB` value of the reference color (to be compared to)
+ * * `amt` - The amount of saturate the colour by.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to only increase the saturation of pixels that are similar to the RGB value RGB{20, 40, 60}:
+ * use photon_rs::Rgb;
+ * use photon_rs::channels::selective_saturate;
+ * use photon_rs::native::open_image;
+ *
+ * let ref_color = Rgb::new(20_u8, 40_u8, 60_u8);
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * selective_saturate(&mut img, ref_color, 0.1_f32);
+ * ```
+ */
+export function selective_saturate(img: PhotonImage, ref_color: Rgb, amt: number): void;
+
+/**
+ * Convert an image to sepia.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to sepia an image of type `PhotonImage`:
+ * use photon_rs::monochrome::sepia;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * sepia(&mut img);
+ * ```
+ */
+export function sepia(img: PhotonImage): void;
+
+/**
+ * Sharpen an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to sharpen an image:
+ * use photon_rs::conv::sharpen;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * sharpen(&mut img);
+ * ```
+ * Adds a constant to a select R, G, or B channel's value.
+ */
+export function sharpen(photon_image: PhotonImage): void;
+
+/**
+ * Sharpen an image with adjustable strength.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `strength` - Sharpening strength. Range: 0.0 to 10.0.
+ *   - 0.0: No sharpening effect
+ *   - 1.0: Standard sharpening (equivalent to sharpen())
+ *   - >1.0: Stronger sharpening
+ *   - <1.0: Subtle sharpening
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to sharpen an image with strength 2.0:
+ * use photon_rs::conv::sharpen_with_strength;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * sharpen_with_strength(&mut img, 2.0);
+ * ```
+ */
+export function sharpen_with_strength(photon_image: PhotonImage, strength: number): void;
+
+/**
+ * Shear the image along the X axis.
+ * A sheared PhotonImage is returned.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage. See the PhotonImage struct for details.
+ * * `shear` - Amount to shear.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to shear an image by 0.5:
+ * use photon_rs::native::open_image;
+ * use photon_rs::transform::shearx;
+ *
+ * let img = open_image("img.jpg").expect("File should open");
+ * let sheared_img = shearx(&img, 0.5);
+ * ```
+ */
+export function shearx(photon_img: PhotonImage, shear: number): PhotonImage;
+
+/**
+ * Shear the image along the Y axis.
+ * A sheared PhotonImage is returned.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage. See the PhotonImage struct for details.
+ * * `shear` - Amount to shear.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to shear an image by 0.5:
+ * use photon_rs::native::open_image;
+ * use photon_rs::transform::sheary;
+ *
+ * let img = open_image("img.jpg").expect("File should open");
+ * let sheared_img = sheary(&img, 0.5);
+ * ```
+ */
+export function sheary(photon_img: PhotonImage, shear: number): PhotonImage;
+
+/**
+ * Convert an image to grayscale by setting a pixel's 3 RGB values to a chosen channel's value.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `channel` - A usize representing the channel from 0 to 2. O represents the Red channel, 1 the Green channel, and 2 the Blue channel.
+ *
+ * # Example
+ * To grayscale using only values from the Red channel:
+ * ```no_run
+ * use photon_rs::monochrome::single_channel_grayscale;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * single_channel_grayscale(&mut img, 0_usize);
+ * ```
+ */
+export function single_channel_grayscale(photon_image: PhotonImage, channel: number): void;
+
+/**
+ * Apply a global Sobel filter to an image
+ *
+ * Each pixel is calculated as the magnitude of the horizontal and vertical components of the Sobel filter,
+ * ie if X is the horizontal sobel and Y is the vertical, for each pixel, we calculate sqrt(X^2 + Y^2)
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply a global Sobel filter:
+ * use photon_rs::conv::sobel_global;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * sobel_global(&mut img);
+ * ```
+ */
+export function sobel_global(photon_image: PhotonImage): void;
+
+/**
+ * Apply a horizontal Sobel filter to an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply a horizontal Sobel filter:
+ * use photon_rs::conv::sobel_horizontal;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * sobel_horizontal(&mut img);
+ * ```
+ */
+export function sobel_horizontal(photon_image: PhotonImage): void;
+
+/**
+ * Apply a vertical Sobel filter to an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to apply a vertical Sobel filter:
+ * use photon_rs::conv::sobel_vertical;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * sobel_vertical(&mut img);
+ * ```
+ */
+export function sobel_vertical(photon_image: PhotonImage): void;
+
+/**
+ * Applies a solarizing effect to an image.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to colorize an image of type `PhotonImage`:
+ * use photon_rs::effects::solarize;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * solarize(&mut img);
+ * ```
+ */
+export function solarize(photon_image: PhotonImage): void;
+
+/**
+ * Applies a solarizing effect to an image and returns the resulting PhotonImage.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to solarize "retimg" an image of type `PhotonImage`:
+ * use photon_rs::effects::solarize_retimg;
+ * use photon_rs::native::open_image;
+ * use photon_rs::PhotonImage;
+ *
+ * let img = open_image("img.jpg").expect("File should open");
+ * let result: PhotonImage = solarize_retimg(&img);
+ * ```
+ */
+export function solarize_retimg(photon_image: PhotonImage): PhotonImage;
+
+/**
+ * Swap two channels.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `channel1` - An index from 0 to 2, representing the Red, Green or Blue channels respectively. Red would be represented by 0, Green by 1, and Blue by 2.
+ * * `channel2` - An index from 0 to 2, representing the Red, Green or Blue channels respectively. Same as above.
+ *
+ * # Example
+ *
+ * ```no_run
+ * // For example, to swap the values of the Red channel with the values of the Blue channel:
+ * use photon_rs::channels::swap_channels;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * swap_channels(&mut img, 0_usize, 2_usize);
+ * ```
+ */
+export function swap_channels(img: PhotonImage, channel1: number, channel2: number): void;
+
+/**
+ * Threshold an image using a standard thresholding algorithm.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `threshold` - The amount the image should be thresholded by from 0 to 255.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to threshold an image of type `PhotonImage`:
+ * use photon_rs::monochrome::threshold;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * threshold(&mut img, 30_u32);
+ * ```
+ */
+export function threshold(img: PhotonImage, threshold: number): void;
+
+/**
+ * Tint an image by adding an offset to averaged RGB channel values.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `r_offset` - The amount the R channel should be incremented by.
+ * * `g_offset` - The amount the G channel should be incremented by.
+ * * `b_offset` - The amount the B channel should be incremented by.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to tint an image of type `PhotonImage`:
+ * use photon_rs::effects::tint;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * tint(&mut img, 10_u32, 20_u32, 15_u32);
+ * ```
+ */
+export function tint(photon_image: PhotonImage, r_offset: number, g_offset: number, b_offset: number): void;
+
+/**
+ * Convert a PhotonImage to JS-compatible ImageData.
+ */
+export function to_image_data(photon_image: PhotonImage): ImageData;
+
+/**
+ * Convert ImageData to a raw pixel vec of u8s.
+ */
+export function to_raw_pixels(imgdata: ImageData): Uint8Array;
+
+/**
+ * Vertical strips. Divide an image into a series of equal-width strips, for an artistic effect.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage that contains a view into the image.
+ * * `num_strips` - The numbder of strips
+ * # Example
+ *
+ * ```no_run
+ * // For example, to draw vertical strips on a `PhotonImage`:
+ * use photon_rs::effects::vertical_strips;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * vertical_strips(&mut img, 8u8);
+ * ```
+ */
+export function vertical_strips(photon_image: PhotonImage, num_strips: number): void;
+
+/**
+ * 在 WASM 环境中清空所有已注册的字体
+ */
+export function wasm_clear_fonts(): void;
+
+/**
+ * 在 WASM 环境中获取已注册字体列表
+ */
+export function wasm_get_registered_fonts(): string[];
+
+/**
+ * 在 WASM 环境中检查字体是否已注册
+ */
+export function wasm_is_font_registered(font_name: string): boolean;
+
+/**
+ * 在 WASM 环境中注册字体
+ *
+ * # 参数
+ * * `font_name` - 字体名称，用于后续引用
+ * * `font_data` - 字体文件的二进制数据（Uint8Array）
+ */
+export function wasm_register_font(font_name: string, font_data: Uint8Array): void;
+
+/**
+ * 在 WASM 环境中移除已注册的字体
+ */
+export function wasm_unregister_font(font_name: string): boolean;
+
+/**
+ * Add a watermark to an image.
+ *
+ * # Arguments
+ * * `img` - A DynamicImage that contains a view into the image.
+ * * `watermark` - The watermark to be placed onto the `img` image.
+ * * `x` - The x coordinate where the watermark's top corner should be positioned.
+ * * `y` - The y coordinate where the watermark's top corner should be positioned.
+ * # Example
+ *
+ * ```no_run
+ * // For example, to add a watermark to an image at x: 30, y: 40:
+ * use photon_rs::multiple::watermark;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * let water_mark = open_image("watermark.jpg").expect("File should open");
+ * watermark(&mut img, &water_mark, 30_i64, 40_i64);
+ * ```
+ */
+export function watermark(img: PhotonImage, watermark: PhotonImage, x: bigint, y: bigint): void;
+
+export class wbg_rayon_PoolBuilder {
+    private constructor();
+    free(): void;
+    [Symbol.dispose](): void;
+    build(): void;
+    mainJS(): string;
+    numThreads(): number;
+    receiver(): number;
+}
+
+export function wbg_rayon_start_worker(receiver: number): void;
+
+export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
+
+export interface InitOutput {
+    readonly __wbg_brushconfig_free: (a: number, b: number) => void;
+    readonly __wbg_brushstroke_free: (a: number, b: number) => void;
+    readonly __wbg_get_brushconfig_base_width: (a: number) => number;
+    readonly __wbg_get_brushconfig_blend_mode: (a: number) => number;
+    readonly __wbg_get_brushconfig_brush_type: (a: number) => number;
+    readonly __wbg_get_brushconfig_color_a: (a: number) => number;
+    readonly __wbg_get_brushconfig_color_b: (a: number) => number;
+    readonly __wbg_get_brushconfig_color_g: (a: number) => number;
+    readonly __wbg_get_brushconfig_color_r: (a: number) => number;
+    readonly __wbg_get_brushconfig_pressure_sensitivity: (a: number) => number;
+    readonly __wbg_get_brushconfig_smoothness: (a: number) => number;
+    readonly __wbg_get_strokepoint_pressure: (a: number) => number;
+    readonly __wbg_get_strokepoint_timestamp: (a: number) => bigint;
+    readonly __wbg_get_strokepoint_x: (a: number) => number;
+    readonly __wbg_get_strokepoint_y: (a: number) => number;
+    readonly __wbg_imageprocessor_free: (a: number, b: number) => void;
+    readonly __wbg_set_brushconfig_base_width: (a: number, b: number) => void;
+    readonly __wbg_set_brushconfig_blend_mode: (a: number, b: number) => void;
+    readonly __wbg_set_brushconfig_brush_type: (a: number, b: number) => void;
+    readonly __wbg_set_brushconfig_color_a: (a: number, b: number) => void;
+    readonly __wbg_set_brushconfig_color_b: (a: number, b: number) => void;
+    readonly __wbg_set_brushconfig_color_g: (a: number, b: number) => void;
+    readonly __wbg_set_brushconfig_color_r: (a: number, b: number) => void;
+    readonly __wbg_set_brushconfig_pressure_sensitivity: (a: number, b: number) => void;
+    readonly __wbg_set_brushconfig_smoothness: (a: number, b: number) => void;
+    readonly __wbg_set_strokepoint_pressure: (a: number, b: number) => void;
+    readonly __wbg_set_strokepoint_timestamp: (a: number, b: bigint) => void;
+    readonly __wbg_set_strokepoint_x: (a: number, b: number) => void;
+    readonly __wbg_set_strokepoint_y: (a: number, b: number) => void;
+    readonly __wbg_strokepoint_free: (a: number, b: number) => void;
+    readonly apply_mask_to_image: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+    readonly auto_crop_by_color: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => void;
+    readonly brushconfig_default_basic: () => number;
+    readonly brushconfig_new: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => number;
+    readonly brushstroke_add_point: (a: number, b: number) => void;
+    readonly brushstroke_clear_points: (a: number) => void;
+    readonly brushstroke_get_config: (a: number) => number;
+    readonly brushstroke_new: (a: number) => number;
+    readonly brushstroke_point_count: (a: number) => number;
+    readonly create_circular_mask: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+    readonly create_polygon_mask: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly imageprocessor_add_stroke_point: (a: number, b: number, c: number, d: number) => void;
+    readonly imageprocessor_adjust_lightness: (a: number, b: number) => void;
+    readonly imageprocessor_adjust_saturation: (a: number, b: number) => void;
+    readonly imageprocessor_alter_blue_channel: (a: number, b: number) => void;
+    readonly imageprocessor_alter_green_channel: (a: number, b: number) => void;
+    readonly imageprocessor_alter_red_channel: (a: number, b: number) => void;
+    readonly imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => void;
+    readonly imageprocessor_apply_b_grayscale: (a: number) => void;
+    readonly imageprocessor_apply_box_blur: (a: number) => void;
+    readonly imageprocessor_apply_brightness: (a: number, b: number) => void;
+    readonly imageprocessor_apply_circular_mask: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly imageprocessor_apply_color_noise_with_strength: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly imageprocessor_apply_colorize: (a: number) => void;
+    readonly imageprocessor_apply_contrast: (a: number, b: number) => void;
+    readonly imageprocessor_apply_decompose_max: (a: number) => void;
+    readonly imageprocessor_apply_decompose_min: (a: number) => void;
+    readonly imageprocessor_apply_desaturate: (a: number) => void;
+    readonly imageprocessor_apply_detect_135_deg_lines: (a: number) => void;
+    readonly imageprocessor_apply_detect_45_deg_lines: (a: number) => void;
+    readonly imageprocessor_apply_detect_horizontal_lines: (a: number) => void;
+    readonly imageprocessor_apply_detect_vertical_lines: (a: number) => void;
+    readonly imageprocessor_apply_dither: (a: number, b: number) => void;
+    readonly imageprocessor_apply_duotone: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+    readonly imageprocessor_apply_edge_detection: (a: number) => void;
+    readonly imageprocessor_apply_edge_one: (a: number) => void;
+    readonly imageprocessor_apply_emboss: (a: number) => void;
+    readonly imageprocessor_apply_frosted_glass: (a: number) => void;
+    readonly imageprocessor_apply_gamma: (a: number, b: number, c: number, d: number) => void;
+    readonly imageprocessor_apply_gaussian_blur: (a: number, b: number) => void;
+    readonly imageprocessor_apply_gradient: (a: number) => void;
+    readonly imageprocessor_apply_grayscale: (a: number) => void;
+    readonly imageprocessor_apply_grayscale_human_corrected: (a: number) => void;
+    readonly imageprocessor_apply_grayscale_shades: (a: number, b: number) => void;
+    readonly imageprocessor_apply_halftone: (a: number) => void;
+    readonly imageprocessor_apply_hue: (a: number, b: number) => void;
+    readonly imageprocessor_apply_identity: (a: number) => void;
+    readonly imageprocessor_apply_inc_brightness: (a: number, b: number) => void;
+    readonly imageprocessor_apply_invert: (a: number) => void;
+    readonly imageprocessor_apply_laplace: (a: number) => void;
+    readonly imageprocessor_apply_lightness: (a: number, b: number, c: number) => void;
+    readonly imageprocessor_apply_lix: (a: number) => void;
+    readonly imageprocessor_apply_neue: (a: number) => void;
+    readonly imageprocessor_apply_noise: (a: number, b: number) => void;
+    readonly imageprocessor_apply_noise_reduction: (a: number, b: number) => void;
+    readonly imageprocessor_apply_normalize: (a: number) => void;
+    readonly imageprocessor_apply_oil: (a: number, b: number, c: number) => void;
+    readonly imageprocessor_apply_pink_noise: (a: number) => void;
+    readonly imageprocessor_apply_pixelate: (a: number, b: number) => void;
+    readonly imageprocessor_apply_polygon_mask: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly imageprocessor_apply_preset_filter: (a: number, b: number, c: number) => void;
+    readonly imageprocessor_apply_primary: (a: number) => void;
+    readonly imageprocessor_apply_ryo: (a: number) => void;
+    readonly imageprocessor_apply_saturation: (a: number, b: number) => void;
+    readonly imageprocessor_apply_sepia: (a: number) => void;
+    readonly imageprocessor_apply_sharpen: (a: number, b: number) => void;
+    readonly imageprocessor_apply_sobel_horizontal: (a: number) => void;
+    readonly imageprocessor_apply_sobel_vertical: (a: number) => void;
+    readonly imageprocessor_apply_solarize: (a: number) => void;
+    readonly imageprocessor_apply_strips: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly imageprocessor_apply_threshold: (a: number, b: number) => void;
+    readonly imageprocessor_apply_tint: (a: number, b: number, c: number, d: number) => void;
+    readonly imageprocessor_apply_watermark: (a: number, b: number, c: number, d: bigint, e: bigint, f: number, g: number, h: number) => void;
+    readonly imageprocessor_apply_watermark_with_blend: (a: number, b: number, c: number, d: bigint, e: bigint, f: number, g: number, h: number) => void;
+    readonly imageprocessor_auto_crop_by_color: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly imageprocessor_begin_stroke: (a: number, b: number) => void;
+    readonly imageprocessor_blend_images: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly imageprocessor_blend_images_with_scale: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly imageprocessor_clear_strokes: (a: number) => void;
+    readonly imageprocessor_crop: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly imageprocessor_darken_hsl: (a: number, b: number) => void;
+    readonly imageprocessor_desaturate_hsl: (a: number, b: number) => void;
+    readonly imageprocessor_draw_stroke: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+    readonly imageprocessor_draw_text: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => void;
+    readonly imageprocessor_draw_text_with_color_and_font: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => void;
+    readonly imageprocessor_draw_text_with_font_name: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => void;
+    readonly imageprocessor_draw_text_with_shadow_and_color_and_font: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => void;
+    readonly imageprocessor_end_stroke: (a: number) => void;
+    readonly imageprocessor_flip_horizontal: (a: number) => void;
+    readonly imageprocessor_flip_vertical: (a: number) => void;
+    readonly imageprocessor_get_bytes: (a: number, b: number) => void;
+    readonly imageprocessor_get_estimated_filesize: (a: number) => bigint;
+    readonly imageprocessor_get_height: (a: number) => number;
+    readonly imageprocessor_get_raw_pixels: (a: number, b: number) => void;
+    readonly imageprocessor_get_stroke_count: (a: number) => number;
+    readonly imageprocessor_get_width: (a: number) => number;
+    readonly imageprocessor_hue_rotate: (a: number, b: number, c: number) => void;
+    readonly imageprocessor_hue_rotate_hsl: (a: number, b: number) => void;
+    readonly imageprocessor_lighten_hsl: (a: number, b: number) => void;
+    readonly imageprocessor_new: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly imageprocessor_new_from_bytes: (a: number, b: number, c: number) => void;
+    readonly imageprocessor_new_white_canvas: (a: number, b: number, c: number) => void;
+    readonly imageprocessor_offset_blue: (a: number, b: number) => void;
+    readonly imageprocessor_offset_green: (a: number, b: number) => void;
+    readonly imageprocessor_offset_red: (a: number, b: number) => void;
+    readonly imageprocessor_refine_edges: (a: number, b: number) => void;
+    readonly imageprocessor_remove_blue_channel: (a: number) => void;
+    readonly imageprocessor_remove_green_channel: (a: number) => void;
+    readonly imageprocessor_remove_red_channel: (a: number) => void;
+    readonly imageprocessor_reset: (a: number) => void;
+    readonly imageprocessor_resize: (a: number, b: number, c: number) => void;
+    readonly imageprocessor_rotate_90: (a: number) => void;
+    readonly imageprocessor_rotate_any: (a: number, b: number) => void;
+    readonly imageprocessor_saturate_hsl: (a: number, b: number) => void;
+    readonly imageprocessor_smart_crop: (a: number, b: number, c: number) => void;
+    readonly imageprocessor_swap_gb_channels: (a: number) => void;
+    readonly imageprocessor_swap_rb_channels: (a: number) => void;
+    readonly imageprocessor_swap_rg_channels: (a: number) => void;
+    readonly imageprocessor_to_base64: (a: number, b: number) => void;
+    readonly imageprocessor_to_jpeg: (a: number, b: number, c: number) => void;
+    readonly imageprocessor_to_png: (a: number, b: number) => void;
+    readonly imageprocessor_to_webp: (a: number, b: number, c: number) => void;
+    readonly imageprocessor_undo_stroke: (a: number) => number;
+    readonly init: () => void;
+    readonly refine_mask_edges: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly strokepoint_new: (a: number, b: number, c: number, d: bigint) => number;
+    readonly imageprocessor_apply_sobel_global: (a: number) => void;
+    readonly imageprocessor_apply_prewitt_horizontal: (a: number) => void;
+    readonly __wbg_photonimage_free: (a: number, b: number) => void;
+    readonly __wbg_rgb_free: (a: number, b: number) => void;
+    readonly __wbg_rgba_free: (a: number, b: number) => void;
+    readonly add_noise_rand: (a: number) => void;
+    readonly add_noise_rand_with_strength: (a: number, b: number) => void;
+    readonly adjust_brightness: (a: number, b: number) => void;
+    readonly adjust_contrast: (a: number, b: number) => void;
+    readonly alter_blue_channel: (a: number, b: number) => void;
+    readonly alter_channel: (a: number, b: number, c: number) => void;
+    readonly alter_channels: (a: number, b: number, c: number, d: number) => void;
+    readonly alter_green_channel: (a: number, b: number) => void;
+    readonly alter_red_channel: (a: number, b: number) => void;
+    readonly alter_two_channels: (a: number, b: number, c: number, d: number, e: number) => void;
+    readonly apply_gradient: (a: number) => void;
+    readonly b_grayscale: (a: number) => void;
+    readonly base64_to_image: (a: number, b: number) => number;
+    readonly base64_to_vec: (a: number, b: number, c: number) => void;
+    readonly blend: (a: number, b: number, c: number, d: number) => void;
+    readonly box_blur: (a: number) => void;
+    readonly cali: (a: number) => void;
+    readonly color_horizontal_strips: (a: number, b: number, c: number) => void;
+    readonly color_vertical_strips: (a: number, b: number, c: number) => void;
+    readonly colorize: (a: number) => void;
+    readonly create_gradient: (a: number, b: number) => number;
+    readonly crop: (a: number, b: number, c: number, d: number, e: number) => number;
+    readonly crop_img_browser: (a: number, b: number, c: number, d: number, e: number) => number;
+    readonly darken_hsl: (a: number, b: number) => void;
+    readonly darken_hsluv: (a: number, b: number) => void;
+    readonly darken_hsv: (a: number, b: number) => void;
+    readonly darken_lch: (a: number, b: number) => void;
+    readonly dec_brightness: (a: number, b: number) => void;
+    readonly decompose_max: (a: number) => void;
+    readonly decompose_min: (a: number) => void;
+    readonly desaturate: (a: number) => void;
+    readonly desaturate_hsl: (a: number, b: number) => void;
+    readonly desaturate_hsluv: (a: number, b: number) => void;
+    readonly desaturate_hsv: (a: number, b: number) => void;
+    readonly desaturate_lch: (a: number, b: number) => void;
+    readonly detect_135_deg_lines: (a: number) => void;
+    readonly detect_45_deg_lines: (a: number) => void;
+    readonly detect_horizontal_lines: (a: number) => void;
+    readonly detect_vertical_lines: (a: number) => void;
+    readonly dither: (a: number, b: number) => void;
+    readonly dither_ordered: (a: number, b: number) => void;
+    readonly dramatic: (a: number) => void;
+    readonly draw_text: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+    readonly draw_text_with_border: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+    readonly draw_text_with_border_and_color: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => void;
+    readonly draw_text_with_color: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => void;
+    readonly duotone: (a: number, b: number, c: number) => void;
+    readonly duotone_horizon: (a: number) => void;
+    readonly duotone_lilac: (a: number) => void;
+    readonly duotone_ochre: (a: number) => void;
+    readonly duotone_tint: (a: number, b: number) => void;
+    readonly duotone_violette: (a: number) => void;
+    readonly edge_detection: (a: number) => void;
+    readonly edge_one: (a: number) => void;
+    readonly emboss: (a: number) => void;
+    readonly filter: (a: number, b: number, c: number) => void;
+    readonly firenze: (a: number) => void;
+    readonly fliph: (a: number) => void;
+    readonly flipv: (a: number) => void;
+    readonly frosted_glass: (a: number) => void;
+    readonly g_grayscale: (a: number) => void;
+    readonly gamma_correction: (a: number, b: number, c: number, d: number) => void;
+    readonly gaussian_blur: (a: number, b: number) => void;
+    readonly get_default_font_name: (a: number) => void;
+    readonly get_image_data: (a: number, b: number) => number;
+    readonly golden: (a: number) => void;
+    readonly grayscale: (a: number) => void;
+    readonly grayscale_human_corrected: (a: number) => void;
+    readonly grayscale_shades: (a: number, b: number) => void;
+    readonly halftone: (a: number) => void;
+    readonly horizontal_strips: (a: number, b: number) => void;
+    readonly hsl: (a: number, b: number, c: number, d: number) => void;
+    readonly hsluv: (a: number, b: number, c: number, d: number) => void;
+    readonly hsv: (a: number, b: number, c: number, d: number) => void;
+    readonly hue_rotate_hsl: (a: number, b: number) => void;
+    readonly hue_rotate_hsluv: (a: number, b: number) => void;
+    readonly hue_rotate_hsv: (a: number, b: number) => void;
+    readonly hue_rotate_lch: (a: number, b: number) => void;
+    readonly identity: (a: number) => void;
+    readonly inc_brightness: (a: number, b: number) => void;
+    readonly invert: (a: number) => void;
+    readonly is_default_font_initialized: () => number;
+    readonly laplace: (a: number) => void;
+    readonly lch: (a: number, b: number, c: number, d: number) => void;
+    readonly lighten_hsl: (a: number, b: number) => void;
+    readonly lighten_hsluv: (a: number, b: number) => void;
+    readonly lighten_hsv: (a: number, b: number) => void;
+    readonly lighten_lch: (a: number, b: number) => void;
+    readonly lix: (a: number) => void;
+    readonly lofi: (a: number) => void;
+    readonly mix_with_colour: (a: number, b: number, c: number) => void;
+    readonly monochrome: (a: number, b: number, c: number, d: number) => void;
+    readonly monochrome_tint: (a: number, b: number) => void;
+    readonly multiple_offsets: (a: number, b: number, c: number, d: number) => void;
+    readonly neue: (a: number) => void;
+    readonly noise_reduction: (a: number) => void;
+    readonly noise_reduction_with_strength: (a: number, b: number) => void;
+    readonly normalize: (a: number) => void;
+    readonly obsidian: (a: number) => void;
+    readonly offset: (a: number, b: number, c: number) => void;
+    readonly offset_blue: (a: number, b: number) => void;
+    readonly offset_green: (a: number, b: number) => void;
+    readonly offset_red: (a: number, b: number) => void;
+    readonly oil: (a: number, b: number, c: number) => void;
+    readonly open_image: (a: number, b: number) => number;
+    readonly padding_bottom: (a: number, b: number, c: number) => number;
+    readonly padding_left: (a: number, b: number, c: number) => number;
+    readonly padding_right: (a: number, b: number, c: number) => number;
+    readonly padding_top: (a: number, b: number, c: number) => number;
+    readonly padding_uniform: (a: number, b: number, c: number) => number;
+    readonly pastel_pink: (a: number) => void;
+    readonly photonimage_get_base64: (a: number, b: number) => void;
+    readonly photonimage_get_bytes: (a: number, b: number) => void;
+    readonly photonimage_get_bytes_jpeg: (a: number, b: number, c: number) => void;
+    readonly photonimage_get_bytes_webp: (a: number, b: number) => void;
+    readonly photonimage_get_bytes_webp_with_quality: (a: number, b: number, c: number) => void;
+    readonly photonimage_get_estimated_filesize: (a: number) => bigint;
+    readonly photonimage_get_height: (a: number) => number;
+    readonly photonimage_get_image_data: (a: number) => number;
+    readonly photonimage_get_raw_pixels: (a: number, b: number) => void;
+    readonly photonimage_get_width: (a: number) => number;
+    readonly photonimage_new: (a: number, b: number, c: number, d: number) => number;
+    readonly photonimage_new_from_blob: (a: number) => number;
+    readonly photonimage_new_from_byteslice: (a: number, b: number) => number;
+    readonly photonimage_new_from_image: (a: number) => number;
+    readonly photonimage_set_imgdata: (a: number, b: number) => void;
+    readonly pink_noise: (a: number) => void;
+    readonly pixelize: (a: number, b: number) => void;
+    readonly prewitt_horizontal: (a: number) => void;
+    readonly primary: (a: number) => void;
+    readonly putImageData: (a: number, b: number, c: number) => void;
+    readonly r_grayscale: (a: number) => void;
+    readonly remove_blue_channel: (a: number, b: number) => void;
+    readonly remove_channel: (a: number, b: number, c: number) => void;
+    readonly remove_green_channel: (a: number, b: number) => void;
+    readonly remove_red_channel: (a: number, b: number) => void;
+    readonly resample: (a: number, b: number, c: number) => number;
+    readonly resize: (a: number, b: number, c: number, d: number) => number;
+    readonly resize_img_browser: (a: number, b: number, c: number, d: number) => number;
+    readonly rgb_get_blue: (a: number) => number;
+    readonly rgb_get_green: (a: number) => number;
+    readonly rgb_get_red: (a: number) => number;
+    readonly rgb_new: (a: number, b: number, c: number) => number;
+    readonly rgb_set_blue: (a: number, b: number) => void;
+    readonly rgb_set_green: (a: number, b: number) => void;
+    readonly rgb_set_red: (a: number, b: number) => void;
+    readonly rgba_get_alpha: (a: number) => number;
+    readonly rgba_new: (a: number, b: number, c: number, d: number) => number;
+    readonly rgba_set_alpha: (a: number, b: number) => void;
+    readonly rotate: (a: number, b: number) => number;
+    readonly run: (a: number) => void;
+    readonly ryo: (a: number) => void;
+    readonly saturate_hsl: (a: number, b: number) => void;
+    readonly saturate_hsluv: (a: number, b: number) => void;
+    readonly saturate_hsv: (a: number, b: number) => void;
+    readonly saturate_lch: (a: number, b: number) => void;
+    readonly seam_carve: (a: number, b: number, c: number) => number;
+    readonly selective_color_convert: (a: number, b: number, c: number, d: number) => void;
+    readonly selective_desaturate: (a: number, b: number, c: number) => void;
+    readonly selective_greyscale: (a: number, b: number) => void;
+    readonly selective_hue_rotate: (a: number, b: number, c: number) => void;
+    readonly selective_lighten: (a: number, b: number, c: number) => void;
+    readonly selective_saturate: (a: number, b: number, c: number) => void;
+    readonly sepia: (a: number) => void;
+    readonly sharpen: (a: number) => void;
+    readonly sharpen_with_strength: (a: number, b: number) => void;
+    readonly shearx: (a: number, b: number) => number;
+    readonly sheary: (a: number, b: number) => number;
+    readonly single_channel_grayscale: (a: number, b: number) => void;
+    readonly sobel_global: (a: number) => void;
+    readonly sobel_horizontal: (a: number) => void;
+    readonly sobel_vertical: (a: number) => void;
+    readonly solarize: (a: number) => void;
+    readonly solarize_retimg: (a: number) => number;
+    readonly swap_channels: (a: number, b: number, c: number) => void;
+    readonly threshold: (a: number, b: number) => void;
+    readonly tint: (a: number, b: number, c: number, d: number) => void;
+    readonly to_image_data: (a: number) => number;
+    readonly to_raw_pixels: (a: number, b: number) => void;
+    readonly vertical_strips: (a: number, b: number) => void;
+    readonly wasm_clear_fonts: () => void;
+    readonly wasm_get_registered_fonts: (a: number) => void;
+    readonly wasm_is_font_registered: (a: number, b: number) => number;
+    readonly wasm_register_font: (a: number, b: number, c: number, d: number) => void;
+    readonly wasm_unregister_font: (a: number, b: number) => number;
+    readonly watermark: (a: number, b: number, c: bigint, d: bigint) => void;
+    readonly photonimage_new_from_base64: (a: number, b: number) => number;
+    readonly rgba_get_green: (a: number) => number;
+    readonly rgba_get_blue: (a: number) => number;
+    readonly rgba_get_red: (a: number) => number;
+    readonly rgba_set_blue: (a: number, b: number) => void;
+    readonly rgba_set_red: (a: number, b: number) => void;
+    readonly rgba_set_green: (a: number, b: number) => void;
+    readonly __wbg_wbg_rayon_poolbuilder_free: (a: number, b: number) => void;
+    readonly initThreadPool: (a: number) => number;
+    readonly wbg_rayon_poolbuilder_build: (a: number) => void;
+    readonly wbg_rayon_poolbuilder_mainJS: (a: number) => number;
+    readonly wbg_rayon_poolbuilder_numThreads: (a: number) => number;
+    readonly wbg_rayon_poolbuilder_receiver: (a: number) => number;
+    readonly wbg_rayon_start_worker: (a: number) => void;
+    readonly memory: WebAssembly.Memory;
+    readonly __wbindgen_export: (a: number, b: number) => number;
+    readonly __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
+    readonly __wbindgen_export3: (a: number) => void;
+    readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
+    readonly __wbindgen_export4: (a: number, b: number, c: number) => void;
+    readonly __wbindgen_thread_destroy: (a?: number, b?: number, c?: number) => void;
+    readonly __wbindgen_start: (a: number) => void;
+}
+
+export type SyncInitInput = BufferSource | WebAssembly.Module;
+
+/**
+ * Instantiates the given `module`, which can either be bytes or
+ * a precompiled `WebAssembly.Module`.
+ *
+ * @param {{ module: SyncInitInput, memory?: WebAssembly.Memory, thread_stack_size?: number }} module - Passing `SyncInitInput` directly is deprecated.
+ * @param {WebAssembly.Memory} memory - Deprecated.
+ *
+ * @returns {InitOutput}
+ */
+export function initSync(module: { module: SyncInitInput, memory?: WebAssembly.Memory, thread_stack_size?: number } | SyncInitInput, memory?: WebAssembly.Memory): InitOutput;
+
+/**
+ * If `module_or_path` is {RequestInfo} or {URL}, makes a request and
+ * for everything else, calls `WebAssembly.instantiate` directly.
+ *
+ * @param {{ module_or_path: InitInput | Promise<InitInput>, memory?: WebAssembly.Memory, thread_stack_size?: number }} module_or_path - Passing `InitInput` directly is deprecated.
+ * @param {WebAssembly.Memory} memory - Deprecated.
+ *
+ * @returns {Promise<InitOutput>}
+ */
+export default function __wbg_init (module_or_path?: { module_or_path: InitInput | Promise<InitInput>, memory?: WebAssembly.Memory, thread_stack_size?: number } | InitInput | Promise<InitInput>, memory?: WebAssembly.Memory): Promise<InitOutput>;

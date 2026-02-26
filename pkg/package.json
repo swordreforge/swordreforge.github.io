@@ -1,0 +1,15 @@
+{
+  "name": "photon-wasm",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "photon_wasm_bg.wasm",
+    "photon_wasm.js",
+    "photon_wasm.d.ts"
+  ],
+  "main": "photon_wasm.js",
+  "types": "photon_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
