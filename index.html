@@ -1380,8 +1380,9 @@
     <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
 
     <div class="main-content">
-            <div class="sidebar">
-                <div class="section">
+            <div class="sidebar" id="sidebar">
+                <div id="sidebarContent">
+                <div class="section" data-section="basic-filters">
                     <h3>基础滤镜</h3>
                     <div class="btn-group">
                         <button class="btn" onclick="applyFilter('grayscale')" disabled>灰度</button>
@@ -1603,6 +1604,26 @@
                         <label>降噪强度 (0 ~ 10)</label>
                         <input type="range" id="noiseReductionSlider" min="0" max="100" value="0" oninput="applyAdjustments()" disabled>
                         <div class="slider-value"><span id="noiseReductionValue">0.0</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>双边滤波器</h3>
+                    <div class="slider-container">
+                        <label>空间平滑半径 (1 ~ 20)</label>
+                        <input type="range" id="bilateralSigmaSpatialSlider" min="10" max="200" value="50" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="bilateralSigmaSpatialValue">5.0</span></div>
+                    </div>
+                    <div class="slider-container" style="margin-top: 15px;">
+                        <label>边缘敏感度 (10 ~ 150)</label>
+                        <input type="range" id="bilateralSigmaRangeSlider" min="100" max="1500" value="300" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="bilateralSigmaRangeValue">30.0</span></div>
+                    </div>
+                    <div class="checkbox-container" style="margin-top: 15px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" id="bilateralFastMode" checked onchange="applyAdjustments()" disabled style="margin-right: 8px;">
+                            <span style="font-size: 0.95em; font-weight: 600; color: #ccc;">快速模式 (降低质量换取速度)</span>
+                        </label>
                     </div>
                 </div>
 
@@ -2012,6 +2033,7 @@
                     <p>格式: <span id="imageFormat">-</span></p>
                     <p>文件大小: <span id="fileSize">-</span></p>
                 </div>
+                </div>
             </div>
 
             <div class="editor-area">
@@ -2049,14 +2071,265 @@
     </div>
 
     <script type="module">
-        // 过滤 wasm-bindgen-rayon 的弃用警告
-        const originalWarn = console.warn;
+        // ==================== 条件化日志系统 ====================
+        const Logger = {
+            // 日志级别配置
+            levels: {
+                ERROR: 0,
+                WARN: 1,
+                INFO: 2,
+                LOG: 3,
+                DEBUG: 4
+            },
+
+            // 当前日志级别（生产环境设为ERROR，开发环境设为DEBUG）
+            currentLevel: 0, // 默认只显示ERROR
+
+            // 是否启用日志（可通过URL参数控制：?debug=true）
+            enabled: false,
+
+            // 初始化日志系统
+            init() {
+                // 检查URL参数
+                const urlParams = new URLSearchParams(window.location.search);
+                const debugParam = urlParams.get('debug');
+
+                if (debugParam === 'true') {
+                    this.currentLevel = this.levels.DEBUG;
+                    this.enabled = true;
+                    console.log('[Logger] 调试模式已启用');
+                } else if (debugParam === 'false') {
+                    this.currentLevel = this.levels.ERROR;
+                    this.enabled = false;
+                } else {
+                    // 根据环境自动判断
+                    this.enabled = window.location.hostname === 'localhost' ||
+                                   window.location.hostname === '127.0.0.1' ||
+                                   window.location.protocol === 'file:';
+                    this.currentLevel = this.enabled ? this.levels.DEBUG : this.levels.ERROR;
+                }
+
+                // 保存原始console方法
+                this.originalConsole = {
+                    log: console.log.bind(console),
+                    warn: console.warn.bind(console),
+                    error: console.error.bind(console),
+                    info: console.info.bind(console),
+                    debug: console.debug.bind(console)
+                };
+            },
+
+            // 检查是否应该输出日志
+            shouldLog(level) {
+                return this.enabled && level <= this.currentLevel;
+            },
+
+            // 日志方法
+            error(...args) {
+                if (this.shouldLog(this.levels.ERROR)) {
+                    this.originalConsole.error(...args);
+                }
+            },
+
+            warn(...args) {
+                if (this.shouldLog(this.levels.WARN)) {
+                    this.originalConsole.warn(...args);
+                }
+            },
+
+            info(...args) {
+                if (this.shouldLog(this.levels.INFO)) {
+                    this.originalConsole.info(...args);
+                }
+            },
+
+            log(...args) {
+                if (this.shouldLog(this.levels.LOG)) {
+                    this.originalConsole.log(...args);
+                }
+            },
+
+            debug(...args) {
+                if (this.shouldLog(this.levels.DEBUG)) {
+                    this.originalConsole.debug(...args);
+                }
+            },
+
+            // 设置日志级别
+            setLevel(level) {
+                if (this.levels[level] !== undefined) {
+                    this.currentLevel = this.levels[level];
+                }
+            },
+
+            // 启用/禁用日志
+            setEnabled(enabled) {
+                this.enabled = enabled;
+            }
+        };
+
+        // 初始化日志系统
+        Logger.init();
+
+        // 过滤 wasm-bindgen-rayon 的弃用警告（在Logger初始化后设置）
+        const originalConsoleWarn = console.warn;
         console.warn = function(...args) {
-            if (args[0] && args[0].includes && args[0].includes('using deprecated parameters')) {
+            // 过滤 wasm-bindgen 的弃用参数警告
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('using deprecated parameters')) {
                 return;
             }
-            originalWarn.apply(console, args);
+            originalConsoleWarn.apply(console, args);
         };
+
+        // ==================== 侧边栏懒加载管理器 ====================
+        class SidebarLazyLoader {
+            constructor(sidebarId, contentId, buffer = 50) {
+                this.sidebar = document.getElementById(sidebarId);
+                this.content = document.getElementById(contentId);
+                this.buffer = buffer;
+                this.sections = [];
+                this.visibleSections = new Set();
+                this.placeholderHeight = 200; // 每个section的占位高度
+                this.init();
+            }
+
+            init() {
+                if (!this.sidebar || !this.content) return;
+
+                // 收集所有section信息
+                this.collectSections();
+
+                // 初始渲染
+                this.updateVisibleSections();
+
+                // 监听滚动事件（使用防抖）
+                let scrollTimeout;
+                this.sidebar.addEventListener('scroll', () => {
+                    if (scrollTimeout) clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(() => {
+                        this.updateVisibleSections();
+                    }, 16);
+                });
+
+                // 监听窗口大小变化
+                window.addEventListener('resize', () => {
+                    this.updateVisibleSections();
+                });
+            }
+
+            collectSections() {
+                const sectionElements = this.content.querySelectorAll('.section');
+                sectionElements.forEach((section, index) => {
+                    const sectionName = section.getAttribute('data-section') || `section-${index}`;
+                    this.sections.push({
+                        index,
+                        name: sectionName,
+                        element: section,
+                        height: section.offsetHeight || this.placeholderHeight,
+                        top: 0, // 将在计算中更新
+                        bottom: 0 // 将在计算中更新
+                    });
+                });
+
+                // 计算每个section的位置
+                let currentTop = 0;
+                this.sections.forEach(section => {
+                    section.top = currentTop;
+                    section.bottom = currentTop + section.height;
+                    currentTop += section.height + 25; // 25px是section的margin-bottom
+                });
+
+                // 设置容器高度
+                this.content.style.minHeight = `${currentTop}px`;
+            }
+
+            updateVisibleSections() {
+                if (!this.sidebar) return;
+
+                const viewportTop = this.sidebar.scrollTop - this.buffer;
+                const viewportBottom = this.sidebar.scrollTop + this.sidebar.offsetHeight + this.buffer;
+
+                // 找出应该显示的section
+                const shouldShow = new Set();
+                this.sections.forEach(section => {
+                    if (section.bottom >= viewportTop && section.top <= viewportBottom) {
+                        shouldShow.add(section.name);
+                    }
+                });
+
+                // 更新可见的section
+                shouldShow.forEach(sectionName => {
+                    if (!this.visibleSections.has(sectionName)) {
+                        this.showSection(sectionName);
+                    }
+                });
+
+                // 隐藏不应该显示的section
+                this.visibleSections.forEach(sectionName => {
+                    if (!shouldShow.has(sectionName)) {
+                        this.hideSection(sectionName);
+                    }
+                });
+
+                this.visibleSections = shouldShow;
+            }
+
+            showSection(sectionName) {
+                const section = this.sections.find(s => s.name === sectionName);
+                if (!section) return;
+
+                // 恢复section的实际内容
+                if (section.element.dataset.placeholder === 'true') {
+                    this.restoreSectionContent(section);
+                }
+
+                section.element.style.display = 'block';
+            }
+
+            hideSection(sectionName) {
+                const section = this.sections.find(s => s.name === sectionName);
+                if (!section) return;
+
+                // 使用占位符替换section内容以减少内存占用
+                if (section.element.dataset.placeholder !== 'true') {
+                    this.replaceWithPlaceholder(section);
+                }
+
+                section.element.style.display = 'none';
+            }
+
+            replaceWithPlaceholder(section) {
+                // 保存section的实际内容
+                const content = section.element.innerHTML;
+                section.element.dataset.originalContent = btoa(unescape(encodeURIComponent(content)));
+                section.element.dataset.placeholder = 'true';
+
+                // 替换为占位符
+                const title = section.element.querySelector('h3')?.textContent || 'Section';
+                section.element.innerHTML = `
+                    <div style="height: ${section.height}px; display: flex; align-items: center; justify-content: center; background: #333; border-radius: 8px; color: #666;">
+                        <span>${title}</span>
+                    </div>
+                `;
+            }
+
+            restoreSectionContent(section) {
+                if (!section.element.dataset.originalContent) return;
+
+                // 恢复原始内容
+                const content = decodeURIComponent(escape(atob(section.element.dataset.originalContent)));
+                section.element.innerHTML = content;
+                section.element.dataset.placeholder = 'false';
+                delete section.element.dataset.originalContent;
+            }
+        }
+
+        // 禁用侧边栏懒加载以避免闪烁问题
+        // 侧边栏内容较小,不需要懒加载优化
+        // let sidebarLazyLoader;
+        // setTimeout(() => {
+        //     sidebarLazyLoader = new SidebarLazyLoader('sidebar', 'sidebarContent', 50);
+        // }, 100);
 
         // 全局变量声明 - 已迁移到 AppState 中管理
         // 保留历史记录最大限制常量
@@ -2603,7 +2876,7 @@
             // 停止内存监控
             stopMemoryMonitor();
 
-            console.log('应用已清理');
+            Logger.log('应用已清理');
         }
 
         // ==================== 内存监控 ====================
@@ -2622,10 +2895,10 @@
                     totalRaw: memory.totalJSHeapSize,
                     limitRaw: memory.jsHeapSizeLimit
                 };
-                console.log('📊 内存使用:', memoryInfo);
+                Logger.log('📊 内存使用:', memoryInfo);
                 return memoryInfo;
             } else {
-                console.warn('⚠️ 内存监控不可用（仅 Chrome/Edge 支持）');
+                Logger.warn('⚠️ 内存监控不可用（仅 Chrome/Edge 支持）');
                 return null;
             }
         }
@@ -2652,9 +2925,9 @@
             if (status === 'critical') {
                 console.error('🔴 严重内存使用过高！可能存在内存泄漏', result);
             } else if (status === 'warning') {
-                console.warn('🟡 内存使用较高', result);
+                Logger.warn('🟡 内存使用较高', result);
             } else {
-                console.log('🟢 内存使用正常', result);
+                Logger.log('🟢 内存使用正常', result);
             }
 
             return result;
@@ -2669,7 +2942,7 @@
             memoryMonitorInterval = setInterval(() => {
                 detectMemoryLeak();
             }, intervalMs);
-            console.log('✅ 内存监控已启动（间隔: ' + intervalMs + 'ms）');
+            Logger.log('✅ 内存监控已启动（间隔: ' + intervalMs + 'ms）');
         }
 
         // 停止内存监控
@@ -2677,7 +2950,7 @@
             if (memoryMonitorInterval) {
                 clearInterval(memoryMonitorInterval);
                 memoryMonitorInterval = null;
-                console.log('⏹️ 内存监控已停止');
+                Logger.log('⏹️ 内存监控已停止');
             }
         }
 
@@ -2688,7 +2961,7 @@
         window.stopMemoryMonitor = stopMemoryMonitor;
 
         // 初始内存检查
-        console.log('🔍 初始内存状态:');
+        Logger.log('🔍 初始内存状态:');
         monitorMemory();
 
         // 在页面卸载时执行清理
@@ -2699,14 +2972,14 @@
             try {
                 // 检测SharedArrayBuffer支持（并行化需要）
                 const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
-                console.log('SharedArrayBuffer support:', hasSharedArrayBuffer);
+                Logger.log('SharedArrayBuffer support:', hasSharedArrayBuffer);
 
                 // 从 photon_wasm.js 导入初始化函数和所有导出
                 const { default: initWasm, ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint, wasm_register_font, wasm_is_font_registered, wasm_get_registered_fonts, wasm_unregister_font, wasm_clear_fonts, initThreadPool } = await import('./pkg/photon_wasm.js?v=27');
 
                 // 调用初始化函数来加载 WASM 模块
                 await initWasm();
-                console.log('WASM module loaded successfully');
+                Logger.log('WASM module loaded successfully');
 
                 // 只在支持SharedArrayBuffer时尝试初始化线程池
                 if (hasSharedArrayBuffer) {
@@ -2717,16 +2990,16 @@
                         const messageEl = document.getElementById('loadingMessage');
                         messageEl.textContent = `正在初始化多线程加速模块（${numThreads} 线程）...`;
                         await initThreadPool(numThreads);
-                        console.log(`✓ WASM thread pool initialized with ${numThreads} threads (parallelization enabled)`);
+                        Logger.log(`✓ WASM thread pool initialized with ${numThreads} threads (parallelization enabled)`);
                     } catch (threadError) {
-                        console.warn('⚠ Thread pool initialization failed:', threadError.message);
-                        console.info('Running in single-threaded mode (parallelization disabled)');
-                        console.info('To enable parallelization, the server must send these headers:');
-                        console.info('  Cross-Origin-Opener-Policy: same-origin');
-                        console.info('  Cross-Origin-Embedder-Policy: require-corp');
+                        Logger.warn('⚠ Thread pool initialization failed:', threadError.message);
+                        Logger.info('Running in single-threaded mode (parallelization disabled)');
+                        Logger.info('To enable parallelization, the server must send these headers:');
+                        Logger.info('  Cross-Origin-Opener-Policy: same-origin');
+                        Logger.info('  Cross-Origin-Embedder-Policy: require-corp');
                     }
                 } else {
-                    console.info('ℹ SharedArrayBuffer not available, running in single-threaded mode');
+                    Logger.info('ℹ SharedArrayBuffer not available, running in single-threaded mode');
                 }
 
                 // 返回所有导出
@@ -2953,11 +3226,11 @@
             try {
                 // WASM 模块已在 loadWasmModule 中加载并初始化
                 // 这里只需要启用按钮和初始化事件监听器
-                console.log('Initializing application...');
+                Logger.log('Initializing application...');
                 enableButtons();
                 // 初始化全局事件监听器
                 initGlobalEvents();
-                console.log('Application initialized successfully');
+                Logger.log('Application initialized successfully');
             } catch (error) {
                 console.error('Failed to initialize application:', error);
                 alert('应用初始化失败');
@@ -3270,7 +3543,7 @@
 
         // 启用按钮
         function enableButtons() {
-            console.log('enableButtons() 被调用，appState.currentImage:', !!appState.currentImage);
+            Logger.log('enableButtons() 被调用，appState.currentImage:', !!appState.currentImage);
             const buttons = document.querySelectorAll('.btn, .toolbar-btn');
             buttons.forEach(btn => {
                 // 下载和清空图像按钮需要 appState.currentImage
@@ -3527,7 +3800,7 @@
                 
                 document.getElementById('addWatermarkBtn').disabled = false;
                 
-                console.log('水印图片已加载:', file.name);
+                Logger.log('水印图片已加载:', file.name);
             } catch (error) {
                 console.error('水印图片加载失败:', error);
                 alert('水印图片加载失败');
@@ -3772,7 +4045,7 @@
             try {
                 appState.processor.apply_watermark_with_blend(appState.watermarkBytes, x, y, scale, blendMode);
                 updateCanvas();
-                console.log('水印已应用，混合模式:', blendMode);
+                Logger.log('水印已应用，混合模式:', blendMode);
                 exitWatermarkMode();
             } catch (error) {
                 console.error('水印应用失败:', error);
@@ -3916,11 +4189,11 @@
 
                     // 继续加载图片
                     try {
-                        console.log('开始处理图片数据...');
+                        Logger.log('开始处理图片数据...');
                         appState.processor = ImageProcessor.new_from_bytes(uint8Array);
                         const width = appState.processor.get_width();
                         const height = appState.processor.get_height();
-                        console.log('图片尺寸:', width, 'x', height);
+                        Logger.log('图片尺寸:', width, 'x', height);
 
                         // 保存原始处理器用于无级调节
                         appState.originalProcessor = ImageProcessor.new_from_bytes(uint8Array);
@@ -3943,7 +4216,7 @@
                             width,
                             height
                         };
-                        console.log('appState.currentImage 已设置:', !!appState.currentImage);
+                        Logger.log('appState.currentImage 已设置:', !!appState.currentImage);
 
                         document.getElementById('emptyState').style.display = 'none';
                         canvas.style.display = 'block';
@@ -3954,9 +4227,9 @@
                         // 清空历史记录，防止用户通过撤销/重做回到之前的图片
                         clearHistory();
 
-                        console.log('调用 enableButtons()...');
+                        Logger.log('调用 enableButtons()...');
                         enableButtons();
-                        console.log('enableButtons() 调用完成');
+                        Logger.log('enableButtons() 调用完成');
                     } catch (error) {
                         console.error('Failed to load image:', error);
                         console.error('错误详情:', error.stack);
@@ -3970,7 +4243,7 @@
                                     width,
                                     height
                                 };
-                                console.log('错误恢复：appState.currentImage 已被设置（仅尺寸信息）');
+                                Logger.log('错误恢复：appState.currentImage 已被设置（仅尺寸信息）');
                                 enableButtons();
                             } catch (e) {
                                 console.error('无法恢复 currentImage:', e);
@@ -4680,6 +4953,8 @@
             const sharpenStrength = parseFloat(document.getElementById('sharpenSlider').value) / 10;
             const noiseReductionStrength = parseFloat(document.getElementById('noiseReductionSlider').value) / 10;
             const noiseStrength = parseFloat(document.getElementById('noiseSlider').value) / 10;
+            const bilateralSigmaSpatial = parseFloat(document.getElementById('bilateralSigmaSpatialSlider').value) / 10;
+            const bilateralSigmaRange = parseFloat(document.getElementById('bilateralSigmaRangeSlider').value) / 10;
             const redChannelOffset = parseInt(document.getElementById('redChannelSlider').value);
             const greenChannelOffset = parseInt(document.getElementById('greenChannelSlider').value);
             const blueChannelOffset = parseInt(document.getElementById('blueChannelSlider').value);
@@ -4696,6 +4971,8 @@
             domUpdateManager.schedule('sharpenValue', sharpenStrength.toFixed(1));
             domUpdateManager.schedule('noiseReductionValue', noiseReductionStrength.toFixed(1));
             domUpdateManager.schedule('noiseValue', noiseStrength.toFixed(1));
+            domUpdateManager.schedule('bilateralSigmaSpatialValue', bilateralSigmaSpatial.toFixed(1));
+            domUpdateManager.schedule('bilateralSigmaRangeValue', bilateralSigmaRange.toFixed(1));
             domUpdateManager.schedule('redChannelValue', redChannelOffset);
             domUpdateManager.schedule('greenChannelValue', greenChannelOffset);
             domUpdateManager.schedule('blueChannelValue', blueChannelOffset);
@@ -4760,6 +5037,17 @@
                     // 应用降噪 (0.0 到 10.0)
                     if (noiseReductionStrength !== 0.0) {
                         appState.processor.apply_noise_reduction(noiseReductionStrength);
+                    }
+
+                    // 应用双边滤波器
+                    const bilateralSigmaSpatial = parseFloat(document.getElementById('bilateralSigmaSpatialSlider').value) / 10;
+                    const bilateralSigmaRange = parseFloat(document.getElementById('bilateralSigmaRangeSlider').value) / 10;
+                    const bilateralFastMode = document.getElementById('bilateralFastMode').checked;
+                    // 如果用户没有手动设置为 0,则应用双边滤波器
+                    const isBilateralEnabled = document.getElementById('bilateralSigmaSpatialSlider').value > 0 ||
+                                             document.getElementById('bilateralSigmaRangeSlider').value > 0;
+                    if (isBilateralEnabled) {
+                        appState.processor.apply_bilateral_filter(bilateralSigmaSpatial, bilateralSigmaRange, bilateralFastMode);
                     }
 
                     // 应用噪点 (0.0 到 10.0)
@@ -6545,6 +6833,8 @@
             document.getElementById('gammaBlueSlider').value = 10;
             document.getElementById('sharpenSlider').value = 0;
             document.getElementById('noiseReductionSlider').value = 0;
+            document.getElementById('bilateralSigmaSpatialSlider').value = 0;
+            document.getElementById('bilateralSigmaRangeSlider').value = 0;
             document.getElementById('noiseSlider').value = 0;
 
             // 重置显示值
@@ -6558,6 +6848,8 @@
             document.getElementById('gammaBlueValue').textContent = '1.0';
             document.getElementById('sharpenValue').textContent = '0.0';
             document.getElementById('noiseReductionValue').textContent = '0.0';
+            document.getElementById('bilateralSigmaSpatialValue').textContent = '0.0';
+            document.getElementById('bilateralSigmaRangeValue').textContent = '0.0';
             document.getElementById('noiseValue').textContent = '0.0';
 
             // 更新画布
@@ -6601,6 +6893,8 @@
             document.getElementById('gammaBlueSlider').value = 10;
             document.getElementById('sharpenSlider').value = 0;
             document.getElementById('noiseReductionSlider').value = 0;
+            document.getElementById('bilateralSigmaSpatialSlider').value = 0;
+            document.getElementById('bilateralSigmaRangeSlider').value = 0;
 
             // 重置显示值
             document.getElementById('brightnessValue').textContent = '0';
@@ -6613,6 +6907,8 @@
             document.getElementById('gammaBlueValue').textContent = '1.0';
             document.getElementById('sharpenValue').textContent = '0.0';
             document.getElementById('noiseReductionValue').textContent = '0.0';
+            document.getElementById('bilateralSigmaSpatialValue').textContent = '0.0';
+            document.getElementById('bilateralSigmaRangeValue').textContent = '0.0';
 
             // 禁用所有按钮
             enableButtons();
@@ -6621,7 +6917,7 @@
         // 更新下载格式
         window.updateDownloadFormat = function() {
             const format = document.getElementById('formatSelect').value;
-            console.log('下载格式已更改为:', format);
+            Logger.log('下载格式已更改为:', format);
         };
 
         // 下载图片
@@ -7188,7 +7484,7 @@ window.applyText = function() {
                         // 添加到字体选择下拉框
                         addCustomFontToSelect(font.name);
 
-                        console.log(`字体 "${font.name}" 已恢复`);
+                        Logger.log(`字体 "${font.name}" 已恢复`);
                     } catch (error) {
                         console.error(`恢复字体 "${font.name}" 失败:`, error);
                     }
@@ -7198,7 +7494,7 @@ window.applyText = function() {
                 updateRegisteredFontsList();
 
                 if (fonts.length > 0) {
-                    console.log(`已恢复 ${fonts.length} 个字体`);
+                    Logger.log(`已恢复 ${fonts.length} 个字体`);
                 }
             } catch (error) {
                 console.error('从数据库恢复字体失败:', error);
@@ -7334,7 +7630,7 @@ window.applyText = function() {
 
             // 验证像素数据长度并优化ImageData创建
             if (pixels.length !== expectedLength) {
-                console.warn(`Pixel data length mismatch: expected ${expectedLength}, got ${pixels.length}`);
+                Logger.warn(`Pixel data length mismatch: expected ${expectedLength}, got ${pixels.length}`);
                 // 尝试修复：截断或填充
                 const validLength = Math.min(pixels.length, expectedLength);
                 const adjustedPixels = new Uint8ClampedArray(expectedLength);
@@ -7375,7 +7671,7 @@ window.applyText = function() {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
                     .then((registration) => {
-                        console.log('[SW] Registered with scope:', registration.scope);
+                        Logger.log('[SW] Registered with scope:', registration.scope);
                     })
                     .catch((error) => {
                         console.error('[SW] Registration failed:', error);
@@ -7556,7 +7852,7 @@ window.applyText = function() {
                             dropdown.classList.remove('active');
                         }
 
-                        console.log(`创建了 ${width}×${height} 的白色画布`);
+                        Logger.log(`创建了 ${width}×${height} 的白色画布`);
                     }
                 }, 'image/png');
             } catch (error) {

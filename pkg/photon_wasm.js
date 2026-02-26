@@ -1,5 +1,5 @@
 /* @ts-self-types="./photon_wasm.d.ts" */
-import { startWorkers } from './snippets/wasm-bindgen-rayon-38edf6e439f6d70d/src/workerHelpers.no-bundler.js';
+import { startWorkers } from './snippets/wasm-bindgen-rayon-38edf6e439f6d70d/src/workerHelpers.js';
 
 /**
  * 混合模式
@@ -234,6 +234,12 @@ export class BrushStroke {
         return BrushConfig.__wrap(ret);
     }
     /**
+     * 清除路径缓存（当点集改变时调用）
+     */
+    invalidate_path_cache() {
+        wasm.brushstroke_invalidate_path_cache(this.__wbg_ptr);
+    }
+    /**
      * @param {BrushConfig} config
      */
     constructor(config) {
@@ -388,6 +394,28 @@ export class ImageProcessor {
     }
     apply_b_grayscale() {
         wasm.imageprocessor_apply_b_grayscale(this.__wbg_ptr);
+    }
+    /**
+     * 应用双边滤波器
+     *
+     * 双边滤波器是一种非线性的、保边的降噪滤波器
+     * 与高斯模糊不同,它在平滑均匀区域的同时保持边缘清晰
+     *
+     * # 参数
+     * * `sigma_spatial` - 空间域标准偏差,控制平滑半径(范围: 1.0-20.0)
+     * * `sigma_range` - 范围域标准偏差,控制边缘敏感度(范围: 10.0-150.0)
+     * * `fast_mode` - 快速模式,降低质量换取速度(默认: true)
+     *
+     * # 使用建议
+     * * `sigma_spatial`: 较大的值会产生更强的平滑效果
+     * * `sigma_range`: 较大的值会允许更大的颜色差异,从而保持更多细节
+     * * `fast_mode`: 快速模式使用采样加速,计算速度提升约4倍,质量略有下降
+     * @param {number} sigma_spatial
+     * @param {number} sigma_range
+     * @param {boolean} fast_mode
+     */
+    apply_bilateral_filter(sigma_spatial, sigma_range, fast_mode) {
+        wasm.imageprocessor_apply_bilateral_filter(this.__wbg_ptr, sigma_spatial, sigma_range, fast_mode);
     }
     apply_box_blur() {
         wasm.imageprocessor_apply_box_blur(this.__wbg_ptr);
@@ -839,7 +867,14 @@ export class ImageProcessor {
         wasm.imageprocessor_desaturate_hsl(this.__wbg_ptr, level);
     }
     /**
-     * 直接绘制一笔（简化接口）
+     * 直接绘制一笔（简化接口，向后兼容）
+     *
+     * # 参数
+     * * `points_js` - 点数据，支持两种格式：
+     *   - Float32Array: [x1, y1, x2, y2, ...] （推荐，性能更高）
+     *   - 普通数组: [{x, y}, {x, y}, ...] （兼容性）
+     * * `r, g, b, a` - 颜色值
+     * * `width` - 笔刷宽度
      * @param {any} points_js
      * @param {number} r
      * @param {number} g
@@ -849,6 +884,28 @@ export class ImageProcessor {
      */
     draw_stroke(points_js, r, g, b, a, width) {
         wasm.imageprocessor_draw_stroke(this.__wbg_ptr, addHeapObject(points_js), r, g, b, a, width);
+    }
+    /**
+     * 绘制一笔（高性能版本，使用 Float32Array）
+     *
+     * # 参数
+     * * `points_array` - Float32Array 格式的点数据：[x1, y1, x2, y2, ...]
+     * * `r, g, b, a` - 颜色值（0-255）
+     * * `width` - 笔刷宽度
+     *
+     * # 性能优势
+     * - 使用 Float32Array 避免 Reflect.get 调用
+     * - 直接内存访问，减少跨边界调用
+     * - 比普通数组版本快约 30%
+     * @param {Float32Array} points_array
+     * @param {number} r
+     * @param {number} g
+     * @param {number} b
+     * @param {number} a
+     * @param {number} width
+     */
+    draw_stroke_array(points_array, r, g, b, a, width) {
+        wasm.imageprocessor_draw_stroke_array(this.__wbg_ptr, addHeapObject(points_array), r, g, b, a, width);
     }
     /**
      * 绘制文本，支持可选参数控制字体、阴影和颜色
@@ -1453,6 +1510,9 @@ export class PhotonImage {
     }
     /**
      * Get the PhotonImage's pixels as a Vec of u8s.
+     *
+     * **Note**: This clones the pixel data, which can be expensive for large images.
+     * For read-only access, prefer `get_raw_pixels_slice()` which returns a reference without cloning.
      * @returns {Uint8Array}
      */
     get_raw_pixels() {
@@ -1475,6 +1535,32 @@ export class PhotonImage {
     get_width() {
         const ret = wasm.photonimage_get_width(this.__wbg_ptr);
         return ret >>> 0;
+    }
+    /**
+     * Initialize the thread pool for WebAssembly parallel processing.
+     *
+     * This function must be called from JavaScript before using any parallel processing features.
+     * It sets up the worker threads for rayon parallel execution.
+     *
+     * # JavaScript Example
+     * ```javascript
+     * import { initThreadPool } from './photon_wasm.js';
+     *
+     * // Initialize with 4 threads
+     * await initThreadPool(4);
+     *
+     * // Now you can use parallel processing features
+     * ```
+     *
+     * # Arguments
+     * * `num_threads` - Number of threads to use for parallel processing.
+     *   If 0, it will use the hardware concurrency (number of logical CPUs).
+     * @param {number} num_threads
+     * @returns {Promise<void>}
+     */
+    static init_thread_pool(num_threads) {
+        const ret = wasm.photonimage_init_thread_pool(num_threads);
+        return takeObject(ret);
     }
     /**
      * Create a new PhotonImage from a Vec of u8s, which represent raw pixels.
@@ -1832,6 +1918,33 @@ export function add_noise_rand(photon_image) {
 }
 
 /**
+ * Add random noise to an image using parallel processing.
+ *
+ * This is the parallel version of the noise addition operation.
+ * Each thread uses its own random number generator to avoid contention.
+ *
+ * # Arguments
+ * * `photon_image` - A mutable reference to a PhotonImage.
+ * * `strength` - Noise strength. Range: 0.0 to 10.0.
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::add_noise_rand_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * add_noise_rand_parallel(&mut img, 2.0);
+ * ```
+ * @param {PhotonImage} photon_image
+ * @param {number} strength
+ */
+export function add_noise_rand_parallel(photon_image, strength) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.add_noise_rand_parallel(photon_image.__wbg_ptr, strength);
+}
+
+/**
  * Add randomized noise to an image with adjustable strength.
  * This function adds Gaussian noise to each pixel by incrementing each channel by a randomized offset.
  * The maximum offset is controlled by the strength parameter.
@@ -1888,6 +2001,32 @@ export function adjust_brightness(photon_image, brightness) {
 }
 
 /**
+ * Apply brightness adjustment using parallel processing.
+ *
+ * This is the parallel version of the brightness adjustment operation.
+ *
+ * # Arguments
+ * * `photon_image` - A mutable reference to a PhotonImage.
+ * * `brightness` - The amount to adjust brightness by (-255 to 255).
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::adjust_brightness_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * adjust_brightness_parallel(&mut img, 20);
+ * ```
+ * @param {PhotonImage} photon_image
+ * @param {number} brightness
+ */
+export function adjust_brightness_parallel(photon_image, brightness) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.adjust_brightness_parallel(photon_image.__wbg_ptr, brightness);
+}
+
+/**
  * Adjust the contrast of an image by a factor.
  *
  * # Arguments
@@ -1909,6 +2048,32 @@ export function adjust_brightness(photon_image, brightness) {
 export function adjust_contrast(photon_image, contrast) {
     _assertClass(photon_image, PhotonImage);
     wasm.adjust_contrast(photon_image.__wbg_ptr, contrast);
+}
+
+/**
+ * Apply contrast adjustment using parallel processing.
+ *
+ * This is the parallel version of the contrast adjustment operation.
+ *
+ * # Arguments
+ * * `photon_image` - A mutable reference to a PhotonImage.
+ * * `contrast` - Contrast factor between [-255.0, 255.0].
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::adjust_contrast_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * adjust_contrast_parallel(&mut img, 30.0);
+ * ```
+ * @param {PhotonImage} photon_image
+ * @param {number} contrast
+ */
+export function adjust_contrast_parallel(photon_image, contrast) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.adjust_contrast_parallel(photon_image.__wbg_ptr, contrast);
 }
 
 /**
@@ -2197,6 +2362,89 @@ export function base64_to_vec(base64) {
 }
 
 /**
+ * Batch process multiple images efficiently.
+ *
+ * This function processes multiple images in a single call, reducing
+ * JavaScript-WASM bridge overhead.
+ *
+ * # Arguments
+ * * `images` - An array of PhotonImage objects.
+ * * `processor` - A function that processes a single image.
+ *
+ * # Example
+ *
+ * ```javascript
+ * import { batch_process_images } from 'photon_rs';
+ *
+ * const images = [
+ *     img1,
+ *     img2,
+ *     img3
+ * ];
+ *
+ * batch_process_images(images, (img) => {
+ *     // Apply processing to each image
+ *     return processImage(img);
+ * });
+ * ```
+ * @param {Array<any>} images
+ * @param {Function} processor
+ * @returns {Array<any>}
+ */
+export function batch_process_images(images, processor) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        wasm.batch_process_images(retptr, addHeapObject(images), addBorrowedObject(processor));
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+        if (r2) {
+            throw takeObject(r1);
+        }
+        return takeObject(r0);
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+        heap[stack_pointer++] = undefined;
+    }
+}
+
+/**
+ * Apply bilateral filter to an image.
+ *
+ * Bilateral filter is a non-linear, edge-preserving, and noise-reducing smoothing filter.
+ * Unlike Gaussian blur, it preserves edges while smoothing homogeneous regions.
+ *
+ * # Performance Optimizations
+ * - Pre-computed spatial weights: O(1) lookup instead of exp() calculation
+ * - Pre-computed range weights: O(1) lookup for color similarity
+ * - Direct pixel access: Avoids expensive get_pixel() calls
+ * - Separable approximation: Can be optimized further with separable kernel
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage to filter
+ * * `sigma_spatial` - Spatial domain standard deviation (controls smoothing radius)
+ * * `sigma_range` - Range domain standard deviation (controls edge sensitivity)
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::conv::bilateral_filter;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * bilateral_filter(&mut img, 5.0, 30.0);
+ * ```
+ * @param {PhotonImage} photon_image
+ * @param {number} sigma_spatial
+ * @param {number} sigma_range
+ * @param {boolean} fast_mode
+ */
+export function bilateral_filter(photon_image, sigma_spatial, sigma_range, fast_mode) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.bilateral_filter(photon_image.__wbg_ptr, sigma_spatial, sigma_range, fast_mode);
+}
+
+/**
  * Blend two images together.
  *
  * The `blend_mode` (3rd param) determines which blending mode to use; change this for varying effects.
@@ -2230,6 +2478,50 @@ export function blend(photon_image, photon_image2, blend_mode) {
     const ptr0 = passStringToWasm0(blend_mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
     const len0 = WASM_VECTOR_LEN;
     wasm.blend(photon_image.__wbg_ptr, photon_image2.__wbg_ptr, ptr0, len0);
+}
+
+/**
+ * Adaptive blend function that automatically selects the optimal algorithm
+ * based on image size.
+ *
+ * - For small images: Uses the standard blend function for maximum compatibility
+ * - For medium/large images: Uses the fast version that works directly on raw pixels
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `photon_image2` - The 2nd PhotonImage to be blended with the first.
+ * * `blend_mode` - The blending mode to use.
+ * @param {PhotonImage} photon_image
+ * @param {PhotonImage} photon_image2
+ * @param {string} blend_mode
+ */
+export function blend_adaptive(photon_image, photon_image2, blend_mode) {
+    _assertClass(photon_image, PhotonImage);
+    _assertClass(photon_image2, PhotonImage);
+    const ptr0 = passStringToWasm0(blend_mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.blend_adaptive(photon_image.__wbg_ptr, photon_image2.__wbg_ptr, ptr0, len0);
+}
+
+/**
+ * Optimized version of blend function that works directly on raw pixel data.
+ * This avoids creating DynamicImage objects multiple times and reduces memory allocations.
+ * Provides 1.3-1.5x performance improvement over the standard blend function.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `photon_image2` - The 2nd PhotonImage to be blended with the first.
+ * * `blend_mode` - The blending mode to use.
+ * @param {PhotonImage} photon_image
+ * @param {PhotonImage} photon_image2
+ * @param {string} blend_mode
+ */
+export function blend_fast(photon_image, photon_image2, blend_mode) {
+    _assertClass(photon_image, PhotonImage);
+    _assertClass(photon_image2, PhotonImage);
+    const ptr0 = passStringToWasm0(blend_mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.blend_fast(photon_image.__wbg_ptr, photon_image2.__wbg_ptr, ptr0, len0);
 }
 
 /**
@@ -3489,9 +3781,13 @@ export function gamma_correction(photon_image, red, green, blue) {
  *
  * Reference: http://blog.ivank.net/fastest-gaussian-blur.html
  *
+ * This implementation uses a separable box blur approximation for optimal performance,
+ * especially effective for large blur radii. The algorithm approximates Gaussian blur
+ * by applying three successive box blurs with carefully calculated radii.
+ *
  * # Arguments
  * * `photon_image` - A PhotonImage
- * * `radius` - blur radius
+ * * `radius` - blur radius (larger values create more blur)
  * # Example
  *
  * ```no_run
@@ -3507,6 +3803,90 @@ export function gamma_correction(photon_image, red, green, blue) {
 export function gaussian_blur(photon_image, radius) {
     _assertClass(photon_image, PhotonImage);
     wasm.gaussian_blur(photon_image.__wbg_ptr, radius);
+}
+
+/**
+ * Fast separable Gaussian blur using SIMD optimization.
+ *
+ * This is an optimized version of Gaussian blur that uses SIMD instructions
+ * for better performance on modern CPUs and WebAssembly. It's particularly
+ * effective for large blur radii and large images.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage
+ * * `radius` - blur radius (larger values create more blur)
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::conv::gaussian_blur_fast;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * gaussian_blur_fast(&mut img, 5_i32);
+ * ```
+ * @param {PhotonImage} photon_image
+ * @param {number} radius
+ */
+export function gaussian_blur_fast(photon_image, radius) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.gaussian_blur_fast(photon_image.__wbg_ptr, radius);
+}
+
+/**
+ * Apply Gaussian blur using parallel processing for better performance on multi-core systems.
+ *
+ * This is the parallel-optimized version of `gaussian_blur`. It uses Rayon to process
+ * the image in parallel, which can provide 2-4x speedup on multi-core CPUs.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage to blur
+ * * `radius` - Blur radius (larger values create more blur)
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::conv::gaussian_blur_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * gaussian_blur_parallel(&mut img, 5_i32);
+ * ```
+ * @param {PhotonImage} photon_image
+ * @param {number} radius
+ */
+export function gaussian_blur_parallel(photon_image, radius) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.gaussian_blur_parallel(photon_image.__wbg_ptr, radius);
+}
+
+/**
+ * Tiled Gaussian blur for better cache locality on large images.
+ *
+ * This implementation processes the image in tiles to improve cache performance,
+ * especially for large images. Each tile is processed independently, with proper
+ * handling of tile boundaries.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage
+ * * `radius` - blur radius
+ * * `tile_size` - Size of each tile (default 256 for good cache performance)
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::conv::gaussian_blur_tiled;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * gaussian_blur_tiled(&mut img, 5_i32, 256);
+ * ```
+ * @param {PhotonImage} photon_image
+ * @param {number} radius
+ * @param {number} tile_size
+ */
+export function gaussian_blur_tiled(photon_image, radius, tile_size) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.gaussian_blur_tiled(photon_image.__wbg_ptr, radius, tile_size);
 }
 
 /**
@@ -3615,6 +3995,31 @@ export function grayscale_human_corrected(img) {
 }
 
 /**
+ * Convert an image to grayscale using parallel processing.
+ *
+ * This is the parallel version of the grayscale operation.
+ * Uses human-corrected luminance formula: 0.3*R + 0.59*G + 0.11*B
+ *
+ * # Arguments
+ * * `photon_image` - A mutable reference to a PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::grayscale_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * grayscale_parallel(&mut img);
+ * ```
+ * @param {PhotonImage} photon_image
+ */
+export function grayscale_parallel(photon_image) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.grayscale_parallel(photon_image.__wbg_ptr);
+}
+
+/**
  * Employ only a limited number of gray shades in an image.
  *
  * # Arguments
@@ -3709,6 +4114,10 @@ export function horizontal_strips(photon_image, num_strips) {
  * let mut img = open_image("img.jpg").expect("File should open");
  * hsl(&mut img, "saturate", 0.1_f32);
  * ```
+ *
+ * # Performance
+ * This function now uses SIMD-optimized algorithms internally for better performance (1.5-2x improvement).
+ * For maximum accuracy with small images, use `hsl_with_palette()` instead.
  * @param {PhotonImage} photon_image
  * @param {string} mode
  * @param {number} amt
@@ -3718,6 +4127,90 @@ export function hsl(photon_image, mode, amt) {
     const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
     const len0 = WASM_VECTOR_LEN;
     wasm.hsl(photon_image.__wbg_ptr, ptr0, len0, amt);
+}
+
+/**
+ * Adaptive HSL color space manipulation that automatically selects the optimal algorithm
+ * based on image size.
+ *
+ * - For small images: Uses the standard palette library for maximum accuracy
+ * - For medium/large images: Uses the fast version with optimized conversion algorithms
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired: "saturate", "desaturate", "lighten", "darken", "shift_hue"
+ * * `amt` - A float value from 0 to 1.
+ * @param {PhotonImage} photon_image
+ * @param {string} mode
+ * @param {number} amt
+ */
+export function hsl_adaptive(photon_image, mode, amt) {
+    _assertClass(photon_image, PhotonImage);
+    const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.hsl_adaptive(photon_image.__wbg_ptr, ptr0, len0, amt);
+}
+
+/**
+ * Adaptive HSL function that automatically selects the optimal algorithm
+ * based on image size and available optimizations.
+ *
+ * - For small images: Uses the standard palette library for maximum accuracy
+ * - For medium images: Uses the fast version with optimized conversion algorithms
+ * - For large images: Uses the SIMD version for maximum performance
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired: "saturate", "desaturate", "lighten", "darken", "shift_hue"
+ * * `amt` - A float value from 0 to 1.
+ * @param {PhotonImage} photon_image
+ * @param {string} mode
+ * @param {number} amt
+ */
+export function hsl_auto(photon_image, mode, amt) {
+    _assertClass(photon_image, PhotonImage);
+    const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.hsl_auto(photon_image.__wbg_ptr, ptr0, len0, amt);
+}
+
+/**
+ * Optimized version of HSL color space manipulation using pre-computed lookup tables.
+ * This provides 1.5-2x performance improvement over the standard version for saturation and lightness operations.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired: "saturate", "desaturate", "lighten", "darken", "shift_hue"
+ * * `amt` - A float value from 0 to 1.
+ * @param {PhotonImage} photon_image
+ * @param {string} mode
+ * @param {number} amt
+ */
+export function hsl_fast(photon_image, mode, amt) {
+    _assertClass(photon_image, PhotonImage);
+    const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.hsl_fast(photon_image.__wbg_ptr, ptr0, len0, amt);
+}
+
+/**
+ * HSL color space manipulation using the palette library for maximum accuracy.
+ * This is slower than the default `hsl()` function but provides more accurate color conversions.
+ * Use this for small images where accuracy is more important than performance.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired to be applied. Choose from: `saturate`, `desaturate`, `shift_hue`, `darken`, `lighten`
+ * * `amt` - A float value from 0 to 1 which represents the amount the effect should be increased by.
+ * @param {PhotonImage} photon_image
+ * @param {string} mode
+ * @param {number} amt
+ */
+export function hsl_with_palette(photon_image, mode, amt) {
+    _assertClass(photon_image, PhotonImage);
+    const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.hsl_with_palette(photon_image.__wbg_ptr, ptr0, len0, amt);
 }
 
 /**
@@ -3789,6 +4282,85 @@ export function hsv(photon_image, mode, amt) {
     const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
     const len0 = WASM_VECTOR_LEN;
     wasm.hsv(photon_image.__wbg_ptr, ptr0, len0, amt);
+}
+
+/**
+ * Adaptive HSV color space manipulation that automatically selects the optimal algorithm
+ * based on image size.
+ *
+ * - For small images: Uses the standard palette library for maximum accuracy
+ * - For medium/large images: Uses the fast version with optimized conversion algorithms
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired: "saturate", "desaturate", "lighten", "darken", "shift_hue"
+ * * `amt` - A float value from 0 to 1.
+ * @param {PhotonImage} photon_image
+ * @param {string} mode
+ * @param {number} amt
+ */
+export function hsv_adaptive(photon_image, mode, amt) {
+    _assertClass(photon_image, PhotonImage);
+    const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.hsv_adaptive(photon_image.__wbg_ptr, ptr0, len0, amt);
+}
+
+/**
+ * Adaptive HSV function that automatically selects the optimal algorithm
+ * based on image size and available optimizations.
+ *
+ * - For small images: Uses the standard palette library for maximum accuracy
+ * - For medium images: Uses the fast version with optimized conversion algorithms
+ * - For large images: Uses the SIMD version for maximum performance
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired: "saturate", "desaturate", "lighten", "darken", "shift_hue"
+ * * `amt` - A float value from 0 to 1.
+ * @param {PhotonImage} photon_image
+ * @param {string} mode
+ * @param {number} amt
+ */
+export function hsv_auto(photon_image, mode, amt) {
+    _assertClass(photon_image, PhotonImage);
+    const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.hsv_auto(photon_image.__wbg_ptr, ptr0, len0, amt);
+}
+
+/**
+ * Optimized version of HSV color space manipulation using fast conversion algorithms.
+ * This provides 1.5-2x performance improvement over the standard version.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired: "saturate", "desaturate", "lighten", "darken", "shift_hue"
+ * * `amt` - A float value from 0 to 1.
+ * @param {PhotonImage} photon_image
+ * @param {string} mode
+ * @param {number} amt
+ */
+export function hsv_fast(photon_image, mode, amt) {
+    _assertClass(photon_image, PhotonImage);
+    const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.hsv_fast(photon_image.__wbg_ptr, ptr0, len0, amt);
+}
+
+/**
+ * HSV color space manipulation using the palette library for maximum accuracy.
+ * This is slower than the default `hsv()` function but provides more accurate color conversions.
+ * Use this for small images where accuracy is more important than performance.
+ * @param {PhotonImage} photon_image
+ * @param {string} mode
+ * @param {number} amt
+ */
+export function hsv_with_palette(photon_image, mode, amt) {
+    _assertClass(photon_image, PhotonImage);
+    const ptr0 = passStringToWasm0(mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+    const len0 = WASM_VECTOR_LEN;
+    wasm.hsv_with_palette(photon_image.__wbg_ptr, ptr0, len0, amt);
 }
 
 /**
@@ -3947,6 +4519,52 @@ export function initThreadPool(num_threads) {
 }
 
 /**
+ * Initialize the thread pool for parallel processing.
+ *
+ * This function should be called once at the beginning of your application
+ * when using parallel operations in WebAssembly.
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::init_parallel;
+ *
+ * // Initialize the thread pool (for WASM)
+ * init_parallel();
+ * ```
+ */
+export function init_parallel() {
+    wasm.init_parallel();
+}
+
+/**
+ * Initialize the thread pool for WebAssembly parallel processing.
+ *
+ * This function must be called from JavaScript before using any parallel processing features.
+ * It sets up the worker threads for rayon parallel execution.
+ *
+ * # JavaScript Example
+ * ```javascript
+ * import { initThreadPool } from './photon_wasm.js';
+ *
+ * // Initialize with 4 threads
+ * await initThreadPool(4);
+ *
+ * // Now you can use parallel processing features
+ * ```
+ *
+ * # Arguments
+ * * `num_threads` - Number of threads to use for parallel processing.
+ *   If 0, it will use the hardware concurrency (number of logical CPUs).
+ * @param {number} num_threads
+ * @returns {Promise<void>}
+ */
+export function init_thread_pool(num_threads) {
+    const ret = wasm.init_thread_pool(num_threads);
+    return takeObject(ret);
+}
+
+/**
  * Invert RGB value of an image.
  *
  * # Arguments
@@ -3965,6 +4583,30 @@ export function initThreadPool(num_threads) {
 export function invert(photon_image) {
     _assertClass(photon_image, PhotonImage);
     wasm.invert(photon_image.__wbg_ptr);
+}
+
+/**
+ * Invert all colors in an image using parallel processing.
+ *
+ * This is the parallel version of the invert operation.
+ *
+ * # Arguments
+ * * `photon_image` - A mutable reference to a PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::invert_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * invert_parallel(&mut img);
+ * ```
+ * @param {PhotonImage} photon_image
+ */
+export function invert_parallel(photon_image) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.invert_parallel(photon_image.__wbg_ptr);
 }
 
 /**
@@ -4747,6 +5389,73 @@ export function pastel_pink(img) {
 }
 
 /**
+ * Create a PhotonImage from a Uint8ClampedArray with zero-copy.
+ *
+ * This function creates a PhotonImage directly from JavaScript's Uint8ClampedArray
+ * without copying the data, enabling efficient data transfer between JavaScript and WASM.
+ *
+ * # Arguments
+ * * `data` - A Uint8ClampedArray containing RGBA pixel data.
+ * * `width` - The image width.
+ * * `height` - The image height.
+ *
+ * # Example
+ *
+ * ```javascript
+ * import { PhotonImage } from 'photon_rs';
+ *
+ * const canvas = document.getElementById('myCanvas');
+ * const ctx = canvas.getContext('2d');
+ * const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+ *
+ * // Create PhotonImage without copying
+ * const photonImg = PhotonImage.from_uint8_array(imageData.data, canvas.width, canvas.height);
+ * ```
+ * @param {Uint8ClampedArray} data
+ * @param {number} width
+ * @param {number} height
+ * @returns {PhotonImage}
+ */
+export function photon_image_from_uint8_clamped_array(data, width, height) {
+    const ret = wasm.photon_image_from_uint8_clamped_array(addHeapObject(data), width, height);
+    return PhotonImage.__wrap(ret);
+}
+
+/**
+ * Get pixel data as a Uint8ClampedArray for efficient transfer to JavaScript.
+ *
+ * This function provides the image's pixel data as a Uint8ClampedArray,
+ * which can be directly used with Canvas API without additional copying.
+ *
+ * # Arguments
+ * * `img` - A reference to a PhotonImage.
+ *
+ * # Returns
+ * A Uint8ClampedArray containing the RGBA pixel data.
+ *
+ * # Example
+ *
+ * ```javascript
+ * import { PhotonImage } from 'photon_rs';
+ *
+ * const canvas = document.getElementById('myCanvas');
+ * const ctx = canvas.getContext('2d');
+ *
+ * // After processing an image
+ * const pixelData = photonImg.get_uint8_clamped_array();
+ * const imageData = new ImageData(pixelData, photonImg.width, photonImg.height);
+ * ctx.putImageData(imageData, 0, 0);
+ * ```
+ * @param {PhotonImage} img
+ * @returns {Uint8ClampedArray}
+ */
+export function photon_image_get_uint8_clamped_array(img) {
+    _assertClass(img, PhotonImage);
+    const ret = wasm.photon_image_get_uint8_clamped_array(img.__wbg_ptr);
+    return takeObject(ret);
+}
+
+/**
  * Add pink-tinted noise to an image.
  *
  * **[WASM SUPPORT IS AVAILABLE]**: Randomized thread pools cannot be created with WASM, but
@@ -4838,6 +5547,56 @@ export function prewitt_horizontal(photon_image) {
 export function primary(img) {
     _assertClass(img, PhotonImage);
     wasm.primary(img.__wbg_ptr);
+}
+
+/**
+ * Process image data in-place for zero-copy operations.
+ *
+ * This function processes ImageData directly without creating intermediate
+ * PhotonImage objects, reducing memory allocations and copying.
+ *
+ * # Arguments
+ * * `image_data` - A mutable reference to ImageData.
+ * * `processor` - A function that processes the pixel data.
+ *
+ * # Example
+ *
+ * ```javascript
+ * import { process_image_data_inplace } from 'photon_rs';
+ *
+ * const canvas = document.getElementById('myCanvas');
+ * const ctx = canvas.getContext('2d');
+ * const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+ *
+ * // Process image data in-place
+ * process_image_data_inplace(imageData, (pixels, width, height) => {
+ *     // Custom processing logic
+ *     for (let i = 0; i < pixels.length; i += 4) {
+ *         pixels[i] = 255 - pixels[i];     // Invert R
+ *         pixels[i + 1] = 255 - pixels[i + 1]; // Invert G
+ *         pixels[i + 2] = 255 - pixels[i + 2]; // Invert B
+ *     }
+ * });
+ *
+ * ctx.putImageData(imageData, 0, 0);
+ * ```
+ * @param {ImageData} image_data
+ * @param {Function} processor
+ */
+export function process_image_data_inplace(image_data, processor) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        wasm.process_image_data_inplace(retptr, addBorrowedObject(image_data), addBorrowedObject(processor));
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        if (r1) {
+            throw takeObject(r0);
+        }
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+        heap[stack_pointer++] = undefined;
+        heap[stack_pointer++] = undefined;
+    }
 }
 
 /**
@@ -5234,7 +5993,18 @@ export function saturate_lch(img, level) {
 /**
  * Resize image using seam carver.
  * Resize only if new dimensions are smaller, than original image.
- * # NOTE: This is still experimental feature, and pretty slow.
+ * # NOTE: This is an optimized parallel implementation with significant performance improvements.
+ *
+ * # Performance Improvements
+ * - **Parallel Energy Computation**: Uses Rayon for multi-threaded energy map calculation
+ * - **Batch Seam Removal**: Processes multiple seams in a single pass (up to 8 at a time)
+ * - **Reduced Memory Allocations**: Pre-allocates all necessary memory upfront
+ * - **Optimized Dynamic Programming**: Efficient min-path computation with SIMD-friendly patterns
+ * - **Smart Rotation Strategy**: Minimizes rotation operations for horizontal seams
+ *
+ * # Expected Performance
+ * - Native (Rayon): 2-4x faster than sequential version on multi-core systems
+ * - WASM (wasm-bindgen-rayon): 1.5-2.5x faster on browsers with thread support
  *
  * # Arguments
  * * `img` - A PhotonImage.
@@ -5632,6 +6402,9 @@ export function single_channel_grayscale(photon_image, channel) {
  * Each pixel is calculated as the magnitude of the horizontal and vertical components of the Sobel filter,
  * ie if X is the horizontal sobel and Y is the vertical, for each pixel, we calculate sqrt(X^2 + Y^2)
  *
+ * This optimized version calculates both horizontal and vertical gradients in a single pass,
+ * avoiding image cloning and reducing memory usage by 50%.
+ *
  * # Arguments
  * * `img` - A PhotonImage.
  *
@@ -5794,6 +6567,33 @@ export function swap_channels(img, channel1, channel2) {
 export function threshold(img, threshold) {
     _assertClass(img, PhotonImage);
     wasm.threshold(img.__wbg_ptr, threshold);
+}
+
+/**
+ * Apply threshold operation using parallel processing.
+ *
+ * This is the parallel version of the threshold operation.
+ * Pixels above threshold become white (255), below become black (0).
+ *
+ * # Arguments
+ * * `photon_image` - A mutable reference to a PhotonImage.
+ * * `threshold` - The threshold value (0-255).
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::threshold_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * threshold_parallel(&mut img, 128);
+ * ```
+ * @param {PhotonImage} photon_image
+ * @param {number} threshold
+ */
+export function threshold_parallel(photon_image, threshold) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.threshold_parallel(photon_image.__wbg_ptr, threshold);
 }
 
 /**
@@ -5975,6 +6775,49 @@ export function watermark(img, watermark, x, y) {
     wasm.watermark(img.__wbg_ptr, watermark.__wbg_ptr, x, y);
 }
 
+/**
+ * Adaptive watermark function that automatically selects the optimal algorithm
+ * based on image size.
+ *
+ * - For small images: Uses the standard watermark function
+ * - For medium/large images: Uses the fast version that works directly on raw pixels
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `watermark` - The watermark to be placed onto the `img` image.
+ * * `x` - The x coordinate where the watermark's top corner should be positioned.
+ * * `y` - The y coordinate where the watermark's top corner should be positioned.
+ * @param {PhotonImage} img
+ * @param {PhotonImage} watermark
+ * @param {bigint} x
+ * @param {bigint} y
+ */
+export function watermark_adaptive(img, watermark, x, y) {
+    _assertClass(img, PhotonImage);
+    _assertClass(watermark, PhotonImage);
+    wasm.watermark_adaptive(img.__wbg_ptr, watermark.__wbg_ptr, x, y);
+}
+
+/**
+ * Optimized version of watermark function that works directly on raw pixel data.
+ * Avoids creating DynamicImage objects multiple times.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `watermark` - The watermark to be placed onto the `img` image.
+ * * `x` - The x coordinate where the watermark's top corner should be positioned.
+ * * `y` - The y coordinate where the watermark's top corner should be positioned.
+ * @param {PhotonImage} img
+ * @param {PhotonImage} watermark
+ * @param {bigint} x
+ * @param {bigint} y
+ */
+export function watermark_fast(img, watermark, x, y) {
+    _assertClass(img, PhotonImage);
+    _assertClass(watermark, PhotonImage);
+    wasm.watermark_fast(img.__wbg_ptr, watermark.__wbg_ptr, x, y);
+}
+
 export class wbg_rayon_PoolBuilder {
     static __wrap(ptr) {
         ptr = ptr >>> 0;
@@ -5995,13 +6838,6 @@ export class wbg_rayon_PoolBuilder {
     }
     build() {
         wasm.wbg_rayon_poolbuilder_build(this.__wbg_ptr);
-    }
-    /**
-     * @returns {string}
-     */
-    mainJS() {
-        const ret = wasm.wbg_rayon_poolbuilder_mainJS(this.__wbg_ptr);
-        return takeObject(ret);
     }
     /**
      * @returns {number}
@@ -6071,19 +6907,37 @@ function __wbg_get_imports(memory) {
             getDataViewMemory0().setFloat64(arg0 + 8 * 1, isLikeNone(ret) ? 0 : ret, true);
             getDataViewMemory0().setInt32(arg0 + 4 * 0, !isLikeNone(ret), true);
         },
+        __wbg___wbindgen_rethrow_0803fa3da1b498f1: function(arg0) {
+            throw takeObject(arg0);
+        },
         __wbg___wbindgen_throw_39bc967c0e5a9b58: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
+        },
+        __wbg__wbg_cb_unref_b6d832240a919168: function(arg0) {
+            getObject(arg0)._wbg_cb_unref();
         },
         __wbg_appendChild_f8784f6270d097cd: function() { return handleError(function (arg0, arg1) {
             const ret = getObject(arg0).appendChild(getObject(arg1));
             return addHeapObject(ret);
         }, arguments); },
+        __wbg_async_d823d36f294f15c4: function(arg0) {
+            const ret = getObject(arg0).async;
+            return ret;
+        },
         __wbg_body_4eb4906314b12ac0: function(arg0) {
             const ret = getObject(arg0).body;
             return isLikeNone(ret) ? 0 : addHeapObject(ret);
         },
+        __wbg_buffer_0501472a2adb62a1: function(arg0) {
+            const ret = getObject(arg0).buffer;
+            return addHeapObject(ret);
+        },
         __wbg_call_08ad0d89caa7cb79: function() { return handleError(function (arg0, arg1, arg2) {
             const ret = getObject(arg0).call(getObject(arg1), getObject(arg2));
+            return addHeapObject(ret);
+        }, arguments); },
+        __wbg_call_c974f0bf2231552e: function() { return handleError(function (arg0, arg1, arg2, arg3) {
+            const ret = getObject(arg0).call(getObject(arg1), getObject(arg2), getObject(arg3));
             return addHeapObject(ret);
         }, arguments); },
         __wbg_createElement_c28be812ac2ffe84: function() { return handleError(function (arg0, arg1, arg2) {
@@ -6092,6 +6946,10 @@ function __wbg_get_imports(memory) {
         }, arguments); },
         __wbg_crypto_38df2bab126b63dc: function(arg0) {
             const ret = getObject(arg0).crypto;
+            return addHeapObject(ret);
+        },
+        __wbg_data_826b7d645a40043f: function(arg0) {
+            const ret = getObject(arg0).data;
             return addHeapObject(ret);
         },
         __wbg_data_a8576aa36473ad45: function(arg0, arg1) {
@@ -6111,6 +6969,17 @@ function __wbg_get_imports(memory) {
         __wbg_drawImage_6f33340e37778efb: function() { return handleError(function (arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) {
             getObject(arg0).drawImage(getObject(arg1), arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
         }, arguments); },
+        __wbg_error_a6fa202b58aa1cd3: function(arg0, arg1) {
+            let deferred0_0;
+            let deferred0_1;
+            try {
+                deferred0_0 = arg0;
+                deferred0_1 = arg1;
+                console.error(getStringFromWasm0(arg0, arg1));
+            } finally {
+                wasm.__wbindgen_export4(deferred0_0, deferred0_1, 1);
+            }
+        },
         __wbg_error_ad28debb48b5c6bb: function(arg0) {
             console.error(getObject(arg0));
         },
@@ -6133,6 +7002,10 @@ function __wbg_get_imports(memory) {
             const ret = getObject(arg0)[arg1 >>> 0];
             return addHeapObject(ret);
         },
+        __wbg_get_index_36f92638a16561e8: function(arg0, arg1) {
+            const ret = getObject(arg0)[arg1 >>> 0];
+            return ret;
+        },
         __wbg_height_21ecb9dcc0472f5d: function(arg0) {
             const ret = getObject(arg0).height;
             return ret;
@@ -6145,10 +7018,30 @@ function __wbg_get_imports(memory) {
             const ret = getObject(arg0).height;
             return ret;
         },
+        __wbg_instanceof_Array_461ec6d7afd45fda: function(arg0) {
+            let result;
+            try {
+                result = getObject(arg0) instanceof Array;
+            } catch (_) {
+                result = false;
+            }
+            const ret = result;
+            return ret;
+        },
         __wbg_instanceof_CanvasRenderingContext2d_125f869ccf2f7649: function(arg0) {
             let result;
             try {
                 result = getObject(arg0) instanceof CanvasRenderingContext2D;
+            } catch (_) {
+                result = false;
+            }
+            const ret = result;
+            return ret;
+        },
+        __wbg_instanceof_Float32Array_00770a0487b98c06: function(arg0) {
+            let result;
+            try {
+                result = getObject(arg0) instanceof Float32Array;
             } catch (_) {
                 result = false;
             }
@@ -6185,6 +7078,14 @@ function __wbg_get_imports(memory) {
             const ret = result;
             return ret;
         },
+        __wbg_length_20b2161ab2bea256: function(arg0) {
+            const ret = getObject(arg0).length;
+            return ret;
+        },
+        __wbg_length_326999dcd07f2163: function(arg0) {
+            const ret = getObject(arg0).length;
+            return ret;
+        },
         __wbg_length_5855c1f289dfffc1: function(arg0) {
             const ret = getObject(arg0).length;
             return ret;
@@ -6200,6 +7101,62 @@ function __wbg_get_imports(memory) {
         __wbg_new_09959f7b4c92c246: function(arg0) {
             const ret = new Uint8Array(getObject(arg0));
             return addHeapObject(ret);
+        },
+        __wbg_new_227d7c05414eb861: function() {
+            const ret = new Error();
+            return addHeapObject(ret);
+        },
+        __wbg_new_5249bab2d955c841: function(arg0) {
+            const ret = new Int32Array(getObject(arg0));
+            return addHeapObject(ret);
+        },
+        __wbg_new_6eed8f87fc95618e: function() { return handleError(function (arg0, arg1) {
+            const ret = new Worker(getStringFromWasm0(arg0, arg1));
+            return addHeapObject(ret);
+        }, arguments); },
+        __wbg_new_79ce7968119cfd96: function(arg0, arg1) {
+            try {
+                var state0 = {a: arg0, b: arg1};
+                var cb0 = (arg0, arg1) => {
+                    const a = state0.a;
+                    state0.a = 0;
+                    try {
+                        return __wasm_bindgen_func_elem_2142(a, state0.b, arg0, arg1);
+                    } finally {
+                        state0.a = a;
+                    }
+                };
+                const ret = new Promise(cb0);
+                return addHeapObject(ret);
+            } finally {
+                state0.a = state0.b = 0;
+            }
+        },
+        __wbg_new_cbee8c0d5c479eac: function() {
+            const ret = new Array();
+            return addHeapObject(ret);
+        },
+        __wbg_new_ed69e637b553a997: function() {
+            const ret = new Object();
+            return addHeapObject(ret);
+        },
+        __wbg_new_typed_8258a0d8488ef2a2: function(arg0, arg1) {
+            try {
+                var state0 = {a: arg0, b: arg1};
+                var cb0 = (arg0, arg1) => {
+                    const a = state0.a;
+                    state0.a = 0;
+                    try {
+                        return __wasm_bindgen_func_elem_2142(a, state0.b, arg0, arg1);
+                    } finally {
+                        state0.a = a;
+                    }
+                };
+                const ret = new Promise(cb0);
+                return addHeapObject(ret);
+            } finally {
+                state0.a = state0.b = 0;
+            }
         },
         __wbg_new_with_length_c8449d782396d344: function(arg0) {
             const ret = new Uint8Array(arg0 >>> 0);
@@ -6217,16 +7174,37 @@ function __wbg_get_imports(memory) {
             const ret = Date.now();
             return ret;
         },
+        __wbg_of_332bf1b25b068982: function(arg0, arg1, arg2) {
+            const ret = Array.of(getObject(arg0), getObject(arg1), getObject(arg2));
+            return addHeapObject(ret);
+        },
+        __wbg_postMessage_af6209ddad5840b9: function() { return handleError(function (arg0, arg1) {
+            getObject(arg0).postMessage(getObject(arg1));
+        }, arguments); },
         __wbg_process_44c7a14e11e9f69e: function(arg0) {
             const ret = getObject(arg0).process;
             return addHeapObject(ret);
         },
+        __wbg_prototypesetcall_e02cc4f04479d253: function(arg0, arg1, arg2) {
+            Uint8ClampedArray.prototype.set.call(getArrayU8FromWasm0(arg0, arg1), getObject(arg2));
+        },
         __wbg_prototypesetcall_f034d444741426c3: function(arg0, arg1, arg2) {
             Uint8Array.prototype.set.call(getArrayU8FromWasm0(arg0, arg1), getObject(arg2));
+        },
+        __wbg_push_a6f9488ffd3fae3b: function(arg0, arg1) {
+            const ret = getObject(arg0).push(getObject(arg1));
+            return ret;
         },
         __wbg_putImageData_afec9ab1493ac23a: function() { return handleError(function (arg0, arg1, arg2, arg3) {
             getObject(arg0).putImageData(getObject(arg1), arg2, arg3);
         }, arguments); },
+        __wbg_queueMicrotask_2c8dfd1056f24fdc: function(arg0) {
+            const ret = getObject(arg0).queueMicrotask;
+            return addHeapObject(ret);
+        },
+        __wbg_queueMicrotask_8985ad63815852e7: function(arg0) {
+            queueMicrotask(getObject(arg0));
+        },
         __wbg_randomFillSync_6c25eac9869eb53c: function() { return handleError(function (arg0, arg1) {
             getObject(arg0).randomFillSync(takeObject(arg1));
         }, arguments); },
@@ -6238,8 +7216,19 @@ function __wbg_get_imports(memory) {
             const ret = module.require;
             return addHeapObject(ret);
         }, arguments); },
+        __wbg_resolve_5d61e0d10c14730a: function(arg0) {
+            const ret = Promise.resolve(getObject(arg0));
+            return addHeapObject(ret);
+        },
+        __wbg_set_bad5c505cc70b5f8: function() { return handleError(function (arg0, arg1, arg2) {
+            const ret = Reflect.set(getObject(arg0), getObject(arg1), getObject(arg2));
+            return ret;
+        }, arguments); },
         __wbg_set_height_ed13c7b896d93a3b: function(arg0, arg1) {
             getObject(arg0).height = arg1 >>> 0;
+        },
+        __wbg_set_onmessage_a073f657459fcfe6: function(arg0, arg1) {
+            getObject(arg0).onmessage = getObject(arg1);
         },
         __wbg_set_textContent_ccd33eab05add227: function(arg0, arg1, arg2) {
             getObject(arg0).textContent = arg1 === 0 ? undefined : getStringFromWasm0(arg1, arg2);
@@ -6247,7 +7236,14 @@ function __wbg_get_imports(memory) {
         __wbg_set_width_7f65ced2ffeee343: function(arg0, arg1) {
             getObject(arg0).width = arg1 >>> 0;
         },
-        __wbg_startWorkers_622cedd0d351664e: function(arg0, arg1, arg2) {
+        __wbg_stack_3b0d974bbf31e44f: function(arg0, arg1) {
+            const ret = getObject(arg1).stack;
+            const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+            const len1 = WASM_VECTOR_LEN;
+            getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
+            getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
+        },
+        __wbg_startWorkers_8b582d57e92bd2d4: function(arg0, arg1, arg2) {
             const ret = startWorkers(takeObject(arg0), takeObject(arg1), wbg_rayon_PoolBuilder.__wrap(arg2));
             return addHeapObject(ret);
         },
@@ -6263,10 +7259,6 @@ function __wbg_get_imports(memory) {
             const ret = typeof self === 'undefined' ? null : self;
             return isLikeNone(ret) ? 0 : addHeapObject(ret);
         },
-        __wbg_static_accessor_URL_151cb8815849ce83: function() {
-            const ret = import.meta.url;
-            return addHeapObject(ret);
-        },
         __wbg_static_accessor_WINDOW_d6c4126e4c244380: function() {
             const ret = typeof window === 'undefined' ? null : window;
             return isLikeNone(ret) ? 0 : addHeapObject(ret);
@@ -6275,8 +7267,32 @@ function __wbg_get_imports(memory) {
             const ret = getObject(arg0).subarray(arg1 >>> 0, arg2 >>> 0);
             return addHeapObject(ret);
         },
+        __wbg_then_6e88c9d5b003f517: function(arg0, arg1) {
+            const ret = getObject(arg0).then(getObject(arg1));
+            return addHeapObject(ret);
+        },
+        __wbg_then_d4163530723f56f4: function(arg0, arg1, arg2) {
+            const ret = getObject(arg0).then(getObject(arg1), getObject(arg2));
+            return addHeapObject(ret);
+        },
+        __wbg_then_f1c954fe00733701: function(arg0, arg1) {
+            const ret = getObject(arg0).then(getObject(arg1));
+            return addHeapObject(ret);
+        },
+        __wbg_value_ad1c1726993ce63e: function(arg0) {
+            const ret = getObject(arg0).value;
+            return addHeapObject(ret);
+        },
         __wbg_versions_276b2795b1c6a219: function(arg0) {
             const ret = getObject(arg0).versions;
+            return addHeapObject(ret);
+        },
+        __wbg_waitAsync_207a52eee200ef0a: function(arg0, arg1, arg2) {
+            const ret = Atomics.waitAsync(getObject(arg0), arg1 >>> 0, arg2);
+            return addHeapObject(ret);
+        },
+        __wbg_waitAsync_f6c74926be2d0dac: function() {
+            const ret = Atomics.waitAsync;
             return addHeapObject(ret);
         },
         __wbg_width_60f44a816d7f9267: function(arg0) {
@@ -6292,14 +7308,60 @@ function __wbg_get_imports(memory) {
             return ret;
         },
         __wbindgen_cast_0000000000000001: function(arg0, arg1) {
+            // Cast intrinsic for `Closure(Closure { dtor_idx: 240, function: Function { arguments: [Externref], shim_idx: 241, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            const ret = makeMutClosure(arg0, arg1, wasm.__wasm_bindgen_func_elem_793, __wasm_bindgen_func_elem_794);
+            return addHeapObject(ret);
+        },
+        __wbindgen_cast_0000000000000002: function(arg0, arg1) {
+            // Cast intrinsic for `Closure(Closure { dtor_idx: 390, function: Function { arguments: [Externref], shim_idx: 393, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
+            const ret = makeMutClosure(arg0, arg1, wasm.__wasm_bindgen_func_elem_1514, __wasm_bindgen_func_elem_1517);
+            return addHeapObject(ret);
+        },
+        __wbindgen_cast_0000000000000003: function(arg0, arg1) {
+            // Cast intrinsic for `Closure(Closure { dtor_idx: 390, function: Function { arguments: [NamedExternref("MessageEvent")], shim_idx: 391, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            const ret = makeMutClosure(arg0, arg1, wasm.__wasm_bindgen_func_elem_1514, __wasm_bindgen_func_elem_1515);
+            return addHeapObject(ret);
+        },
+        __wbindgen_cast_0000000000000004: function(arg0) {
+            // Cast intrinsic for `F64 -> Externref`.
+            const ret = arg0;
+            return addHeapObject(ret);
+        },
+        __wbindgen_cast_0000000000000005: function(arg0, arg1) {
             // Cast intrinsic for `Ref(Slice(U8)) -> NamedExternref("Uint8Array")`.
             const ret = getArrayU8FromWasm0(arg0, arg1);
             return addHeapObject(ret);
         },
-        __wbindgen_cast_0000000000000002: function(arg0, arg1) {
+        __wbindgen_cast_0000000000000006: function(arg0, arg1) {
+            // Cast intrinsic for `Ref(Slice(U8)) -> NamedExternref("Uint8ClampedArray")`.
+            const ret = getArrayU8FromWasm0(arg0, arg1);
+            return addHeapObject(ret);
+        },
+        __wbindgen_cast_0000000000000007: function(arg0, arg1) {
             // Cast intrinsic for `Ref(String) -> Externref`.
             const ret = getStringFromWasm0(arg0, arg1);
             return addHeapObject(ret);
+        },
+        __wbindgen_cast_0000000000000008: function(arg0, arg1) {
+            var v0 = getClampedArrayU8FromWasm0(arg0, arg1).slice();
+            wasm.__wbindgen_export4(arg0, arg1 * 1, 1);
+            // Cast intrinsic for `Vector(ClampedU8) -> Externref`.
+            const ret = v0;
+            return addHeapObject(ret);
+        },
+        __wbindgen_link_922dd8fcb05d94cd: function(arg0) {
+            const val = `onmessage = function (ev) {
+                let [ia, index, value] = ev.data;
+                ia = new Int32Array(ia.buffer);
+                let result = Atomics.wait(ia, index, value);
+                postMessage(result);
+            };
+            `;
+            const ret = typeof URL.createObjectURL === 'undefined' ? "data:application/javascript," + encodeURIComponent(val) : URL.createObjectURL(new Blob([val], { type: "text/javascript" }));
+            const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+            const len1 = WASM_VECTOR_LEN;
+            getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
+            getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
         },
         __wbindgen_object_clone_ref: function(arg0) {
             const ret = getObject(arg0);
@@ -6314,6 +7376,32 @@ function __wbg_get_imports(memory) {
         __proto__: null,
         "./photon_wasm_bg.js": import0,
     };
+}
+
+function __wasm_bindgen_func_elem_794(arg0, arg1, arg2) {
+    wasm.__wasm_bindgen_func_elem_794(arg0, arg1, addHeapObject(arg2));
+}
+
+function __wasm_bindgen_func_elem_1515(arg0, arg1, arg2) {
+    wasm.__wasm_bindgen_func_elem_1515(arg0, arg1, addHeapObject(arg2));
+}
+
+function __wasm_bindgen_func_elem_1517(arg0, arg1, arg2) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        wasm.__wasm_bindgen_func_elem_1517(retptr, arg0, arg1, addHeapObject(arg2));
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        if (r1) {
+            throw takeObject(r0);
+        }
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+
+function __wasm_bindgen_func_elem_2142(arg0, arg1, arg2, arg3) {
+    wasm.__wasm_bindgen_func_elem_2142(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
 }
 
 const BrushConfigFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -6361,6 +7449,10 @@ function addBorrowedObject(obj) {
     heap[--stack_pointer] = obj;
     return stack_pointer;
 }
+
+const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(state => state.dtor(state.a, state.b));
 
 function debugString(val) {
     // primitive types
@@ -6507,6 +7599,34 @@ let heap_next = heap.length;
 
 function isLikeNone(x) {
     return x === undefined || x === null;
+}
+
+function makeMutClosure(arg0, arg1, dtor, f) {
+    const state = { a: arg0, b: arg1, cnt: 1, dtor };
+    const real = (...args) => {
+
+        // First up with a closure we increment the internal reference
+        // count. This ensures that the Rust closure environment won't
+        // be deallocated while we're invoking it.
+        state.cnt++;
+        const a = state.a;
+        state.a = 0;
+        try {
+            return f(a, state.b, ...args);
+        } finally {
+            state.a = a;
+            real._wbg_cb_unref();
+        }
+    };
+    real._wbg_cb_unref = () => {
+        if (--state.cnt === 0) {
+            state.dtor(state.a, state.b);
+            state.a = 0;
+            CLOSURE_DTORS.unregister(state);
+        }
+    };
+    CLOSURE_DTORS.register(real, state, state);
+    return real;
 }
 
 function passArray8ToWasm0(arg, malloc) {

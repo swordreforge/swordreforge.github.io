@@ -75,6 +75,10 @@ export class BrushStroke {
      * 获取笔刷配置
      */
     get_config(): BrushConfig;
+    /**
+     * 清除路径缓存（当点集改变时调用）
+     */
+    invalidate_path_cache(): void;
     constructor(config: BrushConfig);
     /**
      * 获取点数量
@@ -156,6 +160,23 @@ export class ImageProcessor {
     alter_red_channel(amt: number): void;
     apply_all_adjustments(brightness: number, contrast: number, saturation: number, hue: number, lightness: number, lightness_color_space: ColorSpace, gamma_red: number, gamma_green: number, gamma_blue: number, sharpen_strength: number, noise_reduction_strength: number): void;
     apply_b_grayscale(): void;
+    /**
+     * 应用双边滤波器
+     *
+     * 双边滤波器是一种非线性的、保边的降噪滤波器
+     * 与高斯模糊不同,它在平滑均匀区域的同时保持边缘清晰
+     *
+     * # 参数
+     * * `sigma_spatial` - 空间域标准偏差,控制平滑半径(范围: 1.0-20.0)
+     * * `sigma_range` - 范围域标准偏差,控制边缘敏感度(范围: 10.0-150.0)
+     * * `fast_mode` - 快速模式,降低质量换取速度(默认: true)
+     *
+     * # 使用建议
+     * * `sigma_spatial`: 较大的值会产生更强的平滑效果
+     * * `sigma_range`: 较大的值会允许更大的颜色差异,从而保持更多细节
+     * * `fast_mode`: 快速模式使用采样加速,计算速度提升约4倍,质量略有下降
+     */
+    apply_bilateral_filter(sigma_spatial: number, sigma_range: number, fast_mode: boolean): void;
     apply_box_blur(): void;
     apply_brightness(level: number): void;
     /**
@@ -338,9 +359,30 @@ export class ImageProcessor {
      */
     desaturate_hsl(level: number): void;
     /**
-     * 直接绘制一笔（简化接口）
+     * 直接绘制一笔（简化接口，向后兼容）
+     *
+     * # 参数
+     * * `points_js` - 点数据，支持两种格式：
+     *   - Float32Array: [x1, y1, x2, y2, ...] （推荐，性能更高）
+     *   - 普通数组: [{x, y}, {x, y}, ...] （兼容性）
+     * * `r, g, b, a` - 颜色值
+     * * `width` - 笔刷宽度
      */
     draw_stroke(points_js: any, r: number, g: number, b: number, a: number, width: number): void;
+    /**
+     * 绘制一笔（高性能版本，使用 Float32Array）
+     *
+     * # 参数
+     * * `points_array` - Float32Array 格式的点数据：[x1, y1, x2, y2, ...]
+     * * `r, g, b, a` - 颜色值（0-255）
+     * * `width` - 笔刷宽度
+     *
+     * # 性能优势
+     * - 使用 Float32Array 避免 Reflect.get 调用
+     * - 直接内存访问，减少跨边界调用
+     * - 比普通数组版本快约 30%
+     */
+    draw_stroke_array(points_array: Float32Array, r: number, g: number, b: number, a: number, width: number): void;
     /**
      * 绘制文本，支持可选参数控制字体、阴影和颜色
      *
@@ -540,12 +582,36 @@ export class PhotonImage {
     get_image_data(): ImageData;
     /**
      * Get the PhotonImage's pixels as a Vec of u8s.
+     *
+     * **Note**: This clones the pixel data, which can be expensive for large images.
+     * For read-only access, prefer `get_raw_pixels_slice()` which returns a reference without cloning.
      */
     get_raw_pixels(): Uint8Array;
     /**
      * Get the width of the PhotonImage.
      */
     get_width(): number;
+    /**
+     * Initialize the thread pool for WebAssembly parallel processing.
+     *
+     * This function must be called from JavaScript before using any parallel processing features.
+     * It sets up the worker threads for rayon parallel execution.
+     *
+     * # JavaScript Example
+     * ```javascript
+     * import { initThreadPool } from './photon_wasm.js';
+     *
+     * // Initialize with 4 threads
+     * await initThreadPool(4);
+     *
+     * // Now you can use parallel processing features
+     * ```
+     *
+     * # Arguments
+     * * `num_threads` - Number of threads to use for parallel processing.
+     *   If 0, it will use the hardware concurrency (number of logical CPUs).
+     */
+    static init_thread_pool(num_threads: number): Promise<void>;
     /**
      * Create a new PhotonImage from a Vec of u8s, which represent raw pixels.
      */
@@ -709,6 +775,28 @@ export class StrokePoint {
 export function add_noise_rand(photon_image: PhotonImage): void;
 
 /**
+ * Add random noise to an image using parallel processing.
+ *
+ * This is the parallel version of the noise addition operation.
+ * Each thread uses its own random number generator to avoid contention.
+ *
+ * # Arguments
+ * * `photon_image` - A mutable reference to a PhotonImage.
+ * * `strength` - Noise strength. Range: 0.0 to 10.0.
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::add_noise_rand_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * add_noise_rand_parallel(&mut img, 2.0);
+ * ```
+ */
+export function add_noise_rand_parallel(photon_image: PhotonImage, strength: number): void;
+
+/**
  * Add randomized noise to an image with adjustable strength.
  * This function adds Gaussian noise to each pixel by incrementing each channel by a randomized offset.
  * The maximum offset is controlled by the strength parameter.
@@ -755,6 +843,27 @@ export function add_noise_rand_with_strength(photon_image: PhotonImage, strength
 export function adjust_brightness(photon_image: PhotonImage, brightness: number): void;
 
 /**
+ * Apply brightness adjustment using parallel processing.
+ *
+ * This is the parallel version of the brightness adjustment operation.
+ *
+ * # Arguments
+ * * `photon_image` - A mutable reference to a PhotonImage.
+ * * `brightness` - The amount to adjust brightness by (-255 to 255).
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::adjust_brightness_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * adjust_brightness_parallel(&mut img, 20);
+ * ```
+ */
+export function adjust_brightness_parallel(photon_image: PhotonImage, brightness: number): void;
+
+/**
  * Adjust the contrast of an image by a factor.
  *
  * # Arguments
@@ -772,6 +881,27 @@ export function adjust_brightness(photon_image: PhotonImage, brightness: number)
  * ```
  */
 export function adjust_contrast(photon_image: PhotonImage, contrast: number): void;
+
+/**
+ * Apply contrast adjustment using parallel processing.
+ *
+ * This is the parallel version of the contrast adjustment operation.
+ *
+ * # Arguments
+ * * `photon_image` - A mutable reference to a PhotonImage.
+ * * `contrast` - Contrast factor between [-255.0, 255.0].
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::adjust_contrast_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * adjust_contrast_parallel(&mut img, 30.0);
+ * ```
+ */
+export function adjust_contrast_parallel(photon_image: PhotonImage, contrast: number): void;
 
 /**
  * Increment or decrement every pixel's Blue channel by a constant.
@@ -959,6 +1089,64 @@ export function base64_to_image(base64: string): PhotonImage;
 export function base64_to_vec(base64: string): Uint8Array;
 
 /**
+ * Batch process multiple images efficiently.
+ *
+ * This function processes multiple images in a single call, reducing
+ * JavaScript-WASM bridge overhead.
+ *
+ * # Arguments
+ * * `images` - An array of PhotonImage objects.
+ * * `processor` - A function that processes a single image.
+ *
+ * # Example
+ *
+ * ```javascript
+ * import { batch_process_images } from 'photon_rs';
+ *
+ * const images = [
+ *     img1,
+ *     img2,
+ *     img3
+ * ];
+ *
+ * batch_process_images(images, (img) => {
+ *     // Apply processing to each image
+ *     return processImage(img);
+ * });
+ * ```
+ */
+export function batch_process_images(images: Array<any>, processor: Function): Array<any>;
+
+/**
+ * Apply bilateral filter to an image.
+ *
+ * Bilateral filter is a non-linear, edge-preserving, and noise-reducing smoothing filter.
+ * Unlike Gaussian blur, it preserves edges while smoothing homogeneous regions.
+ *
+ * # Performance Optimizations
+ * - Pre-computed spatial weights: O(1) lookup instead of exp() calculation
+ * - Pre-computed range weights: O(1) lookup for color similarity
+ * - Direct pixel access: Avoids expensive get_pixel() calls
+ * - Separable approximation: Can be optimized further with separable kernel
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage to filter
+ * * `sigma_spatial` - Spatial domain standard deviation (controls smoothing radius)
+ * * `sigma_range` - Range domain standard deviation (controls edge sensitivity)
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::conv::bilateral_filter;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * bilateral_filter(&mut img, 5.0, 30.0);
+ * ```
+ */
+export function bilateral_filter(photon_image: PhotonImage, sigma_spatial: number, sigma_range: number, fast_mode: boolean): void;
+
+/**
  * Blend two images together.
  *
  * The `blend_mode` (3rd param) determines which blending mode to use; change this for varying effects.
@@ -984,6 +1172,32 @@ export function base64_to_vec(base64: string): Uint8Array;
  * ```
  */
 export function blend(photon_image: PhotonImage, photon_image2: PhotonImage, blend_mode: string): void;
+
+/**
+ * Adaptive blend function that automatically selects the optimal algorithm
+ * based on image size.
+ *
+ * - For small images: Uses the standard blend function for maximum compatibility
+ * - For medium/large images: Uses the fast version that works directly on raw pixels
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `photon_image2` - The 2nd PhotonImage to be blended with the first.
+ * * `blend_mode` - The blending mode to use.
+ */
+export function blend_adaptive(photon_image: PhotonImage, photon_image2: PhotonImage, blend_mode: string): void;
+
+/**
+ * Optimized version of blend function that works directly on raw pixel data.
+ * This avoids creating DynamicImage objects multiple times and reduces memory allocations.
+ * Provides 1.3-1.5x performance improvement over the standard blend function.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `photon_image2` - The 2nd PhotonImage to be blended with the first.
+ * * `blend_mode` - The blending mode to use.
+ */
+export function blend_fast(photon_image: PhotonImage, photon_image2: PhotonImage, blend_mode: string): void;
 
 /**
  * Apply a box blur effect.
@@ -1921,9 +2135,13 @@ export function gamma_correction(photon_image: PhotonImage, red: number, green: 
  *
  * Reference: http://blog.ivank.net/fastest-gaussian-blur.html
  *
+ * This implementation uses a separable box blur approximation for optimal performance,
+ * especially effective for large blur radii. The algorithm approximates Gaussian blur
+ * by applying three successive box blurs with carefully calculated radii.
+ *
  * # Arguments
  * * `photon_image` - A PhotonImage
- * * `radius` - blur radius
+ * * `radius` - blur radius (larger values create more blur)
  * # Example
  *
  * ```no_run
@@ -1935,6 +2153,74 @@ export function gamma_correction(photon_image: PhotonImage, red: number, green: 
  * ```
  */
 export function gaussian_blur(photon_image: PhotonImage, radius: number): void;
+
+/**
+ * Fast separable Gaussian blur using SIMD optimization.
+ *
+ * This is an optimized version of Gaussian blur that uses SIMD instructions
+ * for better performance on modern CPUs and WebAssembly. It's particularly
+ * effective for large blur radii and large images.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage
+ * * `radius` - blur radius (larger values create more blur)
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::conv::gaussian_blur_fast;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * gaussian_blur_fast(&mut img, 5_i32);
+ * ```
+ */
+export function gaussian_blur_fast(photon_image: PhotonImage, radius: number): void;
+
+/**
+ * Apply Gaussian blur using parallel processing for better performance on multi-core systems.
+ *
+ * This is the parallel-optimized version of `gaussian_blur`. It uses Rayon to process
+ * the image in parallel, which can provide 2-4x speedup on multi-core CPUs.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage to blur
+ * * `radius` - Blur radius (larger values create more blur)
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::conv::gaussian_blur_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * gaussian_blur_parallel(&mut img, 5_i32);
+ * ```
+ */
+export function gaussian_blur_parallel(photon_image: PhotonImage, radius: number): void;
+
+/**
+ * Tiled Gaussian blur for better cache locality on large images.
+ *
+ * This implementation processes the image in tiles to improve cache performance,
+ * especially for large images. Each tile is processed independently, with proper
+ * handling of tile boundaries.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage
+ * * `radius` - blur radius
+ * * `tile_size` - Size of each tile (default 256 for good cache performance)
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::conv::gaussian_blur_tiled;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * gaussian_blur_tiled(&mut img, 5_i32, 256);
+ * ```
+ */
+export function gaussian_blur_tiled(photon_image: PhotonImage, radius: number, tile_size: number): void;
 
 /**
  * 获取默认字体名称
@@ -2001,6 +2287,27 @@ export function grayscale(img: PhotonImage): void;
  * ```
  */
 export function grayscale_human_corrected(img: PhotonImage): void;
+
+/**
+ * Convert an image to grayscale using parallel processing.
+ *
+ * This is the parallel version of the grayscale operation.
+ * Uses human-corrected luminance formula: 0.3*R + 0.59*G + 0.11*B
+ *
+ * # Arguments
+ * * `photon_image` - A mutable reference to a PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::grayscale_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * grayscale_parallel(&mut img);
+ * ```
+ */
+export function grayscale_parallel(photon_image: PhotonImage): void;
 
 /**
  * Employ only a limited number of gray shades in an image.
@@ -2083,8 +2390,64 @@ export function horizontal_strips(photon_image: PhotonImage, num_strips: number)
  * let mut img = open_image("img.jpg").expect("File should open");
  * hsl(&mut img, "saturate", 0.1_f32);
  * ```
+ *
+ * # Performance
+ * This function now uses SIMD-optimized algorithms internally for better performance (1.5-2x improvement).
+ * For maximum accuracy with small images, use `hsl_with_palette()` instead.
  */
 export function hsl(photon_image: PhotonImage, mode: string, amt: number): void;
+
+/**
+ * Adaptive HSL color space manipulation that automatically selects the optimal algorithm
+ * based on image size.
+ *
+ * - For small images: Uses the standard palette library for maximum accuracy
+ * - For medium/large images: Uses the fast version with optimized conversion algorithms
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired: "saturate", "desaturate", "lighten", "darken", "shift_hue"
+ * * `amt` - A float value from 0 to 1.
+ */
+export function hsl_adaptive(photon_image: PhotonImage, mode: string, amt: number): void;
+
+/**
+ * Adaptive HSL function that automatically selects the optimal algorithm
+ * based on image size and available optimizations.
+ *
+ * - For small images: Uses the standard palette library for maximum accuracy
+ * - For medium images: Uses the fast version with optimized conversion algorithms
+ * - For large images: Uses the SIMD version for maximum performance
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired: "saturate", "desaturate", "lighten", "darken", "shift_hue"
+ * * `amt` - A float value from 0 to 1.
+ */
+export function hsl_auto(photon_image: PhotonImage, mode: string, amt: number): void;
+
+/**
+ * Optimized version of HSL color space manipulation using pre-computed lookup tables.
+ * This provides 1.5-2x performance improvement over the standard version for saturation and lightness operations.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired: "saturate", "desaturate", "lighten", "darken", "shift_hue"
+ * * `amt` - A float value from 0 to 1.
+ */
+export function hsl_fast(photon_image: PhotonImage, mode: string, amt: number): void;
+
+/**
+ * HSL color space manipulation using the palette library for maximum accuracy.
+ * This is slower than the default `hsl()` function but provides more accurate color conversions.
+ * Use this for small images where accuracy is more important than performance.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired to be applied. Choose from: `saturate`, `desaturate`, `shift_hue`, `darken`, `lighten`
+ * * `amt` - A float value from 0 to 1 which represents the amount the effect should be increased by.
+ */
+export function hsl_with_palette(photon_image: PhotonImage, mode: string, amt: number): void;
 
 /**
  * Image manipulation effects in the HSLuv colour space
@@ -2140,6 +2503,53 @@ export function hsluv(photon_image: PhotonImage, mode: string, amt: number): voi
  * ```
  */
 export function hsv(photon_image: PhotonImage, mode: string, amt: number): void;
+
+/**
+ * Adaptive HSV color space manipulation that automatically selects the optimal algorithm
+ * based on image size.
+ *
+ * - For small images: Uses the standard palette library for maximum accuracy
+ * - For medium/large images: Uses the fast version with optimized conversion algorithms
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired: "saturate", "desaturate", "lighten", "darken", "shift_hue"
+ * * `amt` - A float value from 0 to 1.
+ */
+export function hsv_adaptive(photon_image: PhotonImage, mode: string, amt: number): void;
+
+/**
+ * Adaptive HSV function that automatically selects the optimal algorithm
+ * based on image size and available optimizations.
+ *
+ * - For small images: Uses the standard palette library for maximum accuracy
+ * - For medium images: Uses the fast version with optimized conversion algorithms
+ * - For large images: Uses the SIMD version for maximum performance
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired: "saturate", "desaturate", "lighten", "darken", "shift_hue"
+ * * `amt` - A float value from 0 to 1.
+ */
+export function hsv_auto(photon_image: PhotonImage, mode: string, amt: number): void;
+
+/**
+ * Optimized version of HSV color space manipulation using fast conversion algorithms.
+ * This provides 1.5-2x performance improvement over the standard version.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage.
+ * * `mode` - The effect desired: "saturate", "desaturate", "lighten", "darken", "shift_hue"
+ * * `amt` - A float value from 0 to 1.
+ */
+export function hsv_fast(photon_image: PhotonImage, mode: string, amt: number): void;
+
+/**
+ * HSV color space manipulation using the palette library for maximum accuracy.
+ * This is slower than the default `hsv()` function but provides more accurate color conversions.
+ * Use this for small images where accuracy is more important than performance.
+ */
+export function hsv_with_palette(photon_image: PhotonImage, mode: string, amt: number): void;
 
 /**
  * Shift hue by a specified number of degrees in the HSL colour space.
@@ -2259,6 +2669,45 @@ export function init(): void;
 export function initThreadPool(num_threads: number): Promise<any>;
 
 /**
+ * Initialize the thread pool for parallel processing.
+ *
+ * This function should be called once at the beginning of your application
+ * when using parallel operations in WebAssembly.
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::init_parallel;
+ *
+ * // Initialize the thread pool (for WASM)
+ * init_parallel();
+ * ```
+ */
+export function init_parallel(): void;
+
+/**
+ * Initialize the thread pool for WebAssembly parallel processing.
+ *
+ * This function must be called from JavaScript before using any parallel processing features.
+ * It sets up the worker threads for rayon parallel execution.
+ *
+ * # JavaScript Example
+ * ```javascript
+ * import { initThreadPool } from './photon_wasm.js';
+ *
+ * // Initialize with 4 threads
+ * await initThreadPool(4);
+ *
+ * // Now you can use parallel processing features
+ * ```
+ *
+ * # Arguments
+ * * `num_threads` - Number of threads to use for parallel processing.
+ *   If 0, it will use the hardware concurrency (number of logical CPUs).
+ */
+export function init_thread_pool(num_threads: number): Promise<void>;
+
+/**
  * Invert RGB value of an image.
  *
  * # Arguments
@@ -2274,6 +2723,26 @@ export function initThreadPool(num_threads: number): Promise<any>;
  * ```
  */
 export function invert(photon_image: PhotonImage): void;
+
+/**
+ * Invert all colors in an image using parallel processing.
+ *
+ * This is the parallel version of the invert operation.
+ *
+ * # Arguments
+ * * `photon_image` - A mutable reference to a PhotonImage.
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::invert_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * invert_parallel(&mut img);
+ * ```
+ */
+export function invert_parallel(photon_image: PhotonImage): void;
 
 /**
  * 检查默认字体是否已初始化
@@ -2874,6 +3343,60 @@ export function padding_uniform(img: PhotonImage, padding: number, padding_rgba:
 export function pastel_pink(img: PhotonImage): void;
 
 /**
+ * Create a PhotonImage from a Uint8ClampedArray with zero-copy.
+ *
+ * This function creates a PhotonImage directly from JavaScript's Uint8ClampedArray
+ * without copying the data, enabling efficient data transfer between JavaScript and WASM.
+ *
+ * # Arguments
+ * * `data` - A Uint8ClampedArray containing RGBA pixel data.
+ * * `width` - The image width.
+ * * `height` - The image height.
+ *
+ * # Example
+ *
+ * ```javascript
+ * import { PhotonImage } from 'photon_rs';
+ *
+ * const canvas = document.getElementById('myCanvas');
+ * const ctx = canvas.getContext('2d');
+ * const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+ *
+ * // Create PhotonImage without copying
+ * const photonImg = PhotonImage.from_uint8_array(imageData.data, canvas.width, canvas.height);
+ * ```
+ */
+export function photon_image_from_uint8_clamped_array(data: Uint8ClampedArray, width: number, height: number): PhotonImage;
+
+/**
+ * Get pixel data as a Uint8ClampedArray for efficient transfer to JavaScript.
+ *
+ * This function provides the image's pixel data as a Uint8ClampedArray,
+ * which can be directly used with Canvas API without additional copying.
+ *
+ * # Arguments
+ * * `img` - A reference to a PhotonImage.
+ *
+ * # Returns
+ * A Uint8ClampedArray containing the RGBA pixel data.
+ *
+ * # Example
+ *
+ * ```javascript
+ * import { PhotonImage } from 'photon_rs';
+ *
+ * const canvas = document.getElementById('myCanvas');
+ * const ctx = canvas.getContext('2d');
+ *
+ * // After processing an image
+ * const pixelData = photonImg.get_uint8_clamped_array();
+ * const imageData = new ImageData(pixelData, photonImg.width, photonImg.height);
+ * ctx.putImageData(imageData, 0, 0);
+ * ```
+ */
+export function photon_image_get_uint8_clamped_array(img: PhotonImage): Uint8ClampedArray;
+
+/**
  * Add pink-tinted noise to an image.
  *
  * **[WASM SUPPORT IS AVAILABLE]**: Randomized thread pools cannot be created with WASM, but
@@ -2949,6 +3472,40 @@ export function prewitt_horizontal(photon_image: PhotonImage): void;
  * ```
  */
 export function primary(img: PhotonImage): void;
+
+/**
+ * Process image data in-place for zero-copy operations.
+ *
+ * This function processes ImageData directly without creating intermediate
+ * PhotonImage objects, reducing memory allocations and copying.
+ *
+ * # Arguments
+ * * `image_data` - A mutable reference to ImageData.
+ * * `processor` - A function that processes the pixel data.
+ *
+ * # Example
+ *
+ * ```javascript
+ * import { process_image_data_inplace } from 'photon_rs';
+ *
+ * const canvas = document.getElementById('myCanvas');
+ * const ctx = canvas.getContext('2d');
+ * const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+ *
+ * // Process image data in-place
+ * process_image_data_inplace(imageData, (pixels, width, height) => {
+ *     // Custom processing logic
+ *     for (let i = 0; i < pixels.length; i += 4) {
+ *         pixels[i] = 255 - pixels[i];     // Invert R
+ *         pixels[i + 1] = 255 - pixels[i + 1]; // Invert G
+ *         pixels[i + 2] = 255 - pixels[i + 2]; // Invert B
+ *     }
+ * });
+ *
+ * ctx.putImageData(imageData, 0, 0);
+ * ```
+ */
+export function process_image_data_inplace(image_data: ImageData, processor: Function): void;
 
 /**
  * Place a PhotonImage onto a 2D canvas.
@@ -3235,7 +3792,18 @@ export function saturate_lch(img: PhotonImage, level: number): void;
 /**
  * Resize image using seam carver.
  * Resize only if new dimensions are smaller, than original image.
- * # NOTE: This is still experimental feature, and pretty slow.
+ * # NOTE: This is an optimized parallel implementation with significant performance improvements.
+ *
+ * # Performance Improvements
+ * - **Parallel Energy Computation**: Uses Rayon for multi-threaded energy map calculation
+ * - **Batch Seam Removal**: Processes multiple seams in a single pass (up to 8 at a time)
+ * - **Reduced Memory Allocations**: Pre-allocates all necessary memory upfront
+ * - **Optimized Dynamic Programming**: Efficient min-path computation with SIMD-friendly patterns
+ * - **Smart Rotation Strategy**: Minimizes rotation operations for horizontal seams
+ *
+ * # Expected Performance
+ * - Native (Rayon): 2-4x faster than sequential version on multi-core systems
+ * - WASM (wasm-bindgen-rayon): 1.5-2.5x faster on browsers with thread support
  *
  * # Arguments
  * * `img` - A PhotonImage.
@@ -3542,6 +4110,9 @@ export function single_channel_grayscale(photon_image: PhotonImage, channel: num
  * Each pixel is calculated as the magnitude of the horizontal and vertical components of the Sobel filter,
  * ie if X is the horizontal sobel and Y is the vertical, for each pixel, we calculate sqrt(X^2 + Y^2)
  *
+ * This optimized version calculates both horizontal and vertical gradients in a single pass,
+ * avoiding image cloning and reducing memory usage by 50%.
+ *
  * # Arguments
  * * `img` - A PhotonImage.
  *
@@ -3674,6 +4245,28 @@ export function swap_channels(img: PhotonImage, channel1: number, channel2: numb
 export function threshold(img: PhotonImage, threshold: number): void;
 
 /**
+ * Apply threshold operation using parallel processing.
+ *
+ * This is the parallel version of the threshold operation.
+ * Pixels above threshold become white (255), below become black (0).
+ *
+ * # Arguments
+ * * `photon_image` - A mutable reference to a PhotonImage.
+ * * `threshold` - The threshold value (0-255).
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::parallel::threshold_parallel;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * threshold_parallel(&mut img, 128);
+ * ```
+ */
+export function threshold_parallel(photon_image: PhotonImage, threshold: number): void;
+
+/**
  * Tint an image by adding an offset to averaged RGB channel values.
  *
  * # Arguments
@@ -3774,12 +4367,38 @@ export function wasm_unregister_font(font_name: string): boolean;
  */
 export function watermark(img: PhotonImage, watermark: PhotonImage, x: bigint, y: bigint): void;
 
+/**
+ * Adaptive watermark function that automatically selects the optimal algorithm
+ * based on image size.
+ *
+ * - For small images: Uses the standard watermark function
+ * - For medium/large images: Uses the fast version that works directly on raw pixels
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `watermark` - The watermark to be placed onto the `img` image.
+ * * `x` - The x coordinate where the watermark's top corner should be positioned.
+ * * `y` - The y coordinate where the watermark's top corner should be positioned.
+ */
+export function watermark_adaptive(img: PhotonImage, watermark: PhotonImage, x: bigint, y: bigint): void;
+
+/**
+ * Optimized version of watermark function that works directly on raw pixel data.
+ * Avoids creating DynamicImage objects multiple times.
+ *
+ * # Arguments
+ * * `img` - A PhotonImage.
+ * * `watermark` - The watermark to be placed onto the `img` image.
+ * * `x` - The x coordinate where the watermark's top corner should be positioned.
+ * * `y` - The y coordinate where the watermark's top corner should be positioned.
+ */
+export function watermark_fast(img: PhotonImage, watermark: PhotonImage, x: bigint, y: bigint): void;
+
 export class wbg_rayon_PoolBuilder {
     private constructor();
     free(): void;
     [Symbol.dispose](): void;
     build(): void;
-    mainJS(): string;
     numThreads(): number;
     receiver(): number;
 }
@@ -3826,6 +4445,7 @@ export interface InitOutput {
     readonly brushstroke_add_point: (a: number, b: number) => void;
     readonly brushstroke_clear_points: (a: number) => void;
     readonly brushstroke_get_config: (a: number) => number;
+    readonly brushstroke_invalidate_path_cache: (a: number) => void;
     readonly brushstroke_new: (a: number) => number;
     readonly brushstroke_point_count: (a: number) => number;
     readonly create_circular_mask: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
@@ -3838,6 +4458,7 @@ export interface InitOutput {
     readonly imageprocessor_alter_red_channel: (a: number, b: number) => void;
     readonly imageprocessor_apply_all_adjustments: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => void;
     readonly imageprocessor_apply_b_grayscale: (a: number) => void;
+    readonly imageprocessor_apply_bilateral_filter: (a: number, b: number, c: number, d: number) => void;
     readonly imageprocessor_apply_box_blur: (a: number) => void;
     readonly imageprocessor_apply_brightness: (a: number, b: number) => void;
     readonly imageprocessor_apply_circular_mask: (a: number, b: number, c: number, d: number, e: number) => void;
@@ -3902,6 +4523,7 @@ export interface InitOutput {
     readonly imageprocessor_darken_hsl: (a: number, b: number) => void;
     readonly imageprocessor_desaturate_hsl: (a: number, b: number) => void;
     readonly imageprocessor_draw_stroke: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+    readonly imageprocessor_draw_stroke_array: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly imageprocessor_draw_text: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => void;
     readonly imageprocessor_draw_text_with_color_and_font: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => void;
     readonly imageprocessor_draw_text_with_font_name: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => void;
@@ -3943,17 +4565,20 @@ export interface InitOutput {
     readonly imageprocessor_to_webp: (a: number, b: number, c: number) => void;
     readonly imageprocessor_undo_stroke: (a: number) => number;
     readonly init: () => void;
+    readonly init_thread_pool: (a: number) => number;
     readonly refine_mask_edges: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
     readonly strokepoint_new: (a: number, b: number, c: number, d: bigint) => number;
-    readonly imageprocessor_apply_sobel_global: (a: number) => void;
     readonly imageprocessor_apply_prewitt_horizontal: (a: number) => void;
+    readonly imageprocessor_apply_sobel_global: (a: number) => void;
     readonly __wbg_photonimage_free: (a: number, b: number) => void;
     readonly __wbg_rgb_free: (a: number, b: number) => void;
-    readonly __wbg_rgba_free: (a: number, b: number) => void;
     readonly add_noise_rand: (a: number) => void;
+    readonly add_noise_rand_parallel: (a: number, b: number) => void;
     readonly add_noise_rand_with_strength: (a: number, b: number) => void;
     readonly adjust_brightness: (a: number, b: number) => void;
+    readonly adjust_brightness_parallel: (a: number, b: number) => void;
     readonly adjust_contrast: (a: number, b: number) => void;
+    readonly adjust_contrast_parallel: (a: number, b: number) => void;
     readonly alter_blue_channel: (a: number, b: number) => void;
     readonly alter_channel: (a: number, b: number, c: number) => void;
     readonly alter_channels: (a: number, b: number, c: number, d: number) => void;
@@ -3964,7 +4589,10 @@ export interface InitOutput {
     readonly b_grayscale: (a: number) => void;
     readonly base64_to_image: (a: number, b: number) => number;
     readonly base64_to_vec: (a: number, b: number, c: number) => void;
+    readonly batch_process_images: (a: number, b: number, c: number) => void;
+    readonly bilateral_filter: (a: number, b: number, c: number, d: number) => void;
     readonly blend: (a: number, b: number, c: number, d: number) => void;
+    readonly blend_fast: (a: number, b: number, c: number, d: number) => void;
     readonly box_blur: (a: number) => void;
     readonly cali: (a: number) => void;
     readonly color_horizontal_strips: (a: number, b: number, c: number) => void;
@@ -4013,17 +4641,29 @@ export interface InitOutput {
     readonly g_grayscale: (a: number) => void;
     readonly gamma_correction: (a: number, b: number, c: number, d: number) => void;
     readonly gaussian_blur: (a: number, b: number) => void;
+    readonly gaussian_blur_fast: (a: number, b: number) => void;
+    readonly gaussian_blur_parallel: (a: number, b: number) => void;
+    readonly gaussian_blur_tiled: (a: number, b: number, c: number) => void;
     readonly get_default_font_name: (a: number) => void;
     readonly get_image_data: (a: number, b: number) => number;
     readonly golden: (a: number) => void;
     readonly grayscale: (a: number) => void;
     readonly grayscale_human_corrected: (a: number) => void;
+    readonly grayscale_parallel: (a: number) => void;
     readonly grayscale_shades: (a: number, b: number) => void;
     readonly halftone: (a: number) => void;
     readonly horizontal_strips: (a: number, b: number) => void;
     readonly hsl: (a: number, b: number, c: number, d: number) => void;
+    readonly hsl_adaptive: (a: number, b: number, c: number, d: number) => void;
+    readonly hsl_auto: (a: number, b: number, c: number, d: number) => void;
+    readonly hsl_fast: (a: number, b: number, c: number, d: number) => void;
+    readonly hsl_with_palette: (a: number, b: number, c: number, d: number) => void;
     readonly hsluv: (a: number, b: number, c: number, d: number) => void;
     readonly hsv: (a: number, b: number, c: number, d: number) => void;
+    readonly hsv_adaptive: (a: number, b: number, c: number, d: number) => void;
+    readonly hsv_auto: (a: number, b: number, c: number, d: number) => void;
+    readonly hsv_fast: (a: number, b: number, c: number, d: number) => void;
+    readonly hsv_with_palette: (a: number, b: number, c: number, d: number) => void;
     readonly hue_rotate_hsl: (a: number, b: number) => void;
     readonly hue_rotate_hsluv: (a: number, b: number) => void;
     readonly hue_rotate_hsv: (a: number, b: number) => void;
@@ -4031,6 +4671,7 @@ export interface InitOutput {
     readonly identity: (a: number) => void;
     readonly inc_brightness: (a: number, b: number) => void;
     readonly invert: (a: number) => void;
+    readonly invert_parallel: (a: number) => void;
     readonly is_default_font_initialized: () => number;
     readonly laplace: (a: number) => void;
     readonly lch: (a: number, b: number, c: number, d: number) => void;
@@ -4061,6 +4702,8 @@ export interface InitOutput {
     readonly padding_top: (a: number, b: number, c: number) => number;
     readonly padding_uniform: (a: number, b: number, c: number) => number;
     readonly pastel_pink: (a: number) => void;
+    readonly photon_image_from_uint8_clamped_array: (a: number, b: number, c: number) => number;
+    readonly photon_image_get_uint8_clamped_array: (a: number) => number;
     readonly photonimage_get_base64: (a: number, b: number) => void;
     readonly photonimage_get_bytes: (a: number, b: number) => void;
     readonly photonimage_get_bytes_jpeg: (a: number, b: number, c: number) => void;
@@ -4071,6 +4714,7 @@ export interface InitOutput {
     readonly photonimage_get_image_data: (a: number) => number;
     readonly photonimage_get_raw_pixels: (a: number, b: number) => void;
     readonly photonimage_get_width: (a: number) => number;
+    readonly photonimage_init_thread_pool: (a: number) => number;
     readonly photonimage_new: (a: number, b: number, c: number, d: number) => number;
     readonly photonimage_new_from_blob: (a: number) => number;
     readonly photonimage_new_from_byteslice: (a: number, b: number) => number;
@@ -4080,6 +4724,7 @@ export interface InitOutput {
     readonly pixelize: (a: number, b: number) => void;
     readonly prewitt_horizontal: (a: number) => void;
     readonly primary: (a: number) => void;
+    readonly process_image_data_inplace: (a: number, b: number, c: number) => void;
     readonly putImageData: (a: number, b: number, c: number) => void;
     readonly r_grayscale: (a: number) => void;
     readonly remove_blue_channel: (a: number, b: number) => void;
@@ -4126,6 +4771,7 @@ export interface InitOutput {
     readonly solarize_retimg: (a: number) => number;
     readonly swap_channels: (a: number, b: number, c: number) => void;
     readonly threshold: (a: number, b: number) => void;
+    readonly threshold_parallel: (a: number, b: number) => void;
     readonly tint: (a: number, b: number, c: number, d: number) => void;
     readonly to_image_data: (a: number) => number;
     readonly to_raw_pixels: (a: number, b: number) => void;
@@ -4136,26 +4782,36 @@ export interface InitOutput {
     readonly wasm_register_font: (a: number, b: number, c: number, d: number) => void;
     readonly wasm_unregister_font: (a: number, b: number) => number;
     readonly watermark: (a: number, b: number, c: bigint, d: bigint) => void;
-    readonly photonimage_new_from_base64: (a: number, b: number) => number;
-    readonly rgba_get_green: (a: number) => number;
+    readonly watermark_adaptive: (a: number, b: number, c: bigint, d: bigint) => void;
+    readonly watermark_fast: (a: number, b: number, c: bigint, d: bigint) => void;
+    readonly init_parallel: () => void;
     readonly rgba_get_blue: (a: number) => number;
+    readonly rgba_get_green: (a: number) => number;
     readonly rgba_get_red: (a: number) => number;
+    readonly photonimage_new_from_base64: (a: number, b: number) => number;
     readonly rgba_set_blue: (a: number, b: number) => void;
-    readonly rgba_set_red: (a: number, b: number) => void;
     readonly rgba_set_green: (a: number, b: number) => void;
+    readonly blend_adaptive: (a: number, b: number, c: number, d: number) => void;
+    readonly rgba_set_red: (a: number, b: number) => void;
+    readonly __wbg_rgba_free: (a: number, b: number) => void;
     readonly __wbg_wbg_rayon_poolbuilder_free: (a: number, b: number) => void;
     readonly initThreadPool: (a: number) => number;
     readonly wbg_rayon_poolbuilder_build: (a: number) => void;
-    readonly wbg_rayon_poolbuilder_mainJS: (a: number) => number;
     readonly wbg_rayon_poolbuilder_numThreads: (a: number) => number;
     readonly wbg_rayon_poolbuilder_receiver: (a: number) => number;
     readonly wbg_rayon_start_worker: (a: number) => void;
+    readonly __wasm_bindgen_func_elem_793: (a: number, b: number) => void;
+    readonly __wasm_bindgen_func_elem_1514: (a: number, b: number) => void;
+    readonly __wasm_bindgen_func_elem_1517: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_2142: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_794: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_1515: (a: number, b: number, c: number) => void;
     readonly memory: WebAssembly.Memory;
     readonly __wbindgen_export: (a: number, b: number) => number;
     readonly __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_export3: (a: number) => void;
-    readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
     readonly __wbindgen_export4: (a: number, b: number, c: number) => void;
+    readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
     readonly __wbindgen_thread_destroy: (a?: number, b?: number, c?: number) => void;
     readonly __wbindgen_start: (a: number) => void;
 }
