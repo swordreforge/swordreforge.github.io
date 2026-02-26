@@ -2058,25 +2058,375 @@
             originalWarn.apply(console, args);
         };
 
-        // 全局变量声明
-        let wasmModule = null;
-        let processor = null;
-        let originalImageData = null;
-        let currentImage = null;
-
-        // 离屏 Canvas 用于双缓冲，避免闪屏
-        let offscreenCanvas = null;
-        let offscreenCtx = null;
-
-        // 历史记录管理
-        let historyStack = [];
-        let redoStack = [];
+        // 全局变量声明 - 已迁移到 AppState 中管理
+        // 保留历史记录最大限制常量
         const MAX_HISTORY = 30;
 
         // IndexedDB 配置（字体持久化）
         const DB_NAME = 'PhotonFontDB';
         const DB_VERSION = 1;
         const STORE_NAME = 'fonts';
+
+        // ==================== 事件管理器 ====================
+        class EventManager {
+            constructor() {
+                this.listeners = new WeakMap();
+            }
+
+            on(element, event, handler, options) {
+                this.off(element, event, handler);
+
+                if (!this.listeners.has(element)) {
+                    this.listeners.set(element, new Map());
+                }
+                const elementListeners = this.listeners.get(element);
+                if (!elementListeners.has(event)) {
+                    elementListeners.set(event, []);
+                }
+                elementListeners.get(event).push(handler);
+
+                element.addEventListener(event, handler, options);
+            }
+
+            off(element, event, handler) {
+                if (!this.listeners.has(element)) return;
+
+                const elementListeners = this.listeners.get(element);
+                if (!elementListeners.has(event)) return;
+
+                const handlers = elementListeners.get(event);
+                const index = handlers.indexOf(handler);
+
+                if (index !== -1) {
+                    handlers.splice(index, 1);
+                    element.removeEventListener(event, handler);
+
+                    if (handlers.length === 0) {
+                        elementListeners.delete(event);
+                    }
+                }
+            }
+
+            removeAll(element) {
+                if (!this.listeners.has(element)) return;
+
+                const elementListeners = this.listeners.get(element);
+
+                for (const [event, handlers] of elementListeners.entries()) {
+                    for (const handler of handlers) {
+                        element.removeEventListener(event, handler);
+                    }
+                }
+
+                this.listeners.delete(element);
+            }
+
+            removeAllForEvent(element, event) {
+                if (!this.listeners.has(element)) return;
+
+                const elementListeners = this.listeners.get(element);
+                if (!elementListeners.has(event)) return;
+
+                const handlers = elementListeners.get(event);
+
+                for (const handler of handlers) {
+                    element.removeEventListener(event, handler);
+                }
+
+                elementListeners.delete(event);
+            }
+        }
+
+        // ==================== Blob URL 管理器 ====================
+        class BlobURLManager {
+            constructor() {
+                this.urls = new Set();
+            }
+
+            create(blob) {
+                const url = URL.createObjectURL(blob);
+                this.urls.add(url);
+                return url;
+            }
+
+            revoke(url) {
+                if (this.urls.has(url)) {
+                    URL.revokeObjectURL(url);
+                    this.urls.delete(url);
+                }
+            }
+
+            revokeAll() {
+                this.urls.forEach(url => {
+                    URL.revokeObjectURL(url);
+                });
+                this.urls.clear();
+            }
+
+            getCount() {
+                return this.urls.size;
+            }
+        }
+
+        // ==================== IndexedDB 连接管理 ====================
+        class FontDBManager {
+            constructor() {
+                this.db = null;
+                this.initPromise = null;
+            }
+
+            async getConnection() {
+                if (this.db && this.db.readyState !== 'closed') {
+                    return this.db;
+                }
+
+                if (!this.initPromise) {
+                    this.initPromise = this._initDB();
+                }
+
+                return this.initPromise;
+            }
+
+            async _initDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                    request.onerror = () => {
+                        this.initPromise = null;
+                        reject(request.error);
+                    };
+
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        this.db.onclose = () => {
+                            this.db = null;
+                            this.initPromise = null;
+                        };
+                        resolve(this.db);
+                    };
+
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(STORE_NAME)) {
+                            db.createObjectStore(STORE_NAME, { keyPath: 'name' });
+                        }
+                    };
+                });
+            }
+
+            async saveFont(name, data) {
+                try {
+                    const db = await this.getConnection();
+                    const transaction = db.transaction(STORE_NAME, 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+
+                    await new Promise((resolve, reject) => {
+                        const request = store.put({ name, data });
+                        request.onsuccess = resolve;
+                        request.onerror = () => reject(request.error);
+                    });
+                } catch (error) {
+                    console.error('保存字体失败:', error);
+                    throw error;
+                }
+            }
+
+            async deleteFont(name) {
+                try {
+                    const db = await this.getConnection();
+                    const transaction = db.transaction(STORE_NAME, 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+
+                    await new Promise((resolve, reject) => {
+                        const request = store.delete(name);
+                        request.onsuccess = resolve;
+                        request.onerror = () => reject(request.error);
+                    });
+                } catch (error) {
+                    console.error('删除字体失败:', error);
+                    throw error;
+                }
+            }
+
+            async getAllFonts() {
+                try {
+                    const db = await this.getConnection();
+                    const transaction = db.transaction(STORE_NAME, 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+
+                    return new Promise((resolve, reject) => {
+                        const request = store.getAll();
+                        request.onsuccess = () => resolve(request.result);
+                        request.onerror = () => reject(request.error);
+                    });
+                } catch (error) {
+                    console.error('获取字体失败:', error);
+                    throw error;
+                }
+            }
+
+            async clearAllFonts() {
+                try {
+                    const db = await this.getConnection();
+                    const transaction = db.transaction(STORE_NAME, 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+
+                    await new Promise((resolve, reject) => {
+                        const request = store.clear();
+                        request.onsuccess = resolve;
+                        request.onerror = () => reject(request.error);
+                    });
+                } catch (error) {
+                    console.error('清空字体失败:', error);
+                    throw error;
+                }
+            }
+
+            close() {
+                if (this.db && this.db.readyState !== 'closed') {
+                    this.db.close();
+                    this.db = null;
+                    this.initPromise = null;
+                }
+            }
+        }
+
+        // ==================== 应用状态管理 ====================
+        class AppState {
+            constructor() {
+                this.wasmModule = null;
+                this.processor = null;
+                this.originalProcessor = null;
+                this.originalImageData = null;
+                this.currentImage = null;
+
+                this.offscreenCanvas = null;
+                this.offscreenCtx = null;
+
+                this.historyStack = [];
+                this.redoStack = [];
+
+                this.isBrushMode = false;
+                this.isWatermarkMode = false;
+                this.isTextMode = false;
+                this.isCropMode = false;
+                this.isPolygonCropMode = false;
+                this.isRectSelectionMode = false;
+
+                this.brushSettings = {
+                    color: '#000000',
+                    width: 5,
+                    type: 'basic'
+                };
+
+                this.polygonPoints = [];
+                this.cropBox = { x: 0, y: 0, width: 0, height: 0 };
+                this.watermarkBytes = null;
+                this.blendBytes = null;
+                this.textBox = { x: 0, y: 0, text: '', fontSize: 60, color: '#ffffff', withShadow: false, textWidth: 0 };
+                this.watermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
+                this.textDragStart = { x: 0, y: 0 };
+                this.initialTextBox = { x: 0, y: 0 };
+                this.watermarkDragStart = { x: 0, y: 0 };
+                this.watermarkResizeHandle = null;
+                this.initialWatermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
+                this.isBrushDrawing = false;
+                this.isTextDragging = false;
+                this.isWatermarkDragging = false;
+                this.isWatermarkResizing = false;
+                this.lastBrushPoint = null;
+            }
+
+            resetModes() {
+                this.isBrushMode = false;
+                this.isWatermarkMode = false;
+                this.isTextMode = false;
+                this.isCropMode = false;
+                this.isPolygonCropMode = false;
+                this.isRectSelectionMode = false;
+            }
+
+            resetTempData() {
+                this.polygonPoints = [];
+                this.cropBox = { x: 0, y: 0, width: 0, height: 0 };
+                this.textBox = { x: 0, y: 0, text: '', fontSize: 60, color: '#ffffff', withShadow: false, textWidth: 0 };
+                this.watermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
+                this.textDragStart = { x: 0, y: 0 };
+                this.initialTextBox = { x: 0, y: 0 };
+                this.watermarkDragStart = { x: 0, y: 0 };
+                this.watermarkResizeHandle = null;
+                this.initialWatermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
+                this.isBrushDrawing = false;
+                this.isTextDragging = false;
+                this.isWatermarkDragging = false;
+                this.isWatermarkResizing = false;
+                this.lastBrushPoint = null;
+            }
+
+            clearHistory() {
+                this.historyStack = [];
+                this.redoStack = [];
+            }
+
+            clearImageData() {
+                this.originalImageData = null;
+                this.currentImage = null;
+                this.watermarkBytes = null;
+                this.blendBytes = null;
+            }
+
+            clearCanvas() {
+                if (this.offscreenCanvas) {
+                    this.offscreenCtx = null;
+                    this.offscreenCanvas.width = 0;
+                    this.offscreenCanvas.height = 0;
+                    this.offscreenCanvas = null;
+                }
+            }
+
+            clearProcessor() {
+                if (this.processor) {
+                    this.processor = null;
+                }
+                if (this.originalProcessor) {
+                    this.originalProcessor = null;
+                }
+            }
+
+            cleanup() {
+                this.resetModes();
+                this.resetTempData();
+                this.clearHistory();
+                this.clearImageData();
+                this.clearCanvas();
+                this.clearProcessor();
+            }
+        }
+
+        // 创建全局管理器实例
+        const eventManager = new EventManager();
+        const blobURLManager = new BlobURLManager();
+        const fontDBManager = new FontDBManager();
+        const appState = new AppState();
+
+        // 创建全局清理函数
+        function cleanupApplication() {
+            appState.cleanup();
+
+            const canvasContainer = document.getElementById('canvasContainer');
+            if (canvasContainer) {
+                eventManager.removeAll(canvasContainer);
+            }
+
+            blobURLManager.revokeAll();
+
+            fontDBManager.close();
+
+            console.log('应用已清理');
+        }
+
+        // 在页面卸载时执行清理
+        window.addEventListener('beforeunload', cleanupApplication);
 
         // 加载 WASM 模块并初始化
         async function loadWasmModule() {
@@ -2157,67 +2507,34 @@
         // 从 IndexedDB 恢复持久化的字体
         restoreFontsFromDB();
 
-        // 文本绘制相关变量
-        let isTextMode = false;
-        let isTextDragging = false;
-        let textBox = { x: 0, y: 0, text: '', fontSize: 60, color: '#ffffff', withShadow: false, textWidth: 0 }; // 新增 textWidth
-        let textDragStart = { x: 0, y: 0 };
-        let initialTextBox = { x: 0, y: 0 };
-
-        // 水印模式相关变量
-        let isWatermarkMode = false;
-        let isWatermarkDragging = false;
-        let isWatermarkResizing = false;
-
-        // 多图混合相关变量
-        let blendBytes = null;
-        let watermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
-        let watermarkDragStart = { x: 0, y: 0 };
-        let watermarkResizeHandle = null;
-        let initialWatermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
-
-        // 笔刷模式相关变量
-        let isBrushMode = false;
-        let isBrushDrawing = false;
-        let brushSettings = {
-            color: '#000000',
-            width: 5,
-            type: 'basic'
-        };
-        // 临时绘制变量，用于 mousemove 时的实时绘制
-        let lastBrushPoint = null;
-
         // 保存当前状态到历史记录
         function saveToHistory() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
-            // 优化：使用 Blob URL 减少内存占用
-            const bytes = processor.get_bytes();
+            const bytes = appState.processor.get_bytes();
             const blob = new Blob([bytes], { type: 'image/png' });
-            const url = URL.createObjectURL(blob);
+            const url = blobURLManager.create(blob);
 
             const state = {
                 url: url,
-                width: processor.get_width(),
-                height: processor.get_height()
+                width: appState.processor.get_width(),
+                height: appState.processor.get_height()
             };
 
-            historyStack.push(state);
-            if (historyStack.length > MAX_HISTORY) {
-                // 释放被移除状态的 Blob URL
-                const removedState = historyStack.shift();
+            appState.historyStack.push(state);
+            if (appState.historyStack.length > MAX_HISTORY) {
+                const removedState = appState.historyStack.shift();
                 if (removedState.url) {
-                    URL.revokeObjectURL(removedState.url);
+                    blobURLManager.revoke(removedState.url);
                 }
             }
 
-            // 清空重做栈
-            redoStack.forEach(state => {
+            appState.redoStack.forEach(state => {
                 if (state.url) {
-                    URL.revokeObjectURL(state.url);
+                    blobURLManager.revoke(state.url);
                 }
             });
-            redoStack = [];
+            appState.redoStack = [];
 
             updateUndoRedoButtons();
         }
@@ -2227,21 +2544,19 @@
 
         // 撤销
         window.undo = async function() {
-            if (historyStack.length === 0) return;
+            if (appState.historyStack.length === 0) return;
 
-            // 保存当前状态到重做栈
-            const currentBytes = processor.get_bytes();
+            const currentBytes = appState.processor.get_bytes();
             const currentBlob = new Blob([currentBytes], { type: 'image/png' });
-            const currentUrl = URL.createObjectURL(currentBlob);
-            
-            redoStack.push({
+            const currentUrl = blobURLManager.create(currentBlob);
+
+            appState.redoStack.push({
                 url: currentUrl,
-                width: processor.get_width(),
-                height: processor.get_height()
+                width: appState.processor.get_width(),
+                height: appState.processor.get_height()
             });
 
-            // 恢复上一个状态
-            const state = historyStack.pop();
+            const state = appState.historyStack.pop();
             await restoreState(state);
 
             updateUndoRedoButtons();
@@ -2249,21 +2564,19 @@
 
         // 重做
         window.redo = async function() {
-            if (redoStack.length === 0) return;
+            if (appState.redoStack.length === 0) return;
 
-            // 保存当前状态到历史栈
-            const currentBytes = processor.get_bytes();
+            const currentBytes = appState.processor.get_bytes();
             const currentBlob = new Blob([currentBytes], { type: 'image/png' });
-            const currentUrl = URL.createObjectURL(currentBlob);
-            
-            historyStack.push({
+            const currentUrl = blobURLManager.create(currentBlob);
+
+            appState.historyStack.push({
                 url: currentUrl,
-                width: processor.get_width(),
-                height: processor.get_height()
+                width: appState.processor.get_width(),
+                height: appState.processor.get_height()
             });
 
-            // 恢复重做状态
-            const state = redoStack.pop();
+            const state = appState.redoStack.pop();
             await restoreState(state);
 
             updateUndoRedoButtons();
@@ -2271,65 +2584,56 @@
 
         // 恢复状态
         async function restoreState(state) {
-            // state.url 现在是 Blob URL
             if (state.url) {
                 try {
                     const response = await fetch(state.url);
                     const bytes = new Uint8Array(await response.arrayBuffer());
-                    processor = ImageProcessor.new_from_bytes(bytes);
-                    
-                    // 释放 Blob URL（因为我们已经获取了数据）
-                    URL.revokeObjectURL(state.url);
+                    appState.processor = ImageProcessor.new_from_bytes(bytes);
+
+                    blobURLManager.revoke(state.url);
                     state.url = null;
                 } catch (error) {
                     console.error('Failed to restore state from Blob URL:', error);
-                    // 如果 Blob URL 失败，尝试从 bytes 恢复（向后兼容）
                     if (state.bytes) {
-                        processor = ImageProcessor.new_from_bytes(state.bytes);
+                        appState.processor = ImageProcessor.new_from_bytes(state.bytes);
                     }
                 }
             } else if (state.bytes) {
-                // 兼容旧的格式
-                processor = ImageProcessor.new_from_bytes(state.bytes);
+                appState.processor = ImageProcessor.new_from_bytes(state.bytes);
             } else if (state.base64) {
-                // 兼容更旧的 base64 格式
                 const base64Data = state.base64.includes(',') ? state.base64.split(',')[1] : state.base64;
                 const uint8Array = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-                processor = ImageProcessor.new_from_bytes(uint8Array);
+                appState.processor = ImageProcessor.new_from_bytes(uint8Array);
             }
-            
-            // 恢复状态时清除 WASM 内部的笔刷历史
-            processor.clear_strokes();
+
+            appState.processor.clear_strokes();
             updateCanvas();
         }
 
         // 更新撤销/重做按钮状态
         function updateUndoRedoButtons() {
-            document.getElementById('undoBtn').disabled = historyStack.length === 0;
-            document.getElementById('redoBtn').disabled = redoStack.length === 0;
-            document.getElementById('toolbarUndoBtn').disabled = historyStack.length === 0;
-            document.getElementById('toolbarRedoBtn').disabled = redoStack.length === 0;
+            document.getElementById('undoBtn').disabled = appState.historyStack.length === 0;
+            document.getElementById('redoBtn').disabled = appState.redoStack.length === 0;
+            document.getElementById('toolbarUndoBtn').disabled = appState.historyStack.length === 0;
+            document.getElementById('toolbarRedoBtn').disabled = appState.redoStack.length === 0;
         }
 
         // 清空历史记录并释放所有 Blob URL
         function clearHistory() {
-            // 释放历史栈中的 Blob URL
-            historyStack.forEach(state => {
+            appState.historyStack.forEach(state => {
                 if (state.url) {
-                    URL.revokeObjectURL(state.url);
+                    blobURLManager.revoke(state.url);
                 }
             });
-            historyStack = [];
+            appState.historyStack = [];
 
-            // 释放重做栈中的 Blob URL
-            redoStack.forEach(state => {
+            appState.redoStack.forEach(state => {
                 if (state.url) {
-                    URL.revokeObjectURL(state.url);
+                    blobURLManager.revoke(state.url);
                 }
             });
-            redoStack = [];
+            appState.redoStack = [];
 
-            // 更新按钮状态
             updateUndoRedoButtons();
         }
 
@@ -2371,20 +2675,12 @@
         function initGlobalEvents() {
             const canvasContainer = document.getElementById('canvasContainer');
             if (!canvasContainer) return;
-            
-            // 移除可能存在的旧监听（防止重复）
-            canvasContainer.removeEventListener('mousemove', handleCanvasMouseMove);
-            canvasContainer.removeEventListener('mouseup', handleCanvasMouseUp);
-            canvasContainer.removeEventListener('mouseleave', handleCanvasMouseLeave);
-            canvasContainer.removeEventListener('click', handleCanvasClick);
-            canvasContainer.removeEventListener('mousedown', handleCanvasMouseDown);
 
-            // 添加新监听
-            canvasContainer.addEventListener('mousemove', handleCanvasMouseMove);
-            canvasContainer.addEventListener('mouseup', handleCanvasMouseUp);
-            canvasContainer.addEventListener('mouseleave', handleCanvasMouseLeave);
-            canvasContainer.addEventListener('click', handleCanvasClick);
-            canvasContainer.addEventListener('mousedown', handleCanvasMouseDown);
+            eventManager.on(canvasContainer, 'mousemove', handleCanvasMouseMove);
+            eventManager.on(canvasContainer, 'mouseup', handleCanvasMouseUp);
+            eventManager.on(canvasContainer, 'mouseleave', handleCanvasMouseLeave);
+            eventManager.on(canvasContainer, 'click', handleCanvasClick);
+            eventManager.on(canvasContainer, 'mousedown', handleCanvasMouseDown);
         }
 
         // 获取 Canvas 缩放比例
@@ -2411,21 +2707,21 @@
             const mouseOrigY = (e.clientY - rect.top) * scale.scaleY;
 
             // 笔刷绘制开始
-            if (isBrushMode) {
-                isBrushDrawing = true;
-                if (processor) {
+            if (appState.isBrushMode) {
+                appState.isBrushDrawing = true;
+                if (appState.processor) {
                     // 在开始绘制前保存历史状态（用于通用撤销）
                     saveToHistory();
 
                     // 将十六进制颜色转换为 RGB
-                    const hex = brushSettings.color.replace('#', '');
+                    const hex = appState.brushSettings.color.replace('#', '');
                     const r = parseInt(hex.substring(0, 2), 16);
                     const g = parseInt(hex.substring(2, 4), 16);
                     const b = parseInt(hex.substring(4, 6), 16);
 
                     // 创建笔刷配置
                     let brushType;
-                    switch (brushSettings.type) {
+                    switch (appState.brushSettings.type) {
                         case 'pencil': brushType = window.BrushType.Pencil; break;
                         case 'marker': brushType = window.BrushType.Marker; break;
                         case 'watercolor': brushType = window.BrushType.Watercolor; break;
@@ -2440,17 +2736,17 @@
 
                     const config = new window.BrushConfig(
                         brushType,
-                        brushSettings.width,
+                        appState.brushSettings.width,
                         eraserColor, eraserGreen, eraserBlue, 255,
                         window.BlendMode.Normal,
                         0.5,
                         0.5
                     );
 
-                    processor.begin_stroke(config);
-                    processor.add_stroke_point(mouseOrigX, mouseOrigY, 1.0);
+                    appState.processor.begin_stroke(config);
+                    appState.processor.add_stroke_point(mouseOrigX, mouseOrigY, 1.0);
                     // 初始化临时绘制变量
-                    lastBrushPoint = { x: mouseOrigX, y: mouseOrigY };
+                    appState.lastBrushPoint = { x: mouseOrigX, y: mouseOrigY };
                     // 不需要在这里调用 updateCanvas()，我们将在 mouseup 时一次性更新
                 }
             }
@@ -2468,21 +2764,21 @@
             const canvas = document.getElementById('imageCanvas');
             
             // 水印拖动
-            if (isWatermarkMode && isWatermarkDragging) {
-                let newX = mouseOrigX - watermarkDragStart.x;
-                let newY = mouseOrigY - watermarkDragStart.y;
+            if (appState.isWatermarkMode && appState.isWatermarkDragging) {
+                let newX = mouseOrigX - appState.watermarkDragStart.x;
+                let newY = mouseOrigY - appState.watermarkDragStart.y;
 
-                newX = Math.max(0, Math.min(canvas.width - watermarkPreview.width, newX));
-                newY = Math.max(0, Math.min(canvas.height - watermarkPreview.height, newY));
+                newX = Math.max(0, Math.min(canvas.width - appState.watermarkPreview.width, newX));
+                newY = Math.max(0, Math.min(canvas.height - appState.watermarkPreview.height, newY));
 
-                watermarkPreview.x = newX;
-                watermarkPreview.y = newY;
+                appState.watermarkPreview.x = newX;
+                appState.watermarkPreview.y = newY;
                 updateWatermarkPreview();
 
                 // 更新滑块显示
-                if (processor) {
-                    const width = processor.get_width();
-                    const height = processor.get_height();
+                if (appState.processor) {
+                    const width = appState.processor.get_width();
+                    const height = appState.processor.get_height();
                     watermarkXSlider.value = (newX / width) * 100;
                     watermarkYSlider.value = (newY / height) * 100;
                     document.getElementById('watermarkXValue').textContent = Math.floor(newX);
@@ -2492,78 +2788,87 @@
             }
             
             // 水印缩放
-            if (isWatermarkMode && isWatermarkResizing) {
-                const dx = mouseOrigX - watermarkDragStart.x;
-                const dy = mouseOrigY - watermarkDragStart.y;
+            if (appState.isWatermarkMode && appState.isWatermarkResizing) {
+                const dx = mouseOrigX - appState.watermarkDragStart.x;
+                const dy = mouseOrigY - appState.watermarkDragStart.y;
                 const minSize = 20;
                 
-                switch(watermarkResizeHandle) {
+                switch(appState.watermarkResizeHandle) {
                     case 'nw':
-                        watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width - dx);
-                        watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height - dy);
-                        watermarkPreview.x = initialWatermarkPreview.x + initialWatermarkPreview.width - watermarkPreview.width;
-                        watermarkPreview.y = initialWatermarkPreview.y + initialWatermarkPreview.height - watermarkPreview.height;
+                        appState.watermarkPreview.width = Math.max(minSize, appState.initialWatermarkPreview.width - dx);
+                        appState.watermarkPreview.height = Math.max(minSize, appState.initialWatermarkPreview.height - dy);
+                        appState.watermarkPreview.x = appState.initialWatermarkPreview.x + appState.initialWatermarkPreview.width - appState.watermarkPreview.width;
+                        appState.watermarkPreview.y = appState.initialWatermarkPreview.y + appState.initialWatermarkPreview.height - appState.watermarkPreview.height;
                         break;
                     case 'ne':
-                        watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width + dx);
-                        watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height - dy);
-                        watermarkPreview.y = initialWatermarkPreview.y + initialWatermarkPreview.height - watermarkPreview.height;
+                        appState.watermarkPreview.width = Math.max(minSize, appState.initialWatermarkPreview.width + dx);
+                        appState.watermarkPreview.height = Math.max(minSize, appState.initialWatermarkPreview.height - dy);
+                        appState.watermarkPreview.y = appState.initialWatermarkPreview.y + appState.initialWatermarkPreview.height - appState.watermarkPreview.height;
                         break;
                     case 'sw':
-                        watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width - dx);
-                        watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height + dy);
-                        watermarkPreview.x = initialWatermarkPreview.x + initialWatermarkPreview.width - watermarkPreview.width;
+                        appState.watermarkPreview.width = Math.max(minSize, appState.initialWatermarkPreview.width - dx);
+                        appState.watermarkPreview.height = Math.max(minSize, appState.initialWatermarkPreview.height + dy);
+                        appState.watermarkPreview.x = appState.initialWatermarkPreview.x + appState.initialWatermarkPreview.width - appState.watermarkPreview.width;
                         break;
                     case 'se':
-                        watermarkPreview.width = Math.max(minSize, initialWatermarkPreview.width + dx);
-                        watermarkPreview.height = Math.max(minSize, initialWatermarkPreview.height + dy);
+                        appState.watermarkPreview.width = Math.max(minSize, appState.initialWatermarkPreview.width + dx);
+                        appState.watermarkPreview.height = Math.max(minSize, appState.initialWatermarkPreview.height + dy);
                         break;
                 }
                 
                 // 边界限制
-                if (watermarkPreview.x < 0) watermarkPreview.x = 0;
-                if (watermarkPreview.y < 0) watermarkPreview.y = 0;
-                if (watermarkPreview.x + watermarkPreview.width > canvas.width) {
-                    watermarkPreview.width = canvas.width - watermarkPreview.x;
+                if (appState.watermarkPreview.x < 0) appState.watermarkPreview.x = 0;
+                if (appState.watermarkPreview.y < 0) appState.watermarkPreview.y = 0;
+                if (appState.watermarkPreview.x + appState.watermarkPreview.width > canvas.width) {
+                    appState.watermarkPreview.width = canvas.width - appState.watermarkPreview.x;
                 }
-                if (watermarkPreview.y + watermarkPreview.height > canvas.height) {
-                    watermarkPreview.height = canvas.height - watermarkPreview.y;
+                if (appState.watermarkPreview.y + appState.watermarkPreview.height > canvas.height) {
+                    appState.watermarkPreview.height = canvas.height - appState.watermarkPreview.y;
                 }
                 
                 updateWatermarkPreview();
                 
                 // 更新大小滑块
-                if (watermarkBytes) {
+                if (appState.watermarkBytes) {
                     const tempImg = new Image();
+                    const blob = new Blob([appState.watermarkBytes]);
+                    const url = blobURLManager.create(blob);
+
                     tempImg.onload = function() {
-                        const scaleX = watermarkPreview.width / tempImg.width;
-                        const scaleY = watermarkPreview.height / tempImg.height;
+                        const scaleX = appState.watermarkPreview.width / tempImg.width;
+                        const scaleY = appState.watermarkPreview.height / tempImg.height;
                         const avgScale = (scaleX + scaleY) / 2;
                         const scalePercent = Math.round(avgScale * 100);
                         watermarkScaleSlider.value = scalePercent;
                         document.getElementById('watermarkScaleValue').textContent = scalePercent;
+                        blobURLManager.revoke(url);
                     };
-                    tempImg.src = URL.createObjectURL(new Blob([watermarkBytes]));
+
+                    tempImg.onerror = function() {
+                        blobURLManager.revoke(url);
+                    };
+
+                    tempImg.src = url;
                 }
                 return;
             }
             
             // 文本拖动
-            if (isTextMode && isTextDragging) {
+            if (appState.isTextMode && appState.isTextDragging) {
                 const textBoxEl = document.getElementById('textBox');
 
                 // 使用存储的 textWidth 和 fontSize 进行边界限制（原始像素）
-                const textWidth = textBox.textWidth;
-                const textHeight = textBox.fontSize;
+                const textWidth = appState.textBox.textWidth;
+                const textHeight = appState.textBox.fontSize;
 
-                let newX = mouseOrigX - textDragStart.x;
-                let newY = mouseOrigY - textDragStart.y;
+                let newX = mouseOrigX - appState.textDragStart.x;
+                let newY = mouseOrigY - appState.textDragStart.y;
 
                 newX = Math.max(0, Math.min(canvas.width - textWidth, newX));
                 newY = Math.max(0, Math.min(canvas.height - textHeight, newY));
 
-                textBox.x = newX;
-                textBox.y = newY;
+                appState.textBox.x = newX;
+                appState.textBox.y = newY;
                 
                 // 获取画布在容器中的实际位置（考虑 flex 布局的居中偏移）
                 const canvasRect = canvas.getBoundingClientRect();
@@ -2577,29 +2882,29 @@
             }
 
             // 笔刷绘制
-            if (isBrushMode && isBrushDrawing) {
-                if (processor) {
+            if (appState.isBrushMode && appState.isBrushDrawing) {
+                if (appState.processor) {
                     // 将点添加到 WASM 处理器
-                    processor.add_stroke_point(mouseOrigX, mouseOrigY, 1.0);
+                    appState.processor.add_stroke_point(mouseOrigX, mouseOrigY, 1.0);
 
                     // 直接在主画布上绘制临时线段（避免频繁调用 updateCanvas 导致闪屏）
                     const canvas = document.getElementById('imageCanvas');
                     const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-                    if (lastBrushPoint) {
+                    if (appState.lastBrushPoint) {
                         // 绘制从上一个点到当前点的线段
                         ctx.beginPath();
-                        ctx.strokeStyle = brushSettings.color;
-                        ctx.lineWidth = brushSettings.width;
+                        ctx.strokeStyle = appState.brushSettings.color;
+                        ctx.lineWidth = appState.brushSettings.width;
                         ctx.lineCap = 'round';
                         ctx.lineJoin = 'round';
-                        ctx.moveTo(lastBrushPoint.x, lastBrushPoint.y);
+                        ctx.moveTo(appState.lastBrushPoint.x, appState.lastBrushPoint.y);
                         ctx.lineTo(mouseOrigX, mouseOrigY);
                         ctx.stroke();
                     }
 
                     // 更新上一个点的位置
-                    lastBrushPoint = { x: mouseOrigX, y: mouseOrigY };
+                    appState.lastBrushPoint = { x: mouseOrigX, y: mouseOrigY };
                 }
             }
         }
@@ -2607,12 +2912,12 @@
         // 鼠标释放处理函数
         function handleCanvasMouseUp() {
             // 笔刷绘制结束
-            if (isBrushMode && isBrushDrawing) {
-                isBrushDrawing = false;
-                if (processor) {
-                    processor.end_stroke();
+            if (appState.isBrushMode && appState.isBrushDrawing) {
+                appState.isBrushDrawing = false;
+                if (appState.processor) {
+                    appState.processor.end_stroke();
                     // 重置临时绘制变量
-                    lastBrushPoint = null;
+                    appState.lastBrushPoint = null;
                     // 调用 updateCanvas 显示最终效果（使用离屏 Canvas，不会闪烁）
                     updateCanvas();
                     saveToHistory();
@@ -2620,19 +2925,19 @@
             }
 
             // 文本拖动结束
-            isTextDragging = false;
+            appState.isTextDragging = false;
             const textBoxEl = document.getElementById('textBox');
             if (textBoxEl) textBoxEl.classList.remove('dragging');
             
             // 水印拖动/缩放结束
-            if (isWatermarkDragging) {
-                isWatermarkDragging = false;
+            if (appState.isWatermarkDragging) {
+                appState.isWatermarkDragging = false;
                 const previewEl = document.getElementById('watermarkPreview');
                 if (previewEl) previewEl.classList.remove('dragging');
             }
-            if (isWatermarkResizing) {
-                isWatermarkResizing = false;
-                watermarkResizeHandle = null;
+            if (appState.isWatermarkResizing) {
+                appState.isWatermarkResizing = false;
+                appState.watermarkResizeHandle = null;
             }
         }
 
@@ -2645,7 +2950,7 @@
         // 点击处理函数
         function handleCanvasClick(e) {
             // 点击非水印区域确认应用
-            if (!isWatermarkMode) return;
+            if (!appState.isWatermarkMode) return;
             
             const watermarkPreviewEl = document.getElementById('watermarkPreview');
             if (!watermarkPreviewEl || watermarkPreviewEl.style.display === 'none') return;
@@ -2654,7 +2959,7 @@
             const isInWatermark = e.clientX >= rect.left && e.clientX <= rect.right &&
                                e.clientY >= rect.top && e.clientY <= rect.bottom;
             
-            if (!isInWatermark && !isWatermarkDragging && !isWatermarkResizing) {
+            if (!isInWatermark && !appState.isWatermarkDragging && !appState.isWatermarkResizing) {
                 confirmWatermark();
             }
         }
@@ -2671,81 +2976,82 @@
 
         // 启用按钮
         function enableButtons() {
+            console.log('enableButtons() 被调用，appState.currentImage:', !!appState.currentImage);
             const buttons = document.querySelectorAll('.btn, .toolbar-btn');
             buttons.forEach(btn => {
-                // 下载和清空图像按钮需要 currentImage
+                // 下载和清空图像按钮需要 appState.currentImage
                 if (btn.getAttribute('onclick')?.includes('downloadImage') ||
                     btn.getAttribute('onclick')?.includes('clearImage')) {
-                    btn.disabled = !currentImage;
+                    btn.disabled = !appState.currentImage;
                 }
                 // 其他非危险按钮
                 else if (!btn.classList.contains('btn-danger')) {
-                    btn.disabled = !currentImage;
+                    btn.disabled = !appState.currentImage;
                 }
             });
 
             // 启用工具栏操作按钮
-            document.getElementById('toolbarUndoBtn').disabled = !currentImage || historyStack.length === 0;
-            document.getElementById('toolbarRedoBtn').disabled = !currentImage || redoStack.length === 0;
-            document.getElementById('toolbarResetBtn').disabled = !currentImage;
-            document.getElementById('toolbarClearBtn').disabled = !currentImage;
+            document.getElementById('toolbarUndoBtn').disabled = !appState.currentImage || appState.historyStack.length === 0;
+            document.getElementById('toolbarRedoBtn').disabled = !appState.currentImage || appState.redoStack.length === 0;
+            document.getElementById('toolbarResetBtn').disabled = !appState.currentImage;
+            document.getElementById('toolbarClearBtn').disabled = !appState.currentImage;
 
             // 启用滑块
             const sliders = document.querySelectorAll('input[type="range"]');
             sliders.forEach(slider => {
-                slider.disabled = !currentImage;
+                slider.disabled = !appState.currentImage;
             });
 
             // 启用选择器
             const selects = document.querySelectorAll('select');
             selects.forEach(select => {
-                select.disabled = !currentImage;
+                select.disabled = !appState.currentImage;
             });
 
             // 启用文本绘制控件
-            document.getElementById('textInput').disabled = !currentImage;
-            document.getElementById('fontSizeSlider').disabled = !currentImage;
-            document.getElementById('textColorPicker').disabled = !currentImage;
-            document.getElementById('fontSelect').disabled = !currentImage;
-            document.getElementById('textOffsetSlider').disabled = !currentImage;
-            document.getElementById('shadowCheckbox').disabled = !currentImage;
+            document.getElementById('textInput').disabled = !appState.currentImage;
+            document.getElementById('fontSizeSlider').disabled = !appState.currentImage;
+            document.getElementById('textColorPicker').disabled = !appState.currentImage;
+            document.getElementById('fontSelect').disabled = !appState.currentImage;
+            document.getElementById('textOffsetSlider').disabled = !appState.currentImage;
+            document.getElementById('shadowCheckbox').disabled = !appState.currentImage;
 
             // 启用水印控件
-            document.getElementById('watermarkInput').disabled = !currentImage;
-            document.getElementById('watermarkBlendMode').disabled = !currentImage;
-            document.getElementById('watermarkScaleSlider').disabled = !currentImage;
-            document.getElementById('watermarkXSlider').disabled = !currentImage;
-            document.getElementById('watermarkYSlider').disabled = !currentImage;
-            document.getElementById('addWatermarkBtn').disabled = !currentImage || !watermarkBytes;
-            document.getElementById('clearWatermarkBtn').disabled = !currentImage;
+            document.getElementById('watermarkInput').disabled = !appState.currentImage;
+            document.getElementById('watermarkBlendMode').disabled = !appState.currentImage;
+            document.getElementById('watermarkScaleSlider').disabled = !appState.currentImage;
+            document.getElementById('watermarkXSlider').disabled = !appState.currentImage;
+            document.getElementById('watermarkYSlider').disabled = !appState.currentImage;
+            document.getElementById('addWatermarkBtn').disabled = !appState.currentImage || !appState.watermarkBytes;
+            document.getElementById('clearWatermarkBtn').disabled = !appState.currentImage;
 
             // 启用字体上传控件
-            document.getElementById('fontInput').disabled = !currentImage;
+            document.getElementById('fontInput').disabled = !appState.currentImage;
 
             // 启用旋转滑块
 
             // 启用多图混合控件
-            document.getElementById('blendInput').disabled = !currentImage;
-            document.getElementById('blendMode').disabled = !currentImage;
-            document.getElementById('blendScaleSlider').disabled = !currentImage;
-            document.getElementById('applyBlendBtn').disabled = !currentImage || !blendBytes;
-            document.getElementById('clearBlendBtn').disabled = !currentImage;
-            document.getElementById('rotationSlider').disabled = !currentImage;
+            document.getElementById('blendInput').disabled = !appState.currentImage;
+            document.getElementById('blendMode').disabled = !appState.currentImage;
+            document.getElementById('blendScaleSlider').disabled = !appState.currentImage;
+            document.getElementById('applyBlendBtn').disabled = !appState.currentImage || !appState.blendBytes;
+            document.getElementById('clearBlendBtn').disabled = !appState.currentImage;
+            document.getElementById('rotationSlider').disabled = !appState.currentImage;
 
             // 启用边缘优化按钮
-            document.getElementById('polygonCropBtn').disabled = !currentImage;
-            document.getElementById('circularMaskBtn').disabled = !currentImage;
-            document.getElementById('autoCropBtn').disabled = !currentImage;
-            document.getElementById('refineEdgesBtn').disabled = !currentImage;
-            document.getElementById('smartCropBtn').disabled = !currentImage;
+            document.getElementById('polygonCropBtn').disabled = !appState.currentImage;
+            document.getElementById('circularMaskBtn').disabled = !appState.currentImage;
+            document.getElementById('autoCropBtn').disabled = !appState.currentImage;
+            document.getElementById('refineEdgesBtn').disabled = !appState.currentImage;
+            document.getElementById('smartCropBtn').disabled = !appState.currentImage;
 
             // 启用笔刷控件
-            document.getElementById('sidebarBrushColor').disabled = !currentImage;
-            document.getElementById('sidebarBrushWidth').disabled = !currentImage;
-            document.getElementById('sidebarBrushType').disabled = !currentImage;
-            document.getElementById('sidebarEnableBrushBtn').disabled = !currentImage;
+            document.getElementById('sidebarBrushColor').disabled = !appState.currentImage;
+            document.getElementById('sidebarBrushWidth').disabled = !appState.currentImage;
+            document.getElementById('sidebarBrushType').disabled = !appState.currentImage;
+            document.getElementById('sidebarEnableBrushBtn').disabled = !appState.currentImage;
             // 笔刷禁用状态下的撤销和清除按钮保持禁用
-            if (!isBrushMode) {
+            if (!appState.isBrushMode) {
                 document.getElementById('sidebarUndoBrushBtn').disabled = true;
                 document.getElementById('sidebarClearBrushBtn').disabled = true;
             }
@@ -2792,7 +3098,7 @@
 
         // 快速调整功能
         window.quickAdjust = function(type, value) {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             const brightnessSlider = document.getElementById('brightnessSlider');
             const contrastSlider = document.getElementById('contrastSlider');
@@ -2855,7 +3161,7 @@
 
         // 点击整个编辑区域触发上传（仅在没有图片时）
         editorArea.addEventListener('click', (e) => {
-            if (!currentImage && !e.target.closest('.sidebar')) {
+            if (!appState.currentImage && !e.target.closest('.sidebar')) {
                 document.getElementById('fileInput').click();
             }
         });
@@ -2863,7 +3169,7 @@
         // 整个编辑区域支持拖拽
         editorArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            if (!currentImage) {
+            if (!appState.currentImage) {
                 emptyState.classList.add('dragover');
             }
         });
@@ -2897,11 +3203,9 @@
         const watermarkXSlider = document.getElementById('watermarkXSlider');
         const watermarkYSlider = document.getElementById('watermarkYSlider');
 
-        let watermarkBytes = null;
-
         // 点击水印上传区域
         watermarkUpload.addEventListener('click', (e) => {
-            if (currentImage) {
+            if (appState.currentImage) {
                 e.stopPropagation();
                 // 清空 value 以允许重复选择相同文件
                 watermarkInput.value = '';
@@ -2922,7 +3226,7 @@
             showLoading(true);
             try {
                 const arrayBuffer = await file.arrayBuffer();
-                watermarkBytes = new Uint8Array(arrayBuffer);
+                appState.watermarkBytes = new Uint8Array(arrayBuffer);
                 
                 watermarkFileName.textContent = file.name;
                 watermarkFileName.style.color = '#4aaa6b';
@@ -2940,48 +3244,56 @@
         // 水印大小滑块更新
         watermarkScaleSlider.addEventListener('input', function() {
             document.getElementById('watermarkScaleValue').textContent = this.value;
-            // 更新实际水印大小
-            if (processor && watermarkBytes) {
+            if (appState.processor && appState.watermarkBytes) {
                 const scale = this.value / 100;
                 const tempImg = new Image();
+                const blob = new Blob([appState.watermarkBytes]);
+                const url = blobURLManager.create(blob);
+
                 tempImg.onload = function() {
-                    watermarkPreview.width = Math.floor(tempImg.width * scale);
-                    watermarkPreview.height = Math.floor(tempImg.height * scale);
+                    appState.watermarkPreview.width = Math.floor(tempImg.width * scale);
+                    appState.watermarkPreview.height = Math.floor(tempImg.height * scale);
                     updateWatermarkPreview();
+                    blobURLManager.revoke(url);
                 };
-                tempImg.src = URL.createObjectURL(new Blob([watermarkBytes]));
+
+                tempImg.onerror = function() {
+                    blobURLManager.revoke(url);
+                };
+
+                tempImg.src = url;
             }
         });
 
         // 水印位置滑块更新
         watermarkXSlider.addEventListener('input', function() {
-            if (processor) {
-                const width = processor.get_width();
+            if (appState.processor) {
+                const width = appState.processor.get_width();
                 const x = Math.floor(width * this.value / 100);
                 document.getElementById('watermarkXValue').textContent = x;
                 // 更新实际水印位置
-                watermarkPreview.x = x;
+                appState.watermarkPreview.x = x;
                 updateWatermarkPreview();
             }
         });
 
         watermarkYSlider.addEventListener('input', function() {
-            if (processor) {
-                const height = processor.get_height();
+            if (appState.processor) {
+                const height = appState.processor.get_height();
                 const y = Math.floor(height * this.value / 100);
                 document.getElementById('watermarkYValue').textContent = y;
                 // 更新实际水印位置
-                watermarkPreview.y = y;
+                appState.watermarkPreview.y = y;
                 updateWatermarkPreview();
             }
         });
 
         // 设置水印预设位置
         window.setWatermarkPosition = function(position) {
-            if (!processor) return;
+            if (!appState.processor) return;
             
-            const width = processor.get_width();
-            const height = processor.get_height();
+            const width = appState.processor.get_width();
+            const height = appState.processor.get_height();
             let x, y;
             
             switch(position) {
@@ -3028,44 +3340,50 @@
 
         // 进入水印模式
         window.addWatermarkMode = function() {
-            if (!processor || !watermarkBytes) {
+            if (!appState.processor || !appState.watermarkBytes) {
                 alert('请先加载主图像和水印图片');
                 return;
             }
 
-            isWatermarkMode = true;
+            appState.isWatermarkMode = true;
             
             // 设置水印预览框事件（确保事件监听器已绑定）
             setupWatermarkPreviewEvents();
             
             // 计算初始水印大小（基于缩放滑块）
             const scale = watermarkScaleSlider.value / 100;
-            const width = processor.get_width();
-            const height = processor.get_height();
-            
-            // 从字节数组加载水印图片获取原始尺寸
+            const width = appState.processor.get_width();
+            const height = appState.processor.get_height();
+
             const tempImg = new Image();
+            const blob1 = new Blob([appState.watermarkBytes]);
+            const url1 = blobURLManager.create(blob1);
+
             tempImg.onload = function() {
-                watermarkPreview.width = Math.floor(tempImg.width * scale);
-                watermarkPreview.height = Math.floor(tempImg.height * scale);
-                watermarkPreview.x = Math.floor((width - watermarkPreview.width) / 2);
-                watermarkPreview.y = Math.floor((height - watermarkPreview.height) / 2);
-                
-                // 更新水印预览框
+                appState.watermarkPreview.width = Math.floor(tempImg.width * scale);
+                appState.watermarkPreview.height = Math.floor(tempImg.height * scale);
+                appState.watermarkPreview.x = Math.floor((width - appState.watermarkPreview.width) / 2);
+                appState.watermarkPreview.y = Math.floor((height - appState.watermarkPreview.height) / 2);
+
                 updateWatermarkPreview();
-                
-                // 显示水印预览框和按钮
+
                 document.getElementById('watermarkPreview').style.display = 'block';
                 document.getElementById('addWatermarkBtn').style.display = 'none';
                 document.getElementById('confirmWatermarkBtn').style.display = 'inline-block';
                 document.getElementById('cancelWatermarkBtn').style.display = 'inline-block';
-                
-                // 创建 base64 图片
-                const blob = new Blob([watermarkBytes], { type: 'image/*' });
-                const url = URL.createObjectURL(blob);
-                document.getElementById('watermarkPreviewImg').src = url;
+
+                const blob2 = new Blob([appState.watermarkBytes], { type: 'image/*' });
+                const url2 = blobURLManager.create(blob2);
+                document.getElementById('watermarkPreviewImg').src = url2;
+
+                blobURLManager.revoke(url1);
             };
-            tempImg.src = URL.createObjectURL(new Blob([watermarkBytes]));
+
+            tempImg.onerror = function() {
+                blobURLManager.revoke(url1);
+            };
+
+            tempImg.src = url1;
         }
 
         // 设置水印预览框事件
@@ -3074,17 +3392,15 @@
             const canvasContainer = document.getElementById('canvasContainer');
             if (!watermarkPreviewEl || !canvasContainer) return;
 
-            // 移除旧的事件监听器（通过克隆节点）
-            const newPreviewEl = watermarkPreviewEl.cloneNode(true);
-            watermarkPreviewEl.parentNode.replaceChild(newPreviewEl, watermarkPreviewEl);
+            // 使用事件管理器移除所有旧监听器
+            eventManager.removeAll(watermarkPreviewEl);
 
-            // 重新获取元素引用并保存到全局变量
-            const updatedWatermarkPreviewEl = document.getElementById('watermarkPreview');
-            window.watermarkPreviewElement = updatedWatermarkPreviewEl; // 保存全局引用
+            // 保存全局引用
+            window.watermarkPreviewElement = watermarkPreviewEl;
 
             // 水印预览框鼠标按下（开始拖动）
-            updatedWatermarkPreviewEl.addEventListener('mousedown', (e) => {
-                if (!isWatermarkMode) return;
+            eventManager.on(watermarkPreviewEl, 'mousedown', (e) => {
+                if (!appState.isWatermarkMode) return;
 
                 const handle = e.target.classList.contains('watermark-handle') ? e.target : null;
                 const rect = canvasContainer.getBoundingClientRect();
@@ -3093,26 +3409,24 @@
                 const mouseOrigY = (e.clientY - rect.top) * scale.scaleY;
 
                 if (handle) {
-                    // 开始缩放
-                    isWatermarkResizing = true;
-                    watermarkResizeHandle = handle.className.split(' ')[1]; // nw, ne, sw, se
-                    watermarkDragStart = {
+                    appState.isWatermarkResizing = true;
+                    appState.watermarkResizeHandle = handle.className.split(' ')[1];
+                    appState.watermarkDragStart = {
                         x: mouseOrigX,
                         y: mouseOrigY
                     };
-                    initialWatermarkPreview = { ...watermarkPreview };
+                    appState.initialWatermarkPreview = { ...appState.watermarkPreview };
                 } else {
-                    // 开始拖动
-                    isWatermarkDragging = true;
-                    updatedWatermarkPreviewEl.classList.add('dragging');
+                    appState.isWatermarkDragging = true;
+                    watermarkPreviewEl.classList.add('dragging');
 
-                    watermarkDragStart = {
-                        x: mouseOrigX - watermarkPreview.x,
-                        y: mouseOrigY - watermarkPreview.y
+                    appState.watermarkDragStart = {
+                        x: mouseOrigX - appState.watermarkPreview.x,
+                        y: mouseOrigY - appState.watermarkPreview.y
                     };
-                    initialWatermarkPreview = { ...watermarkPreview };
+                    appState.initialWatermarkPreview = { ...appState.watermarkPreview };
                 }
-                
+
                 e.preventDefault();
                 e.stopPropagation();
             });
@@ -3120,13 +3434,13 @@
 
         // 确认水印
         window.confirmWatermark = function() {
-            if (!processor || !watermarkBytes) return;
+            if (!appState.processor || !appState.watermarkBytes) return;
             
             saveHistory();
             
             // 将坐标四舍五入为整数，避免 BigInt 转换错误
-            const x = BigInt(Math.round(watermarkPreview.x));
-            const y = BigInt(Math.round(watermarkPreview.y));
+            const x = BigInt(Math.round(appState.watermarkPreview.x));
+            const y = BigInt(Math.round(appState.watermarkPreview.y));
             
             // 直接使用滑块值作为缩放比例，避免反推误差
             const scale = watermarkScaleSlider.value / 100;
@@ -3136,7 +3450,7 @@
             const blendMode = blendModeSelect ? blendModeSelect.value : 'overlay';
             
             try {
-                processor.apply_watermark_with_blend(watermarkBytes, x, y, scale, blendMode);
+                appState.processor.apply_watermark_with_blend(appState.watermarkBytes, x, y, scale, blendMode);
                 updateCanvas();
                 console.log('水印已应用，混合模式:', blendMode);
                 exitWatermarkMode();
@@ -3153,10 +3467,10 @@
 
         // 退出水印模式
         function exitWatermarkMode() {
-            isWatermarkMode = false;
-            isWatermarkDragging = false;
-            isWatermarkResizing = false;
-            watermarkResizeHandle = null;
+            appState.isWatermarkMode = false;
+            appState.isWatermarkDragging = false;
+            appState.isWatermarkResizing = false;
+            appState.watermarkResizeHandle = null;
 
             // 隐藏水印预览框
             document.getElementById('watermarkPreview').style.display = 'none';
@@ -3175,15 +3489,15 @@
             const preview = document.getElementById('watermarkPreview');
             const scale = getCanvasScale();
             // 将原始像素坐标转换为 CSS 像素
-            preview.style.left = (watermarkPreview.x / scale.scaleX) + 'px';
-            preview.style.top = (watermarkPreview.y / scale.scaleY) + 'px';
-            preview.style.width = (watermarkPreview.width / scale.scaleX) + 'px';
-            preview.style.height = (watermarkPreview.height / scale.scaleY) + 'px';
+            preview.style.left = (appState.watermarkPreview.x / scale.scaleX) + 'px';
+            preview.style.top = (appState.watermarkPreview.y / scale.scaleY) + 'px';
+            preview.style.width = (appState.watermarkPreview.width / scale.scaleX) + 'px';
+            preview.style.height = (appState.watermarkPreview.height / scale.scaleY) + 'px';
         }
 
         // 清除水印（重置到上一个状态）
         window.clearWatermark = function() {
-            if (historyStack.length > 0) {
+            if (appState.historyStack.length > 0) {
                 undo();
             }
 		};
@@ -3197,7 +3511,7 @@
         const blendScaleSlider = document.getElementById('blendScaleSlider');
 
         blendUpload.addEventListener('click', (e) => {
-            if (currentImage) {
+            if (appState.currentImage) {
                 e.stopPropagation();
                 // 清空 value 以允许重复选择相同文件
                 blendInput.value = '';
@@ -3221,7 +3535,7 @@
         async function loadBlendImage(file) {
             try {
                 const arrayBuffer = await file.arrayBuffer();
-                blendBytes = new Uint8Array(arrayBuffer);
+                appState.blendBytes = new Uint8Array(arrayBuffer);
 
                 blendFileName.textContent = file.name;
                 blendFileName.style.color = '#4aaa6b';
@@ -3235,7 +3549,7 @@
 
         // 应用混合
         window.applyBlend = function() {
-            if (!processor || !blendBytes) {
+            if (!appState.processor || !appState.blendBytes) {
                 alert('请先上传主图像和混合图像');
                 return;
             }
@@ -3248,7 +3562,7 @@
                 const blendMode = blendModeSelect ? blendModeSelect.value : 'overlay';
                 const scale = blendScaleSlider.value / 100;
 
-                processor.blend_images_with_scale(blendBytes, scale, blendMode);
+                appState.processor.blend_images_with_scale(appState.blendBytes, scale, blendMode);
                 updateCanvas();
             } catch (error) {
                 console.error('混合应用失败:', error);
@@ -3259,7 +3573,7 @@
 
         // 清除混合图像（重置到上一个状态）
         window.clearBlend = function() {
-            if (historyStack.length > 0) {
+            if (appState.historyStack.length > 0) {
                 undo();
             }
         };
@@ -3282,12 +3596,14 @@
 
                     // 继续加载图片
                     try {
-                        processor = ImageProcessor.new_from_bytes(uint8Array);
-                        const width = processor.get_width();
-                        const height = processor.get_height();
+                        console.log('开始处理图片数据...');
+                        appState.processor = ImageProcessor.new_from_bytes(uint8Array);
+                        const width = appState.processor.get_width();
+                        const height = appState.processor.get_height();
+                        console.log('图片尺寸:', width, 'x', height);
 
                         // 保存原始处理器用于无级调节
-                        originalProcessor = ImageProcessor.new_from_bytes(uint8Array);
+                        appState.originalProcessor = ImageProcessor.new_from_bytes(uint8Array);
 
                         // 优化：使用 get_raw_pixels() + ImageData 直接渲染 Canvas（零拷贝优化）
                         const canvas = document.getElementById('imageCanvas');
@@ -3296,17 +3612,18 @@
                         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
                         // 获取原始像素数据并直接创建 ImageData
-                        const pixels = processor.get_raw_pixels();
+                        const pixels = appState.processor.get_raw_pixels();
                         const imageData = new ImageData(new Uint8ClampedArray(pixels), width, height);
                         ctx.putImageData(imageData, 0, 0);
 
                         // 保存原始图像数据
-                        originalImageData = ctx.getImageData(0, 0, width, height);
-                        currentImage = {
-                            data: new Uint8ClampedArray(originalImageData.data),
+                        appState.originalImageData = ctx.getImageData(0, 0, width, height);
+                        appState.currentImage = {
+                            data: new Uint8ClampedArray(appState.originalImageData.data),
                             width,
                             height
                         };
+                        console.log('appState.currentImage 已设置:', !!appState.currentImage);
 
                         document.getElementById('emptyState').style.display = 'none';
                         canvas.style.display = 'block';
@@ -3317,9 +3634,29 @@
                         // 清空历史记录，防止用户通过撤销/重做回到之前的图片
                         clearHistory();
 
+                        console.log('调用 enableButtons()...');
                         enableButtons();
+                        console.log('enableButtons() 调用完成');
                     } catch (error) {
                         console.error('Failed to load image:', error);
+                        console.error('错误详情:', error.stack);
+
+                        // 即使在处理过程中出现错误，如果 processor 已经创建且画布已经显示，也要设置 currentImage
+                        if (appState.processor && !appState.currentImage) {
+                            try {
+                                const width = appState.processor.get_width();
+                                const height = appState.processor.get_height();
+                                appState.currentImage = {
+                                    width,
+                                    height
+                                };
+                                console.log('错误恢复：appState.currentImage 已被设置（仅尺寸信息）');
+                                enableButtons();
+                            } catch (e) {
+                                console.error('无法恢复 currentImage:', e);
+                            }
+                        }
+
                         alert('图片加载失败，可能是尺寸过大导致内存不足');
                     }
                     showLoading(false);
@@ -3338,20 +3675,20 @@
 
         // 应用滤镜
         window.applyFilter = function(filterType) {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             // 保存状态到历史记录
             saveToHistory();
             try {
                 switch (filterType) {
                     case 'grayscale':
-                        processor.apply_grayscale();
+                        appState.processor.apply_grayscale();
                         break;
                     case 'sepia':
-                        processor.apply_sepia();
+                        appState.processor.apply_sepia();
                         break;
                     case 'invert':
-                        processor.apply_invert();
+                        appState.processor.apply_invert();
                         break;
                 }
                 updateCanvas();
@@ -3363,11 +3700,11 @@
 
         // 二值化
         window.applyThreshold = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_threshold(128);
+                appState.processor.apply_threshold(128);
                 updateCanvas();
             } catch (error) {
                 console.error('Threshold error:', error);
@@ -3377,13 +3714,13 @@
 
         // 灰度着色
         window.applyGrayscaleShades = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             const numShades = prompt('请输入灰度级别数 (建议 2-16):', '4');
             if (numShades && !isNaN(numShades)) {
                 showLoading(true);
                 saveToHistory();
                 try {
-                    processor.apply_grayscale_shades(parseInt(numShades));
+                    appState.processor.apply_grayscale_shades(parseInt(numShades));
                     updateCanvas();
                 } catch (error) {
                     console.error('Grayscale shades error:', error);
@@ -3394,11 +3731,11 @@
 
         // 人类感知灰度
         window.applyGrayscaleHumanCorrected = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_grayscale_human_corrected();
+                appState.processor.apply_grayscale_human_corrected();
                 updateCanvas();
             } catch (error) {
                 console.error('Grayscale human corrected error:', error);
@@ -3408,11 +3745,11 @@
 
         // 蓝色灰度
         window.applyBGrayscale = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_b_grayscale();
+                appState.processor.apply_b_grayscale();
                 updateCanvas();
             } catch (error) {
                 console.error('B grayscale error:', error);
@@ -3422,11 +3759,11 @@
 
         // 去饱和
         window.applyDesaturate = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_desaturate();
+                appState.processor.apply_desaturate();
                 updateCanvas();
             } catch (error) {
                 console.error('Desaturate error:', error);
@@ -3436,11 +3773,11 @@
 
         // 最大分解
         window.applyDecomposeMax = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_decompose_max();
+                appState.processor.apply_decompose_max();
                 updateCanvas();
             } catch (error) {
                 console.error('Decompose max error:', error);
@@ -3450,11 +3787,11 @@
 
         // 最小分解
         window.applyDecomposeMin = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_decompose_min();
+                appState.processor.apply_decompose_min();
                 updateCanvas();
             } catch (error) {
                 console.error('Decompose min error:', error);
@@ -3464,11 +3801,11 @@
 
         // 应用预设滤镜
         window.applyPresetFilter = function(filterName) {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_preset_filter(filterName);
+                appState.processor.apply_preset_filter(filterName);
                 updateCanvas();
             } catch (error) {
                 console.error('Preset filter error:', error);
@@ -3478,13 +3815,13 @@
 
         // 特殊效果
         window.applyPixelate = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             const pixelSize = prompt('请输入像素大小 (建议 5-20):', '10');
             if (pixelSize && !isNaN(pixelSize)) {
                 showLoading(true);
                 saveToHistory();
                 try {
-                    processor.apply_pixelate(parseInt(pixelSize));
+                    appState.processor.apply_pixelate(parseInt(pixelSize));
                     updateCanvas();
                 } catch (error) {
                     console.error('Pixelate error:', error);
@@ -3494,11 +3831,11 @@
         };
 
         window.applyHalftone = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_halftone();
+                appState.processor.apply_halftone();
                 updateCanvas();
             } catch (error) {
                 console.error('Halftone error:', error);
@@ -3507,11 +3844,11 @@
         };
 
         window.applySolarize = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_solarize();
+                appState.processor.apply_solarize();
                 updateCanvas();
             } catch (error) {
                 console.error('Solarize error:', error);
@@ -3520,13 +3857,13 @@
         };
 
         window.applyDither = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             const depth = prompt('请输入色深 (建议 8-64):', '16');
             if (depth && !isNaN(depth)) {
                 showLoading(true);
                 saveToHistory();
                 try {
-                    processor.apply_dither(parseInt(depth));
+                    appState.processor.apply_dither(parseInt(depth));
                     updateCanvas();
                 } catch (error) {
                     console.error('Dither error:', error);
@@ -3536,14 +3873,14 @@
         };
 
         window.applyOil = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             const radius = prompt('请输入半径 (建议 1-5):', '3');
             const intensity = prompt('请输入强度 (0.0-1.0):', '0.5');
             if (radius && intensity && !isNaN(radius) && !isNaN(intensity)) {
                 showLoading(true);
                 saveToHistory();
                 try {
-                    processor.apply_oil(parseInt(radius), parseFloat(intensity));
+                    appState.processor.apply_oil(parseInt(radius), parseFloat(intensity));
                     updateCanvas();
                 } catch (error) {
                     console.error('Oil error:', error);
@@ -3553,7 +3890,7 @@
         };
 
         window.applyDuotone = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             const color1 = prompt('请输入第一种颜色 (R,G,B，如: 255,0,0):', '100,100,200');
             const color2 = prompt('请输入第二种颜色 (R,G,B，如: 0,255,0):', '200,100,100');
             if (color1 && color2) {
@@ -3563,7 +3900,7 @@
                     showLoading(true);
                     saveToHistory();
                     try {
-                        processor.apply_duotone(c1[0], c1[1], c1[2], c2[0], c2[1], c2[2]);
+                        appState.processor.apply_duotone(c1[0], c1[1], c1[2], c2[0], c2[1], c2[2]);
                         updateCanvas();
                     } catch (error) {
                         console.error('Duotone error:', error);
@@ -3575,11 +3912,11 @@
 
         // 特效滤镜
         window.applyLix = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_lix();
+                appState.processor.apply_lix();
                 updateCanvas();
             } catch (error) {
                 console.error('Lix error:', error);
@@ -3588,11 +3925,11 @@
         };
 
         window.applyNeue = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_neue();
+                appState.processor.apply_neue();
                 updateCanvas();
             } catch (error) {
                 console.error('Neue error:', error);
@@ -3601,11 +3938,11 @@
         };
 
         window.applyRyo = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_ryo();
+                appState.processor.apply_ryo();
                 updateCanvas();
             } catch (error) {
                 console.error('Ryo error:', error);
@@ -3614,13 +3951,13 @@
         };
 
         window.applyIncBrightness = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             const brightness = parseInt(prompt('请输入亮度增加值 (0-255):', '30'));
             if (!isNaN(brightness)) {
                 showLoading(true);
                 saveToHistory();
                 try {
-                    processor.apply_inc_brightness(brightness);
+                    appState.processor.apply_inc_brightness(brightness);
                     updateCanvas();
                 } catch (error) {
                     console.error('Inc brightness error:', error);
@@ -3630,11 +3967,11 @@
         };
 
         window.applyGradient = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_gradient();
+                appState.processor.apply_gradient();
                 updateCanvas();
             } catch (error) {
                 console.error('Gradient error:', error);
@@ -3644,11 +3981,11 @@
 
         // 主色效果
         window.applyPrimary = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_primary();
+                appState.processor.apply_primary();
                 updateCanvas();
             } catch (error) {
                 console.error('Primary error:', error);
@@ -3658,11 +3995,11 @@
 
         // 着色
         window.applyColorize = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_colorize();
+                appState.processor.apply_colorize();
                 updateCanvas();
             } catch (error) {
                 console.error('Colorize error:', error);
@@ -3672,11 +4009,11 @@
 
         // 毛玻璃效果
         window.applyFrostedGlass = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_frosted_glass();
+                appState.processor.apply_frosted_glass();
                 updateCanvas();
             } catch (error) {
                 console.error('Frosted glass error:', error);
@@ -3686,7 +4023,7 @@
 
         // 色调
         window.applyTint = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             const rOffset = prompt('请输入红色偏移量 (0-255):', '50');
             const gOffset = prompt('请输入绿色偏移量 (0-255):', '30');
             const bOffset = prompt('请输入蓝色偏移量 (0-255):', '20');
@@ -3694,7 +4031,7 @@
                 showLoading(true);
                 saveToHistory();
                 try {
-                    processor.apply_tint(parseInt(rOffset), parseInt(gOffset), parseInt(bOffset));
+                    appState.processor.apply_tint(parseInt(rOffset), parseInt(gOffset), parseInt(bOffset));
                     updateCanvas();
                 } catch (error) {
                     console.error('Tint error:', error);
@@ -3705,13 +4042,13 @@
 
         // 水平条纹
         window.applyHorizontalStrips = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             const numStrips = prompt('请输入条纹数量 (建议 5-20):', '10');
             if (numStrips && !isNaN(numStrips)) {
                 showLoading(true);
                 saveToHistory();
                 try {
-                    processor.apply_strips(parseInt(numStrips), true);
+                    appState.processor.apply_strips(parseInt(numStrips), true);
                     updateCanvas();
                 } catch (error) {
                     console.error('Horizontal strips error:', error);
@@ -3722,13 +4059,13 @@
 
         // 垂直条纹
         window.applyVerticalStrips = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             const numStrips = prompt('请输入条纹数量 (建议 5-20):', '10');
             if (numStrips && !isNaN(numStrips)) {
                 showLoading(true);
                 saveToHistory();
                 try {
-                    processor.apply_strips(parseInt(numStrips), false);
+                    appState.processor.apply_strips(parseInt(numStrips), false);
                     updateCanvas();
                 } catch (error) {
                     console.error('Vertical strips error:', error);
@@ -3739,7 +4076,7 @@
 
         // 彩色水平条纹
         window.applyColorHorizontalStrips = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             const numStrips = prompt('请输入条纹数量 (建议 5-20):', '10');
             const color = prompt('请输入条纹颜色 (R,G,B，如: 255,0,0):', '255,0,0');
             if (numStrips && color) {
@@ -3748,7 +4085,7 @@
                     showLoading(true);
                     saveToHistory();
                     try {
-                        processor.apply_strips(parseInt(numStrips), true, rgb[0], rgb[1], rgb[2]);
+                        appState.processor.apply_strips(parseInt(numStrips), true, rgb[0], rgb[1], rgb[2]);
                         updateCanvas();
                     } catch (error) {
                         console.error('Color horizontal strips error:', error);
@@ -3760,7 +4097,7 @@
 
         // 彩色垂直条纹
         window.applyColorVerticalStrips = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             const numStrips = prompt('请输入条纹数量 (建议 5-20):', '10');
             const color = prompt('请输入条纹颜色 (R,G,B，如: 0,255,0):', '0,255,0');
             if (numStrips && color) {
@@ -3769,7 +4106,7 @@
                     showLoading(true);
                     saveToHistory();
                     try {
-                        processor.apply_strips(parseInt(numStrips), false, rgb[0], rgb[1], rgb[2]);
+                        appState.processor.apply_strips(parseInt(numStrips), false, rgb[0], rgb[1], rgb[2]);
                         updateCanvas();
                     } catch (error) {
                         console.error('Color vertical strips error:', error);
@@ -3781,11 +4118,11 @@
 
         // 归一化
         window.applyNormalize = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_normalize();
+                appState.processor.apply_normalize();
                 updateCanvas();
             } catch (error) {
                 console.error('Normalize error:', error);
@@ -3795,11 +4132,11 @@
 
         // 盒式模糊
         window.applyBoxBlur = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_box_blur();
+                appState.processor.apply_box_blur();
                 updateCanvas();
             } catch (error) {
                 console.error('Box blur error:', error);
@@ -3809,13 +4146,13 @@
 
         // 高斯模糊
         window.applyGaussianBlur = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             const radius = prompt('请输入模糊半径 (建议 1-10):', '3');
             if (radius && !isNaN(radius)) {
                 showLoading(true);
                 saveToHistory();
                 try {
-                    processor.apply_gaussian_blur(parseInt(radius));
+                    appState.processor.apply_gaussian_blur(parseInt(radius));
                     updateCanvas();
                 } catch (error) {
                     console.error('Gaussian blur error:', error);
@@ -3826,11 +4163,11 @@
 
         // Sobel 水平边缘检测
         window.applySobelHorizontal = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_sobel_horizontal();
+                appState.processor.apply_sobel_horizontal();
                 updateCanvas();
             } catch (error) {
                 console.error('Sobel horizontal error:', error);
@@ -3840,11 +4177,11 @@
 
         // Sobel 垂直边缘检测
         window.applySobelVertical = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_sobel_vertical();
+                appState.processor.apply_sobel_vertical();
                 updateCanvas();
             } catch (error) {
                 console.error('Sobel vertical error:', error);
@@ -3854,11 +4191,11 @@
 
         // Sobel 全局边缘检测
         window.applySobelGlobal = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_sobel_global();
+                appState.processor.apply_sobel_global();
                 updateCanvas();
             } catch (error) {
                 console.error('Sobel global error:', error);
@@ -3868,11 +4205,11 @@
 
         // Prewitt 水平边缘检测
         window.applyPrewittHorizontal = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_prewitt_horizontal();
+                appState.processor.apply_prewitt_horizontal();
                 updateCanvas();
             } catch (error) {
                 console.error('Prewitt horizontal error:', error);
@@ -3882,11 +4219,11 @@
 
         // Laplace 效果
         window.applyLaplace = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_laplace();
+                appState.processor.apply_laplace();
                 updateCanvas();
             } catch (error) {
                 console.error('Laplace error:', error);
@@ -3896,11 +4233,11 @@
 
         // 浮雕效果
         window.applyEmboss = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_emboss();
+                appState.processor.apply_emboss();
                 updateCanvas();
             } catch (error) {
                 console.error('Emboss error:', error);
@@ -3910,11 +4247,11 @@
 
         // 身份卷积（保持原样，用于测试）
         window.applyIdentity = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_identity();
+                appState.processor.apply_identity();
                 updateCanvas();
             } catch (error) {
                 console.error('Identity error:', error);
@@ -3924,11 +4261,11 @@
 
         // 边缘检测类型 1
         window.applyEdgeOne = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_edge_one();
+                appState.processor.apply_edge_one();
                 updateCanvas();
             } catch (error) {
                 console.error('Edge one error:', error);
@@ -3938,11 +4275,11 @@
 
         // 基础边缘检测
         window.applyEdgeDetection = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_edge_detection();
+                appState.processor.apply_edge_detection();
                 updateCanvas();
             } catch (error) {
                 console.error('Edge detection error:', error);
@@ -3952,11 +4289,11 @@
 
         // 检测水平线
         window.applyDetectHorizontalLines = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_detect_horizontal_lines();
+                appState.processor.apply_detect_horizontal_lines();
                 updateCanvas();
             } catch (error) {
                 console.error('Detect horizontal lines error:', error);
@@ -3966,11 +4303,11 @@
 
         // 检测垂直线
         window.applyDetectVerticalLines = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_detect_vertical_lines();
+                appState.processor.apply_detect_vertical_lines();
                 updateCanvas();
             } catch (error) {
                 console.error('Detect vertical lines error:', error);
@@ -3980,11 +4317,11 @@
 
         // 检测 45 度线
         window.applyDetect45DegLines = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_detect_45_deg_lines();
+                appState.processor.apply_detect_45_deg_lines();
                 updateCanvas();
             } catch (error) {
                 console.error('Detect 45 degree lines error:', error);
@@ -3994,11 +4331,11 @@
 
         // 检测 135 度线
         window.applyDetect135DegLines = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             saveToHistory();
             try {
-                processor.apply_detect_135_deg_lines();
+                appState.processor.apply_detect_135_deg_lines();
                 updateCanvas();
             } catch (error) {
                 console.error('Detect 135 degree lines error:', error);
@@ -4008,9 +4345,8 @@
 
         // 应用无级调节
         let adjustmentTimeout = null;
-        let originalProcessor = null; // 保存原始处理器用于无级调节
         window.applyAdjustments = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             // 获取滑块值
             const brightness = parseInt(document.getElementById('brightnessSlider').value);
@@ -4048,35 +4384,35 @@
             // 应用调整
             try {
                 // 基于原始图像应用所有调整
-                if (originalProcessor) {
+                if (appState.originalProcessor) {
                     // 创建新的处理器实例（基于原始图像，使用 get_bytes() 代替 to_base64()，提升性能）
-                    const originalBytes = originalProcessor.get_bytes();
-                    processor = ImageProcessor.new_from_bytes(originalBytes);
+                    const originalBytes = appState.originalProcessor.get_bytes();
+                    appState.processor = ImageProcessor.new_from_bytes(originalBytes);
                     
                     // 应用亮度 (-255 到 255)
                     const adjustedBrightness = Math.max(-255, Math.min(255, brightness));
                     if (adjustedBrightness !== 0) {
-                        processor.apply_brightness(adjustedBrightness);
+                        appState.processor.apply_brightness(adjustedBrightness);
                     }
                     
                     // 应用对比度 (-255 到 255，从 0-200 转换)
                     const adjustedContrast = (contrast - 100) * 2.55; // 转换为 -255 到 255
                     const clampedContrast = Math.max(-255, Math.min(255, adjustedContrast));
                     if (clampedContrast !== 0) {
-                        processor.apply_contrast(clampedContrast);
+                        appState.processor.apply_contrast(clampedContrast);
                     }
                     
                     // 应用饱和度 (-1 到 1，从 0-200 转换)
                     const adjustedSaturation = (saturation - 100) / 100; // 转换为 -1 到 1
                     const clampedSaturation = Math.max(-1, Math.min(1, adjustedSaturation));
                     if (clampedSaturation !== 0) {
-                        processor.apply_saturation(clampedSaturation);
+                        appState.processor.apply_saturation(clampedSaturation);
                     }
                     
                     // 应用色相 (-360 到 360)
                     const adjustedHue = Math.max(-360, Math.min(360, hue));
                     if (adjustedHue !== 0) {
-                        processor.apply_hue(adjustedHue);
+                        appState.processor.apply_hue(adjustedHue);
                     }
 
                     // 应用明度 (-1 到 1，从 0-200 转换)
@@ -4089,38 +4425,38 @@
                             // 根据图像特征自动选择色彩空间
                             selectedColorSpace = autoDetectColorSpace();
                         }
-                        processor.apply_lightness(clampedLightness, selectedColorSpace);
+                        appState.processor.apply_lightness(clampedLightness, selectedColorSpace);
                     }
 
                     // 应用伽马校正 (0.1 到 10)
                     if (gammaRed !== 1.0 || gammaGreen !== 1.0 || gammaBlue !== 1.0) {
-                        processor.apply_gamma(gammaRed, gammaGreen, gammaBlue);
+                        appState.processor.apply_gamma(gammaRed, gammaGreen, gammaBlue);
                     }
 
                     // 应用锐化 (0.0 到 10.0)
                     if (sharpenStrength !== 0.0) {
-                        processor.apply_sharpen(sharpenStrength);
+                        appState.processor.apply_sharpen(sharpenStrength);
                     }
 
                     // 应用降噪 (0.0 到 10.0)
                     if (noiseReductionStrength !== 0.0) {
-                        processor.apply_noise_reduction(noiseReductionStrength);
+                        appState.processor.apply_noise_reduction(noiseReductionStrength);
                     }
 
                     // 应用噪点 (0.0 到 10.0)
                     if (noiseStrength !== 0.0) {
-                        processor.apply_noise(noiseStrength);
+                        appState.processor.apply_noise(noiseStrength);
                     }
 
                     // 应用通道调整 (-255 到 255)
                     if (redChannelOffset !== 0) {
-                        processor.offset_red(Math.abs(redChannelOffset));
+                        appState.processor.offset_red(Math.abs(redChannelOffset));
                     }
                     if (greenChannelOffset !== 0) {
-                        processor.offset_green(Math.abs(greenChannelOffset));
+                        appState.processor.offset_green(Math.abs(greenChannelOffset));
                     }
                     if (blueChannelOffset !== 0) {
-                        processor.offset_blue(Math.abs(blueChannelOffset));
+                        appState.processor.offset_blue(Math.abs(blueChannelOffset));
                     }
                 }
                 
@@ -4150,11 +4486,11 @@
 
         // 旋转图片
         window.rotateImage = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             try {
                 saveToHistory();
-                processor.rotate_90();
+                appState.processor.rotate_90();
                 updateCanvas();
             } catch (error) {
                 console.error('Rotate error:', error);
@@ -4164,14 +4500,14 @@
 
         // 快速旋转指定角度（180°或270°）
         window.quickRotate = function(angle) {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             try {
                 saveToHistory();
                 // 180° = 两次90°旋转，270° = 三次90°旋转
                 const rotations = angle / 90;
                 for (let i = 0; i < rotations; i++) {
-                    processor.rotate_90();
+                    appState.processor.rotate_90();
                 }
                 updateCanvas();
             } catch (error) {
@@ -4183,11 +4519,11 @@
 
         // 彩色噪点函数
         window.applyPinkNoise = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             try {
                 saveToHistory();
-                processor.apply_pink_noise();
+                appState.processor.apply_pink_noise();
                 updateCanvas();
             } catch (error) {
                 console.error('Pink noise error:', error);
@@ -4196,13 +4532,13 @@
         };
 
         window.applyColorNoise = function(rFactor, gFactor, bFactor) {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             try {
                 saveToHistory();
                 // 使用强度滑块的值
                 const strength = parseFloat(document.getElementById('colorNoiseStrengthSlider').value) / 100;
-                processor.apply_color_noise_with_strength(rFactor, gFactor, bFactor, strength);
+                appState.processor.apply_color_noise_with_strength(rFactor, gFactor, bFactor, strength);
                 updateCanvas();
             } catch (error) {
                 console.error('Color noise error:', error);
@@ -4233,7 +4569,7 @@
         let rotationTimeout = null;
         let isRotating = false;
         window.applyRotation = function() {
-            if (!processor || isRotating) return;
+            if (!appState.processor || isRotating) return;
 
             const angle = parseFloat(document.getElementById('rotationSlider').value);
             document.getElementById('rotationValue').textContent = angle;
@@ -4241,7 +4577,7 @@
             // 防抖：用户停止调节 800ms 后才应用旋转（增加防抖时间以减少卡顿）
             clearTimeout(rotationTimeout);
             rotationTimeout = setTimeout(() => {
-                if (angle !== 0 && processor && !isRotating) {
+                if (angle !== 0 && appState.processor && !isRotating) {
                     isRotating = true;
                     showLoading(true);
                     
@@ -4250,7 +4586,7 @@
                         setTimeout(() => {
                             try {
                                 saveToHistory();
-                                processor.rotate_any(angle);
+                                appState.processor.rotate_any(angle);
                                 updateCanvas();
                                 // 重置滑块
                                 document.getElementById('rotationSlider').value = 0;
@@ -4270,11 +4606,11 @@
 
         // 水平翻转
         window.flipHorizontal = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             try {
                 saveToHistory();
-                processor.flip_horizontal();
+                appState.processor.flip_horizontal();
                 updateCanvas();
             } catch (error) {
                 console.error('Flip horizontal error:', error);
@@ -4284,11 +4620,11 @@
 
         // 垂直翻转
         window.flipVertical = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             showLoading(true);
             try {
                 saveToHistory();
-                processor.flip_vertical();
+                appState.processor.flip_vertical();
                 updateCanvas();
             } catch (error) {
                 console.error('Flip vertical error:', error);
@@ -4298,14 +4634,14 @@
 
         // 缩放图片
         window.resizeImage = function() {
-            if (!processor) return;
-            const width = prompt('请输入新宽度:', processor.get_width() / 2);
-            const height = prompt('请输入新高度:', processor.get_height() / 2);
+            if (!appState.processor) return;
+            const width = prompt('请输入新宽度:', appState.processor.get_width() / 2);
+            const height = prompt('请输入新高度:', appState.processor.get_height() / 2);
             if (width && height && !isNaN(width) && !isNaN(height)) {
                 showLoading(true);
                 try {
                     saveToHistory();
-                    processor.resize(parseInt(width), parseInt(height));
+                    appState.processor.resize(parseInt(width), parseInt(height));
                     updateCanvas();
                 } catch (error) {
                     console.error('Resize error:', error);
@@ -4315,8 +4651,6 @@
         };
 
         // 裁剪模式
-        let isCropMode = false;
-        let cropBox = { x: 0, y: 0, width: 0, height: 0 };
         let isDragging = false;
         let isResizing = false;
         let resizeHandle = null;
@@ -4325,14 +4659,14 @@
 
         // 进入裁剪模式
         window.cropImage = function() {
-            if (!processor) return;
-            isCropMode = true;
+            if (!appState.processor) return;
+            appState.isCropMode = true;
 
             // 初始化裁剪框为图像中心的一半大小
             const canvas = document.getElementById('imageCanvas');
             const width = canvas.width;
             const height = canvas.height;
-            cropBox = {
+            appState.cropBox = {
                 x: width * 0.25,
                 y: height * 0.25,
                 width: width * 0.5,
@@ -4363,7 +4697,7 @@
 
             // 添加窗口大小变化监听器，确保裁剪框尺寸始终与 imageCanvas 同步
             const resizeHandler = () => {
-                if (isCropMode) {
+                if (appState.isCropMode) {
                     const updatedCanvas = document.getElementById('imageCanvas');
                     const updatedCanvasRect = updatedCanvas.getBoundingClientRect();
                     const updatedCropOverlay = document.getElementById('cropOverlay');
@@ -4413,21 +4747,21 @@
                 const canvasCoords = displayToCanvasCoords(mouseX, mouseY, canvas);
 
                 // 检查是否点击了裁剪框
-                if (canvasCoords.x >= cropBox.x && canvasCoords.x <= cropBox.x + cropBox.width &&
-                    canvasCoords.y >= cropBox.y && canvasCoords.y <= cropBox.y + cropBox.height) {
+                if (canvasCoords.x >= appState.cropBox.x && canvasCoords.x <= appState.cropBox.x + appState.cropBox.width &&
+                    canvasCoords.y >= appState.cropBox.y && canvasCoords.y <= appState.cropBox.y + appState.cropBox.height) {
 
                     // 检查是否点击了调整手柄
                     const handleSize = 16;
-                    if (Math.abs(canvasCoords.x - cropBox.x) < handleSize && Math.abs(canvasCoords.y - cropBox.y) < handleSize) {
+                    if (Math.abs(canvasCoords.x - appState.cropBox.x) < handleSize && Math.abs(canvasCoords.y - appState.cropBox.y) < handleSize) {
                         isResizing = true;
                         resizeHandle = 'nw';
-                    } else if (Math.abs(canvasCoords.x - (cropBox.x + cropBox.width)) < handleSize && Math.abs(canvasCoords.y - cropBox.y) < handleSize) {
+                    } else if (Math.abs(canvasCoords.x - (appState.cropBox.x + appState.cropBox.width)) < handleSize && Math.abs(canvasCoords.y - appState.cropBox.y) < handleSize) {
                         isResizing = true;
                         resizeHandle = 'ne';
-                    } else if (Math.abs(canvasCoords.x - cropBox.x) < handleSize && Math.abs(canvasCoords.y - (cropBox.y + cropBox.height)) < handleSize) {
+                    } else if (Math.abs(canvasCoords.x - appState.cropBox.x) < handleSize && Math.abs(canvasCoords.y - (appState.cropBox.y + appState.cropBox.height)) < handleSize) {
                         isResizing = true;
                         resizeHandle = 'sw';
-                    } else if (Math.abs(canvasCoords.x - (cropBox.x + cropBox.width)) < handleSize && Math.abs(canvasCoords.y - (cropBox.y + cropBox.height)) < handleSize) {
+                    } else if (Math.abs(canvasCoords.x - (appState.cropBox.x + appState.cropBox.width)) < handleSize && Math.abs(canvasCoords.y - (appState.cropBox.y + appState.cropBox.height)) < handleSize) {
                         isResizing = true;
                         resizeHandle = 'se';
                     } else {
@@ -4435,14 +4769,14 @@
                     }
 
                     dragStart = { x: mouseX, y: mouseY };
-                    initialCropBox = { ...cropBox };
+                    initialCropBox = { ...appState.cropBox };
                     e.preventDefault();
                 }
             });
 
             // 鼠标移动
             updatedCropOverlay.addEventListener('mousemove', (e) => {
-                if (!isCropMode) return;
+                if (!appState.isCropMode) return;
 
                 // 使用 imageCanvas 的 getBoundingClientRect() 作为坐标基准
                 const rect = canvas.getBoundingClientRect();
@@ -4460,8 +4794,8 @@
                 if (isDragging) {
                     // 转换移动距离为 Canvas 实际坐标
                     const { scaleX, scaleY } = getCanvasScale(canvas);
-                    cropBox.x = Math.max(0, Math.min(canvas.width - cropBox.width, initialCropBox.x + dx * scaleX));
-                    cropBox.y = Math.max(0, Math.min(canvas.height - cropBox.height, initialCropBox.y + dy * scaleY));
+                    appState.cropBox.x = Math.max(0, Math.min(canvas.width - appState.cropBox.width, initialCropBox.x + dx * scaleX));
+                    appState.cropBox.y = Math.max(0, Math.min(canvas.height - appState.cropBox.height, initialCropBox.y + dy * scaleY));
                     drawCropOverlay();
                 } else if (isResizing) {
                     // 转换移动距离为 Canvas 实际坐标
@@ -4491,15 +4825,15 @@
             const canvas = document.getElementById('imageCanvas');
             const handleSize = 16;
 
-            if (mouseX >= cropBox.x && mouseX <= cropBox.x + cropBox.width &&
-                mouseY >= cropBox.y && mouseY <= cropBox.y + cropBox.height) {
-                if (Math.abs(mouseX - cropBox.x) < handleSize && Math.abs(mouseY - cropBox.y) < handleSize) {
+            if (mouseX >= appState.cropBox.x && mouseX <= appState.cropBox.x + appState.cropBox.width &&
+                mouseY >= appState.cropBox.y && mouseY <= appState.cropBox.y + appState.cropBox.height) {
+                if (Math.abs(mouseX - appState.cropBox.x) < handleSize && Math.abs(mouseY - appState.cropBox.y) < handleSize) {
                     canvas.style.cursor = 'nw-resize';
-                } else if (Math.abs(mouseX - (cropBox.x + cropBox.width)) < handleSize && Math.abs(mouseY - cropBox.y) < handleSize) {
+                } else if (Math.abs(mouseX - (appState.cropBox.x + appState.cropBox.width)) < handleSize && Math.abs(mouseY - appState.cropBox.y) < handleSize) {
                     canvas.style.cursor = 'ne-resize';
-                } else if (Math.abs(mouseX - cropBox.x) < handleSize && Math.abs(mouseY - (cropBox.y + cropBox.height)) < handleSize) {
+                } else if (Math.abs(mouseX - appState.cropBox.x) < handleSize && Math.abs(mouseY - (appState.cropBox.y + appState.cropBox.height)) < handleSize) {
                     canvas.style.cursor = 'sw-resize';
-                } else if (Math.abs(mouseX - (cropBox.x + cropBox.width)) < handleSize && Math.abs(mouseY - (cropBox.y + cropBox.height)) < handleSize) {
+                } else if (Math.abs(mouseX - (appState.cropBox.x + appState.cropBox.width)) < handleSize && Math.abs(mouseY - (appState.cropBox.y + appState.cropBox.height)) < handleSize) {
                     canvas.style.cursor = 'se-resize';
                 } else {
                     canvas.style.cursor = 'move';
@@ -4516,30 +4850,30 @@
             
             switch (resizeHandle) {
                 case 'nw':
-                    cropBox.x = Math.max(0, initialCropBox.x + dx);
-                    cropBox.y = Math.max(0, initialCropBox.y + dy);
-                    cropBox.width = Math.max(minSize, initialCropBox.width - dx);
-                    cropBox.height = Math.max(minSize, initialCropBox.height - dy);
+                    appState.cropBox.x = Math.max(0, initialCropBox.x + dx);
+                    appState.cropBox.y = Math.max(0, initialCropBox.y + dy);
+                    appState.cropBox.width = Math.max(minSize, initialCropBox.width - dx);
+                    appState.cropBox.height = Math.max(minSize, initialCropBox.height - dy);
                     break;
                 case 'ne':
-                    cropBox.y = Math.max(0, initialCropBox.y + dy);
-                    cropBox.width = Math.max(minSize, initialCropBox.width + dx);
-                    cropBox.height = Math.max(minSize, initialCropBox.height - dy);
+                    appState.cropBox.y = Math.max(0, initialCropBox.y + dy);
+                    appState.cropBox.width = Math.max(minSize, initialCropBox.width + dx);
+                    appState.cropBox.height = Math.max(minSize, initialCropBox.height - dy);
                     break;
                 case 'sw':
-                    cropBox.x = Math.max(0, initialCropBox.x + dx);
-                    cropBox.width = Math.max(minSize, initialCropBox.width - dx);
-                    cropBox.height = Math.max(minSize, initialCropBox.height + dy);
+                    appState.cropBox.x = Math.max(0, initialCropBox.x + dx);
+                    appState.cropBox.width = Math.max(minSize, initialCropBox.width - dx);
+                    appState.cropBox.height = Math.max(minSize, initialCropBox.height + dy);
                     break;
                 case 'se':
-                    cropBox.width = Math.max(minSize, initialCropBox.width + dx);
-                    cropBox.height = Math.max(minSize, initialCropBox.height + dy);
+                    appState.cropBox.width = Math.max(minSize, initialCropBox.width + dx);
+                    appState.cropBox.height = Math.max(minSize, initialCropBox.height + dy);
                     break;
             }
             
             // 确保裁剪框在画布内
-            cropBox.x = Math.max(0, Math.min(canvas.width - cropBox.width, cropBox.x));
-            cropBox.y = Math.max(0, Math.min(canvas.height - cropBox.height, cropBox.y));
+            appState.cropBox.x = Math.max(0, Math.min(canvas.width - appState.cropBox.width, appState.cropBox.x));
+            appState.cropBox.y = Math.max(0, Math.min(canvas.height - appState.cropBox.height, appState.cropBox.y));
         }
 
         // 绘制裁剪覆盖层
@@ -4555,13 +4889,13 @@
             ctx.fillRect(0, 0, cropOverlay.width, cropOverlay.height);
             
             // 清除裁剪框区域的遮罩
-            ctx.clearRect(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
+            ctx.clearRect(appState.cropBox.x, appState.cropBox.y, appState.cropBox.width, appState.cropBox.height);
             
             // 绘制裁剪框边框
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]);
-            ctx.strokeRect(cropBox.x, cropBox.y, cropBox.width, cropBox.height);
+            ctx.strokeRect(appState.cropBox.x, appState.cropBox.y, appState.cropBox.width, appState.cropBox.height);
             ctx.setLineDash([]);
             
             // 绘制三分线
@@ -4571,16 +4905,16 @@
             // 垂直线
             for (let i = 1; i < 3; i++) {
                 ctx.beginPath();
-                ctx.moveTo(cropBox.x + (cropBox.width / 3) * i, cropBox.y);
-                ctx.lineTo(cropBox.x + (cropBox.width / 3) * i, cropBox.y + cropBox.height);
+                ctx.moveTo(appState.cropBox.x + (appState.cropBox.width / 3) * i, appState.cropBox.y);
+                ctx.lineTo(appState.cropBox.x + (appState.cropBox.width / 3) * i, appState.cropBox.y + appState.cropBox.height);
                 ctx.stroke();
             }
             
             // 水平线
             for (let i = 1; i < 3; i++) {
                 ctx.beginPath();
-                ctx.moveTo(cropBox.x, cropBox.y + (cropBox.height / 3) * i);
-                ctx.lineTo(cropBox.x + cropBox.width, cropBox.y + (cropBox.height / 3) * i);
+                ctx.moveTo(appState.cropBox.x, appState.cropBox.y + (appState.cropBox.height / 3) * i);
+                ctx.lineTo(appState.cropBox.x + appState.cropBox.width, appState.cropBox.y + (appState.cropBox.height / 3) * i);
                 ctx.stroke();
             }
             
@@ -4591,33 +4925,33 @@
             ctx.lineWidth = 2;
 
             // 四角
-            ctx.fillRect(cropBox.x - handleSize/2, cropBox.y - handleSize/2, handleSize, handleSize);
-            ctx.strokeRect(cropBox.x - handleSize/2, cropBox.y - handleSize/2, handleSize, handleSize);
+            ctx.fillRect(appState.cropBox.x - handleSize/2, appState.cropBox.y - handleSize/2, handleSize, handleSize);
+            ctx.strokeRect(appState.cropBox.x - handleSize/2, appState.cropBox.y - handleSize/2, handleSize, handleSize);
 
-            ctx.fillRect(cropBox.x + cropBox.width - handleSize/2, cropBox.y - handleSize/2, handleSize, handleSize);
-            ctx.strokeRect(cropBox.x + cropBox.width - handleSize/2, cropBox.y - handleSize/2, handleSize, handleSize);
+            ctx.fillRect(appState.cropBox.x + appState.cropBox.width - handleSize/2, appState.cropBox.y - handleSize/2, handleSize, handleSize);
+            ctx.strokeRect(appState.cropBox.x + appState.cropBox.width - handleSize/2, appState.cropBox.y - handleSize/2, handleSize, handleSize);
 
-            ctx.fillRect(cropBox.x - handleSize/2, cropBox.y + cropBox.height - handleSize/2, handleSize, handleSize);
-            ctx.strokeRect(cropBox.x - handleSize/2, cropBox.y + cropBox.height - handleSize/2, handleSize, handleSize);
+            ctx.fillRect(appState.cropBox.x - handleSize/2, appState.cropBox.y + appState.cropBox.height - handleSize/2, handleSize, handleSize);
+            ctx.strokeRect(appState.cropBox.x - handleSize/2, appState.cropBox.y + appState.cropBox.height - handleSize/2, handleSize, handleSize);
 
-            ctx.fillRect(cropBox.x + cropBox.width - handleSize/2, cropBox.y + cropBox.height - handleSize/2, handleSize, handleSize);
-            ctx.strokeRect(cropBox.x + cropBox.width - handleSize/2, cropBox.y + cropBox.height - handleSize/2, handleSize, handleSize);
+            ctx.fillRect(appState.cropBox.x + appState.cropBox.width - handleSize/2, appState.cropBox.y + appState.cropBox.height - handleSize/2, handleSize, handleSize);
+            ctx.strokeRect(appState.cropBox.x + appState.cropBox.width - handleSize/2, appState.cropBox.y + appState.cropBox.height - handleSize/2, handleSize, handleSize);
         }
 
         // 应用裁剪
         window.applyCrop = function() {
-            if (!processor || !isCropMode) return;
+            if (!appState.processor || !appState.isCropMode) return;
             
             saveToHistory();
             
             showLoading(true);
             try {
-                const x1 = Math.floor(cropBox.x);
-                const y1 = Math.floor(cropBox.y);
-                const x2 = Math.floor(cropBox.x + cropBox.width);
-                const y2 = Math.floor(cropBox.y + cropBox.height);
+                const x1 = Math.floor(appState.cropBox.x);
+                const y1 = Math.floor(appState.cropBox.y);
+                const x2 = Math.floor(appState.cropBox.x + appState.cropBox.width);
+                const y2 = Math.floor(appState.cropBox.y + appState.cropBox.height);
                 
-                processor.crop(x1, y1, x2, y2);
+                appState.processor.crop(x1, y1, x2, y2);
                 updateCanvas();
                 cancelCrop();
             } catch (error) {
@@ -4628,7 +4962,7 @@
 
         // 取消裁剪
         window.cancelCrop = function() {
-            isCropMode = false;
+            appState.isCropMode = false;
             document.getElementById('cropOverlay').style.display = 'none';
             document.getElementById('cropControls').style.display = 'none';
             document.getElementById('imageCanvas').style.cursor = 'default';
@@ -4642,7 +4976,7 @@
 
         // 格式转换
         window.convertFormat = function(format) {
-            if (!processor) return;
+            if (!appState.processor) return;
             
             let quality = 90; // 默认质量
             
@@ -4682,15 +5016,15 @@
                 
                 switch (format) {
                     case 'png':
-                        base64 = processor.to_png();
+                        base64 = appState.processor.to_png();
                         mimeType = 'image/png';
                         break;
                     case 'jpeg':
-                        base64 = processor.to_jpeg(quality);
+                        base64 = appState.processor.to_jpeg(quality);
                         mimeType = 'image/jpeg';
                         break;
                     case 'webp':
-                        base64 = processor.to_webp(quality);
+                        base64 = appState.processor.to_webp(quality);
                         mimeType = 'image/webp';
                         break;
                     default:
@@ -4731,7 +5065,7 @@
         // 确认抠图预览
         window.confirmMaskPreview = function() {
             // 如果在矩形选框模式，先应用抠图
-            if (isRectSelectionMode) {
+            if (appState.isRectSelectionMode) {
                 // 先保存当前状态（抠图前的状态）
                 saveToHistory();
                 applyMaskFromRectSelection();
@@ -4743,7 +5077,7 @@
             }
 
             // 如果在多边形预览模式（还未应用抠图），先应用抠图
-            if (currentMaskType === 'polygon' && isPolygonCropMode) {
+            if (currentMaskType === 'polygon' && appState.isPolygonCropMode) {
                 enterPolygonMaskPreview();
                 return;
             }
@@ -4761,18 +5095,18 @@
                 const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
                 historyData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
             }
-            historyStack.push({
+            appState.historyStack.push({
                 bytes: historyData,
-                width: processor.get_width(),
-                height: processor.get_height()
+                width: appState.processor.get_width(),
+                height: appState.processor.get_height()
             });
-            if (historyStack.length > MAX_HISTORY) {
-                historyStack.shift();
+            if (appState.historyStack.length > MAX_HISTORY) {
+                appState.historyStack.shift();
             }
-            redoStack = [];
+            appState.redoStack = [];
             updateUndoRedoButtons();
 
-            // 使用当前的 processor（已经应用了抠图效果）
+            // 使用当前的 appState.processor（已经应用了抠图效果）
             updateCanvas();
             hideMaskPreviewControls();
             currentMaskType = null;
@@ -4783,7 +5117,7 @@
         // 取消抠图预览
         window.cancelMaskPreview = function() {
             // 如果在矩形选框模式，退出选框模式
-            if (isRectSelectionMode) {
+            if (appState.isRectSelectionMode) {
                 exitRectSelectionMode();
                 hideMaskPreviewControls();
                 currentMaskType = null;
@@ -4792,11 +5126,11 @@
             }
 
             // 如果在多边形抠图模式，直接清理状态（不调用 togglePolygonCropMode 避免死循环）
-            if (isPolygonCropMode) {
-                isPolygonCropMode = false;
+            if (appState.isPolygonCropMode) {
+                appState.isPolygonCropMode = false;
                 const btn = document.getElementById('polygonCropBtn');
                 if (btn) btn.classList.remove('active');
-                polygonPoints = [];
+                appState.polygonPoints = [];
 
                 const canvas = document.getElementById('imageCanvas');
                 if (canvas) canvas.style.cursor = 'default';
@@ -4822,7 +5156,7 @@
                 const ctx = cropOverlay.getContext('2d');
                 ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
                 cropOverlay.style.display = 'none';
-                polygonPoints = [];
+                appState.polygonPoints = [];
             }
 
             if (maskPreviewImageData) {
@@ -4830,12 +5164,12 @@
                 try {
                     // maskPreviewImageData 现在是 Uint8Array，直接使用
                     if (maskPreviewImageData instanceof Uint8Array) {
-                        processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
+                        appState.processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
                     } else {
                         // 兼容旧的 base64 格式
                         const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
                         const originalBytes = base64_to_bytes(base64Data);
-                        processor = ImageProcessor.new_from_bytes(originalBytes);
+                        appState.processor = ImageProcessor.new_from_bytes(originalBytes);
                     }
                     updateCanvas();
                 } catch (error) {
@@ -4859,7 +5193,6 @@
         }
 
         // 矩形选框模式相关变量
-        let isRectSelectionMode = false;
         let rectSelectionBox = { x: 0, y: 0, width: 0, height: 0 };
         let isRectDragging = false;
         let isRectResizing = false;
@@ -4870,8 +5203,8 @@
 
         // 进入矩形选框模式
         function enterRectSelectionMode(type) {
-            if (!processor) return;
-            isRectSelectionMode = true;
+            if (!appState.processor) return;
+            appState.isRectSelectionMode = true;
             rectSelectionType = type;
 
             // 初始化选框为图像中心的一半大小
@@ -5024,7 +5357,7 @@
 
             // 鼠标按下
             updatedCropOverlay.addEventListener('mousedown', (e) => {
-                if (!isRectSelectionMode) return;
+                if (!appState.isRectSelectionMode) return;
 
                 const rect = canvas.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
@@ -5083,7 +5416,7 @@
 
             // 鼠标移动
             updatedCropOverlay.addEventListener('mousemove', (e) => {
-                if (!isRectSelectionMode) return;
+                if (!appState.isRectSelectionMode) return;
 
                 const rect = canvas.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
@@ -5229,19 +5562,19 @@
 
         // 退出矩形选框模式
         function exitRectSelectionMode() {
-            isRectSelectionMode = false;
+            appState.isRectSelectionMode = false;
             document.getElementById('cropOverlay').style.display = 'none';
             document.getElementById('imageCanvas').style.cursor = 'default';
         }
 
         // 从矩形选框应用抠图
         function applyMaskFromRectSelection() {
-            if (!isRectSelectionMode) return;
+            if (!appState.isRectSelectionMode) return;
 
             showLoading(true);
 
             // 保存当前图像数据（使用 get_bytes() 代替 to_base64()，提升性能）
-            maskPreviewImageData = processor.get_bytes();
+            maskPreviewImageData = appState.processor.get_bytes();
 
             try {
                 const centerX = rectSelectionBox.x + rectSelectionBox.width / 2;
@@ -5250,19 +5583,19 @@
 
                 switch (rectSelectionType) {
                     case 'circular':
-                        processor.apply_circular_mask(centerX, centerY, radius, 2);
+                        appState.processor.apply_circular_mask(centerX, centerY, radius, 2);
                         break;
                     case 'auto':
                         // 获取选框中心点颜色作为目标颜色（使用 get_pixel_at 优化，避免读取整个图像）
-                        const pixelIndex = Math.floor(centerY) * processor.get_width() * 4 + Math.floor(centerX) * 4;
-                        const pixels = processor.get_raw_pixels();
+                        const pixelIndex = Math.floor(centerY) * appState.processor.get_width() * 4 + Math.floor(centerX) * 4;
+                        const pixels = appState.processor.get_raw_pixels();
                         const r = pixels[pixelIndex];
                         const g = pixels[pixelIndex + 1];
                         const b = pixels[pixelIndex + 2];
-                        processor.auto_crop_by_color(r, g, b, 30, 2);
+                        appState.processor.auto_crop_by_color(r, g, b, 30, 2);
                         break;
                     case 'smart':
-                        processor.smart_crop(50, 2);
+                        appState.processor.smart_crop(50, 2);
                         break;
                 }
 
@@ -5281,7 +5614,7 @@
                         // 提取纯 base64 数据（移除可能的 data URI 前缀）
                         const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
                         const originalBytes = base64_to_bytes(base64Data);
-                        processor = ImageProcessor.new_from_bytes(originalBytes);
+                        appState.processor = ImageProcessor.new_from_bytes(originalBytes);
                         updateCanvas();
                     } catch (e) {
                         console.error('Failed to restore image:', e);
@@ -5295,12 +5628,10 @@
         }
 
         // 多边形抠图模式相关变量
-        let isPolygonCropMode = false;
-        let polygonPoints = [];
-        
+
         // 切换多边形抠图模式
         window.togglePolygonCropMode = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             // 如果已经在预览模式，先取消预览
             if (isMaskPreviewMode) {
@@ -5308,14 +5639,14 @@
                 return;
             }
 
-            isPolygonCropMode = !isPolygonCropMode;
+            appState.isPolygonCropMode = !appState.isPolygonCropMode;
             const btn = document.getElementById('polygonCropBtn');
             const canvas = document.getElementById('imageCanvas');
             const cropOverlay = document.getElementById('cropOverlay');
 
-            if (isPolygonCropMode) {
+            if (appState.isPolygonCropMode) {
                 btn.classList.add('active');
-                polygonPoints = [];
+                appState.polygonPoints = [];
                 canvas.style.cursor = 'crosshair';
 
                 // 显示 cropOverlay 用于绘制预览
@@ -5329,7 +5660,7 @@
                 alert('多边形抠图模式已启用\n\n点击画布添加顶点\n添加第3个点后自动预览抠图效果\n点击"确认抠图"应用，点击"取消"放弃');
             } else {
                 btn.classList.remove('active');
-                polygonPoints = [];
+                appState.polygonPoints = [];
                 canvas.style.cursor = 'default';
 
                 // 隐藏 cropOverlay 并清空
@@ -5347,7 +5678,7 @@
 
         // 定义多边形抠图点击处理函数
         function handlePolygonClick(e) {
-            if (!isPolygonCropMode || !processor) return;
+            if (!appState.isPolygonCropMode || !appState.processor) return;
 
             // 如果在预览模式下，点击会继续添加点
             if (isMaskPreviewMode && currentMaskType === 'polygon') {
@@ -5360,7 +5691,7 @@
                 const x = (e.clientX - rect.left) * scaleX;
                 const y = (e.clientY - rect.top) * scaleY;
 
-                polygonPoints.push({ x, y });
+                appState.polygonPoints.push({ x, y });
 
                 // 重新绘制多边形预览（在原图上）
                 updateCanvas();
@@ -5378,21 +5709,21 @@
             const x = (e.clientX - rect.left) * scaleX;
             const y = (e.clientY - rect.top) * scaleY;
 
-            polygonPoints.push({ x, y });
+            appState.polygonPoints.push({ x, y });
 
             // 绘制预览
             updateCanvas();
             drawPolygonPreview();
 
             // 当添加第3个点时，进入预览模式（显示确认/取消框，但不应用抠图）
-            if (polygonPoints.length === 3) {
+            if (appState.polygonPoints.length === 3) {
                 enterPolygonPreviewMode();
             }
         }
 
         // 定义右键点击处理函数
         function handlePolygonContextMenu(e) {
-            if (isPolygonCropMode && polygonPoints.length >= 3) {
+            if (appState.isPolygonCropMode && appState.polygonPoints.length >= 3) {
                 e.preventDefault();
                 enterPolygonMaskPreview();
             }
@@ -5400,7 +5731,7 @@
 
         // 定义双击处理函数
         function handlePolygonDoubleClick(e) {
-            if (isPolygonCropMode && polygonPoints.length >= 3) {
+            if (appState.isPolygonCropMode && appState.polygonPoints.length >= 3) {
                 e.preventDefault();
                 enterPolygonMaskPreview();
             }
@@ -5418,7 +5749,7 @@
         
         // 绘制多边形预览
         function drawPolygonPreview() {
-            if (polygonPoints.length === 0) return;
+            if (appState.polygonPoints.length === 0) return;
 
             // 使用 cropOverlay 覆盖层绘制预览，避免重绘整个主画布
             const canvas = document.getElementById('cropOverlay');
@@ -5430,13 +5761,13 @@
             ctx.strokeStyle = '#667eea';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(polygonPoints[0].x, polygonPoints[0].y);
+            ctx.moveTo(appState.polygonPoints[0].x, appState.polygonPoints[0].y);
 
-            for (let i = 1; i < polygonPoints.length; i++) {
-                ctx.lineTo(polygonPoints[i].x, polygonPoints[i].y);
+            for (let i = 1; i < appState.polygonPoints.length; i++) {
+                ctx.lineTo(appState.polygonPoints[i].x, appState.polygonPoints[i].y);
             }
 
-            if (polygonPoints.length >= 3) {
+            if (appState.polygonPoints.length >= 3) {
                 ctx.closePath();
                 ctx.fillStyle = 'rgba(102, 126, 234, 0.2)';
                 ctx.fill();
@@ -5446,7 +5777,7 @@
 
             // 绘制顶点
             ctx.fillStyle = '#fff';
-            for (const point of polygonPoints) {
+            for (const point of appState.polygonPoints) {
                 ctx.beginPath();
                 ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
                 ctx.fill();
@@ -5456,7 +5787,7 @@
         
         // 进入多边形抠图预览模式（显示控制栏，但不应用抠图）
         function enterPolygonPreviewMode() {
-            if (polygonPoints.length < 3) {
+            if (appState.polygonPoints.length < 3) {
                 alert('至少需要3个顶点才能形成多边形');
                 return;
             }
@@ -5474,7 +5805,7 @@
 
         // 进入多边形抠图预览模式（应用抠图效果）
         function enterPolygonMaskPreview() {
-            if (polygonPoints.length < 3) {
+            if (appState.polygonPoints.length < 3) {
                 alert('至少需要3个顶点才能形成多边形');
                 return;
             }
@@ -5482,17 +5813,17 @@
             showLoading(true);
 
             // 保存当前图像数据用于恢复（使用 get_bytes() 代替 base64，提升性能）
-            maskPreviewImageData = processor.get_bytes();
+            maskPreviewImageData = appState.processor.get_bytes();
 
             // 转换顶点为平坦数组
             const vertices = [];
-            for (const point of polygonPoints) {
+            for (const point of appState.polygonPoints) {
                 vertices.push(point.x, point.y);
             }
 
             try {
                 // 应用多边形遮罩（带抗锯齿和平滑边缘）
-                processor.apply_polygon_mask(
+                appState.processor.apply_polygon_mask(
                     vertices,
                     true,  // 抗锯齿
                     true,  // 平滑边缘
@@ -5502,7 +5833,7 @@
                 updateCanvas();
 
                 // 退出多边形抠图模式
-                isPolygonCropMode = false;
+                appState.isPolygonCropMode = false;
                 const btn = document.getElementById('polygonCropBtn');
                 btn.classList.remove('active');
                 document.getElementById('imageCanvas').style.cursor = 'default';
@@ -5519,12 +5850,12 @@
                 if (maskPreviewImageData) {
                     try {
                         if (maskPreviewImageData instanceof Uint8Array) {
-                            processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
+                            appState.processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
                         } else {
                             // 兼容旧的 base64 格式
                             const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
                             const originalBytes = base64_to_bytes(base64Data);
-                            processor = ImageProcessor.new_from_bytes(originalBytes);
+                            appState.processor = ImageProcessor.new_from_bytes(originalBytes);
                         }
                         updateCanvas();
                     } catch (e) {
@@ -5538,7 +5869,7 @@
 
         // 应用多边形遮罩
         function applyPolygonMask() {
-            if (polygonPoints.length < 3) {
+            if (appState.polygonPoints.length < 3) {
                 alert('至少需要3个顶点才能形成多边形');
                 return;
             }
@@ -5547,7 +5878,7 @@
             
             // 转换顶点为平坦数组
             const vertices = [];
-            for (const point of polygonPoints) {
+            for (const point of appState.polygonPoints) {
                 vertices.push(point.x, point.y);
             }
             
@@ -5556,7 +5887,7 @@
                 saveToHistory();
                 
                 // 应用多边形遮罩（带抗锯齿和平滑边缘）
-                processor.apply_polygon_mask(
+                appState.processor.apply_polygon_mask(
                     vertices,
                     true,  // 抗锯齿
                     true,  // 平滑边缘
@@ -5579,7 +5910,7 @@
         
         // 显示圆形抠图参数面板（保留为备用）
         window.applyCircularMask = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             // 进入矩形选框模式
             enterRectSelectionMode('circular');
@@ -5588,13 +5919,13 @@
 
         // 保留旧的参数面板函数作为备用
         window.showCircularMaskParams = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             document.getElementById('circularMaskParams').style.display = 'block';
 
             // 设置滑块范围
-            const width = processor.get_width();
-            const height = processor.get_height();
+            const width = appState.processor.get_width();
+            const height = appState.processor.get_height();
 
             document.getElementById('circleCenterXSlider').max = width;
             document.getElementById('circleCenterXSlider').value = width / 2;
@@ -5631,20 +5962,20 @@
         
         // 应用圆形遮罩
         window.applyCircularMaskWithParams = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             showLoading(true);
 
             try {
                 // 保存当前图像数据用于恢复（使用 get_bytes() 代替 base64，提升性能）
-                maskPreviewImageData = processor.get_bytes();
+                maskPreviewImageData = appState.processor.get_bytes();
 
                 const centerX = parseFloat(document.getElementById('circleCenterXSlider').value);
                 const centerY = parseFloat(document.getElementById('circleCenterYSlider').value);
                 const radius = parseFloat(document.getElementById('circleRadiusSlider').value);
                 const featherRadius = parseFloat(document.getElementById('circleFeatherSlider').value);
 
-                processor.apply_circular_mask(centerX, centerY, radius, featherRadius);
+                appState.processor.apply_circular_mask(centerX, centerY, radius, featherRadius);
                 updateCanvas();
 
                 hideCircularMaskParams();
@@ -5660,12 +5991,12 @@
                 if (maskPreviewImageData) {
                     try {
                         if (maskPreviewImageData instanceof Uint8Array) {
-                            processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
+                            appState.processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
                         } else {
                             // 兼容旧的 base64 格式
                             const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
                             const originalBytes = base64_to_bytes(base64Data);
-                            processor = ImageProcessor.new_from_bytes(originalBytes);
+                            appState.processor = ImageProcessor.new_from_bytes(originalBytes);
                         }
                         updateCanvas();
                     } catch (e) {
@@ -5679,7 +6010,7 @@
         
         // 显示自动抠图参数面板
         window.applyAutoCropByColor = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             // 进入矩形选框模式
             enterRectSelectionMode('auto');
@@ -5688,7 +6019,7 @@
 
         // 保留旧的参数面板函数作为备用
         window.showAutoCropParams = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             document.getElementById('autoCropParams').style.display = 'block';
 
@@ -5711,13 +6042,13 @@
         
         // 应用自动抠图
         window.applyAutoCropWithParams = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             showLoading(true);
 
             try {
                 // 保存当前图像数据用于恢复（使用 get_bytes() 代替 base64，提升性能）
-                maskPreviewImageData = processor.get_bytes();
+                maskPreviewImageData = appState.processor.get_bytes();
 
                 const colorHex = document.getElementById('targetColorPicker').value;
                 const tolerance = parseInt(document.getElementById('toleranceSlider').value);
@@ -5728,7 +6059,7 @@
                 const g = parseInt(colorHex.slice(3, 5), 16);
                 const b = parseInt(colorHex.slice(5, 7), 16);
 
-                processor.auto_crop_by_color(r, g, b, tolerance, featherRadius);
+                appState.processor.auto_crop_by_color(r, g, b, tolerance, featherRadius);
                 updateCanvas();
 
                 hideAutoCropParams();
@@ -5744,12 +6075,12 @@
                 if (maskPreviewImageData) {
                     try {
                         if (maskPreviewImageData instanceof Uint8Array) {
-                            processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
+                            appState.processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
                         } else {
                             // 兼容旧的 base64 格式
                             const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
                             const originalBytes = base64_to_bytes(base64Data);
-                            processor = ImageProcessor.new_from_bytes(originalBytes);
+                            appState.processor = ImageProcessor.new_from_bytes(originalBytes);
                         }
                         updateCanvas();
                     } catch (e) {
@@ -5763,7 +6094,7 @@
         
         // 显示边缘优化参数面板
         window.applyRefineEdges = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
             
             document.getElementById('refineEdgesParams').style.display = 'block';
             
@@ -5780,7 +6111,7 @@
         
         // 应用边缘优化
         window.applyRefineEdgesWithParams = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             showLoading(true);
 
@@ -5789,7 +6120,7 @@
 
                 const smoothingRadius = parseInt(document.getElementById('smoothRadiusSlider').value);
 
-                processor.refine_edges(smoothingRadius);
+                appState.processor.refine_edges(smoothingRadius);
                 updateCanvas();
 
                 hideRefineEdgesParams();
@@ -5804,7 +6135,7 @@
         
         // 显示智能抠图参数面板
         window.applySmartCrop = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             // 进入矩形选框模式
             enterRectSelectionMode('smart');
@@ -5813,7 +6144,7 @@
 
         // 保留旧的参数面板函数作为备用
         window.showSmartCropParams = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             document.getElementById('smartCropParams').style.display = 'block';
 
@@ -5833,18 +6164,18 @@
         
         // 应用智能抠图
         window.applySmartCropWithParams = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             showLoading(true);
 
             try {
                 // 保存当前图像数据用于恢复（使用 get_bytes() 代替 base64，提升性能）
-                maskPreviewImageData = processor.get_bytes();
+                maskPreviewImageData = appState.processor.get_bytes();
 
                 const threshold = parseInt(document.getElementById('edgeThresholdSlider').value);
                 const featherRadius = parseFloat(document.getElementById('smartFeatherSlider').value);
 
-                processor.smart_crop(threshold, featherRadius);
+                appState.processor.smart_crop(threshold, featherRadius);
                 updateCanvas();
 
                 hideSmartCropParams();
@@ -5860,12 +6191,12 @@
                 if (maskPreviewImageData) {
                     try {
                         if (maskPreviewImageData instanceof Uint8Array) {
-                            processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
+                            appState.processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
                         } else {
                             // 兼容旧的 base64 格式
                             const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
                             const originalBytes = base64_to_bytes(base64Data);
-                            processor = ImageProcessor.new_from_bytes(originalBytes);
+                            appState.processor = ImageProcessor.new_from_bytes(originalBytes);
                         }
                         updateCanvas();
                     } catch (e) {
@@ -5879,10 +6210,10 @@
 
         // 重置图片
         window.resetImage = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             // 重置 WebAssembly 处理器
-            processor.reset();
+            appState.processor.reset();
 
             // 重置滑块
             document.getElementById('brightnessSlider').value = 0;
@@ -5917,13 +6248,13 @@
 
         // 清空图像
         window.clearImage = function() {
-            if (!currentImage) return;
+            if (!appState.currentImage) return;
 
             // 清空处理器
-            processor = null;
-            originalProcessor = null;
-            currentImage = null;
-            originalImageData = null;
+            appState.processor = null;
+            appState.originalProcessor = null;
+            appState.currentImage = null;
+            appState.originalImageData = null;
 
             // 重置文件输入框，确保可以重复选择同一文件
             document.getElementById('fileInput').value = '';
@@ -5997,7 +6328,7 @@
 
         // 进入文本添加模式
         window.addTextMode = function() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             const text = document.getElementById('textInput').value.trim();
             if (!text) {
@@ -6005,11 +6336,11 @@
                 return;
             }
 
-            isTextMode = true;
-            textBox.text = text;
-            textBox.fontSize = parseInt(document.getElementById('fontSizeSlider').value);
-            textBox.color = document.getElementById('textColorPicker').value;
-            textBox.withShadow = document.getElementById('shadowCheckbox').checked;
+            appState.isTextMode = true;
+            appState.textBox.text = text;
+            appState.textBox.fontSize = parseInt(document.getElementById('fontSizeSlider').value);
+            appState.textBox.color = document.getElementById('textColorPicker').value;
+            appState.textBox.withShadow = document.getElementById('shadowCheckbox').checked;
 
             // 计算初始位置（居中）
             const canvas = document.getElementById('imageCanvas');
@@ -6031,13 +6362,13 @@
                 fontName = 'sans-serif';
             }
 
-            ctx.font = `${textBox.fontSize}px ${fontName}`;
+            ctx.font = `${appState.textBox.fontSize}px ${fontName}`;
             const textWidth = ctx.measureText(text).width;
-            textBox.textWidth = textWidth; // 存储文本宽度
-            const textHeight = textBox.fontSize;
+            appState.textBox.textWidth = textWidth; // 存储文本宽度
+            const textHeight = appState.textBox.fontSize;
 
-            textBox.x = (canvasWidth - textWidth) / 2;
-            textBox.y = (canvasHeight - textHeight) / 2;
+            appState.textBox.x = (canvasWidth - textWidth) / 2;
+            appState.textBox.y = (canvasHeight - textHeight) / 2;
 
             // 获取缩放比例
             const scale = getCanvasScale();
@@ -6053,15 +6384,15 @@
             const canvasOffsetY = canvasRect.top - containerRect.top;
 
             // 将原始像素坐标转换为 CSS 像素，并加上画布在容器中的偏移
-            textBoxEl.style.left = (canvasOffsetX + textBox.x / scale.scaleX) + 'px';
-            textBoxEl.style.top = (canvasOffsetY + textBox.y / scale.scaleY) + 'px';
+            textBoxEl.style.left = (canvasOffsetX + appState.textBox.x / scale.scaleX) + 'px';
+            textBoxEl.style.top = (canvasOffsetY + appState.textBox.y / scale.scaleY) + 'px';
             // 设置精确宽高（原始像素转 CSS）
             textBoxEl.style.width = (textWidth / scale.scaleX) + 'px';
             textBoxEl.style.height = (textHeight / scale.scaleY) + 'px';
             // 字体大小需要考虑缩放，但 WASM 和浏览器字体渲染有差异，添加补偿系数
             const fontRenderRatio = 1.0; // 补偿系数，根据实际效果调整
-            textBoxEl.style.fontSize = (textBox.fontSize / scale.scaleY * fontRenderRatio) + 'px';
-            textBoxEl.style.color = textBox.color;
+            textBoxEl.style.fontSize = (appState.textBox.fontSize / scale.scaleY * fontRenderRatio) + 'px';
+            textBoxEl.style.color = appState.textBox.color;
             textBoxEl.style.fontWeight = 'normal'; // 确保字体粗细正确
             textBoxEl.style.letterSpacing = '-1.5px'; // 调整字间距，WASM 字体字间距更窄
             // 设置字体（使用完整的字体栈）
@@ -6084,9 +6415,9 @@
 
             // 鼠标按下
             textBoxEl.addEventListener('mousedown', (e) => {
-                if (!isTextMode) return;
+                if (!appState.isTextMode) return;
 
-                isTextDragging = true;
+                appState.isTextDragging = true;
                 textBoxEl.classList.add('dragging');
 
                 const rect = canvasContainer.getBoundingClientRect();
@@ -6094,12 +6425,12 @@
                 const mouseOrigX = (e.clientX - rect.left) * scale.scaleX;
                 const mouseOrigY = (e.clientY - rect.top) * scale.scaleY;
 
-                textDragStart = {
-                    x: mouseOrigX - textBox.x,
-                    y: mouseOrigY - textBox.y
+                appState.textDragStart = {
+                    x: mouseOrigX - appState.textBox.x,
+                    y: mouseOrigY - appState.textBox.y
                 };
 
-                initialTextBox = { x: textBox.x, y: textBox.y };
+                appState.initialTextBox = { x: appState.textBox.x, y: appState.textBox.y };
                 e.preventDefault();
                 e.stopPropagation();
             });
@@ -6107,7 +6438,7 @@
 
         // 更新文本框预览
         function updateTextBoxPreview() {
-            if (!isTextMode) return;
+            if (!appState.isTextMode) return;
 
             const scale = getCanvasScale();
             const textBoxEl = document.getElementById('textBox');
@@ -6134,11 +6465,11 @@
             ctx.font = `${fontSize}px ${fontName}`;
             const textWidth = ctx.measureText(text).width;
 
-            // 更新 textBox 对象
-            textBox.text = text;
-            textBox.fontSize = fontSize;
-            textBox.color = document.getElementById('textColorPicker').value;
-            textBox.textWidth = textWidth;
+            // 更新 appState.textBox 对象
+            appState.textBox.text = text;
+            appState.textBox.fontSize = fontSize;
+            appState.textBox.color = document.getElementById('textColorPicker').value;
+            appState.textBox.textWidth = textWidth;
 
             // 更新预览框样式
             textBoxEl.textContent = text;
@@ -6146,7 +6477,7 @@
             // 调整补偿系数使预览字体大小匹配实际效果
             const fontRenderRatio = 1.0; // 补偿系数，根据实际效果调整
             textBoxEl.style.fontSize = (fontSize / scale.scaleY * fontRenderRatio) + 'px';
-            textBoxEl.style.color = textBox.color;
+            textBoxEl.style.color = appState.textBox.color;
             textBoxEl.style.fontWeight = 'normal'; // 确保字体粗细正确
             textBoxEl.style.letterSpacing = '-1.5px'; // 调整字间距，WASM 字体字间距更窄
             // 使用完整的字体栈（已包含引号和备选字体）
@@ -6161,8 +6492,8 @@
             const canvasOffsetY = canvasRect.top - containerRect.top;
 
             // 添加画布偏移，确保预览框跟随画布位置
-            textBoxEl.style.left = (canvasOffsetX + textBox.x / scale.scaleX) + 'px';
-            textBoxEl.style.top = (canvasOffsetY + textBox.y / scale.scaleY) + 'px';
+            textBoxEl.style.left = (canvasOffsetX + appState.textBox.x / scale.scaleX) + 'px';
+            textBoxEl.style.top = (canvasOffsetY + appState.textBox.y / scale.scaleY) + 'px';
 
             // 更新偏移值显示
             document.getElementById('textOffsetValue').textContent = offset;
@@ -6177,11 +6508,11 @@
         // 应用文本绘制
         // 通道调整快捷函数
 window.alterRedChannel = function(amt) {
-    if (!processor) return;
+    if (!appState.processor) return;
     showLoading(true);
     saveToHistory();
     try {
-        processor.alter_red_channel(amt);
+        appState.processor.alter_red_channel(amt);
         updateCanvas();
     } catch (error) {
         console.error('Alter red channel error:', error);
@@ -6190,11 +6521,11 @@ window.alterRedChannel = function(amt) {
 };
 
 window.alterGreenChannel = function(amt) {
-    if (!processor) return;
+    if (!appState.processor) return;
     showLoading(true);
     saveToHistory();
     try {
-        processor.alter_green_channel(amt);
+        appState.processor.alter_green_channel(amt);
         updateCanvas();
     } catch (error) {
         console.error('Alter green channel error:', error);
@@ -6203,11 +6534,11 @@ window.alterGreenChannel = function(amt) {
 };
 
 window.alterBlueChannel = function(amt) {
-    if (!processor) return;
+    if (!appState.processor) return;
     showLoading(true);
     saveToHistory();
     try {
-        processor.alter_blue_channel(amt);
+        appState.processor.alter_blue_channel(amt);
         updateCanvas();
     } catch (error) {
         console.error('Alter blue channel error:', error);
@@ -6217,11 +6548,11 @@ window.alterBlueChannel = function(amt) {
 
 // 色彩空间快捷函数
 window.hueRotateHSL = function(degrees) {
-    if (!processor) return;
+    if (!appState.processor) return;
     showLoading(true);
     saveToHistory();
     try {
-        processor.hue_rotate_hsl(degrees);
+        appState.processor.hue_rotate_hsl(degrees);
         updateCanvas();
     } catch (error) {
         console.error('Hue rotate error:', error);
@@ -6230,11 +6561,11 @@ window.hueRotateHSL = function(degrees) {
 };
 
 window.lightenHSL = function(level) {
-    if (!processor) return;
+    if (!appState.processor) return;
     showLoading(true);
     saveToHistory();
     try {
-        processor.lighten_hsl(level);
+        appState.processor.lighten_hsl(level);
         updateCanvas();
     } catch (error) {
         console.error('Lighten error:', error);
@@ -6243,11 +6574,11 @@ window.lightenHSL = function(level) {
 };
 
 window.darkenHSL = function(level) {
-    if (!processor) return;
+    if (!appState.processor) return;
     showLoading(true);
     saveToHistory();
     try {
-        processor.darken_hsl(level);
+        appState.processor.darken_hsl(level);
         updateCanvas();
     } catch (error) {
         console.error('Darken error:', error);
@@ -6256,11 +6587,11 @@ window.darkenHSL = function(level) {
 };
 
 window.saturateHSL = function(level) {
-    if (!processor) return;
+    if (!appState.processor) return;
     showLoading(true);
     saveToHistory();
     try {
-        processor.saturate_hsl(level);
+        appState.processor.saturate_hsl(level);
         updateCanvas();
     } catch (error) {
         console.error('Saturate error:', error);
@@ -6269,11 +6600,11 @@ window.saturateHSL = function(level) {
 };
 
 window.desaturateHSL = function(level) {
-    if (!processor) return;
+    if (!appState.processor) return;
     showLoading(true);
     saveToHistory();
     try {
-        processor.desaturate_hsl(level);
+        appState.processor.desaturate_hsl(level);
         updateCanvas();
     } catch (error) {
         console.error('Desaturate error:', error);
@@ -6283,7 +6614,7 @@ window.desaturateHSL = function(level) {
 
 // 文本绘制
 window.applyText = function() {
-            if (!processor || !isTextMode) return;
+            if (!appState.processor || !appState.isTextMode) return;
 
             const text = document.getElementById('textInput').value.trim();
             if (!text) {
@@ -6319,20 +6650,20 @@ window.applyText = function() {
 
                 // 使用预览框左上角坐标，Y 坐标加上字体高度（WASM 使用左下角基准）
                 // 偏移量需要与预览框的 transform 方向一致（translateY 向下为正）
-                const drawX = Math.floor(textBox.x + 160); // X方向调整，增加160像素偏移
+                const drawX = Math.floor(appState.textBox.x + 160); // X方向调整，增加160像素偏移
                 const offset = parseInt(document.getElementById('textOffsetSlider').value);
-                // 预览框的 top 是 textBox.y，调整基线偏移使预览和实际绘制对齐
-                const drawY = Math.floor(textBox.y + fontSize * 0 + offset); // 基线偏移设为0
+                // 预览框的 top 是 appState.textBox.y，调整基线偏移使预览和实际绘制对齐
+                const drawY = Math.floor(appState.textBox.y + fontSize * 0 + offset); // 基线偏移设为0
 
                 // 判断是使用默认字体还是自定义字体
                 if (fontSelect.startsWith('custom-')) {
                     // 使用自定义字体（动态注册的字体）
                     const fontName = fontSelect.replace('custom-', '');
-                    processor.draw_text_with_font_name(text, drawX, drawY, fontSize, fontName, withShadow, r, g, b);
+                    appState.processor.draw_text_with_font_name(text, drawX, drawY, fontSize, fontName, withShadow, r, g, b);
                 } else {
                     // 使用默认字体
                     const fontName = 'default';
-                    processor.draw_text_with_font_name(text, drawX, drawY, fontSize, fontName, withShadow, r, g, b);
+                    appState.processor.draw_text_with_font_name(text, drawX, drawY, fontSize, fontName, withShadow, r, g, b);
                 }
 
                 updateCanvas();
@@ -6346,8 +6677,8 @@ window.applyText = function() {
 
         // 取消文本模式
         window.cancelTextMode = function() {
-            isTextMode = false;
-            isTextDragging = false;
+            appState.isTextMode = false;
+            appState.isTextDragging = false;
 
             // 隐藏文本框
             const textBoxEl = document.getElementById('textBox');
@@ -6367,73 +6698,44 @@ window.applyText = function() {
 
         // ==================== 字体管理功能 ====================
 
-        // 初始化 IndexedDB
-        async function initFontDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => resolve(request.result);
-
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    if (!db.objectStoreNames.contains(STORE_NAME)) {
-                        db.createObjectStore(STORE_NAME, { keyPath: 'name' });
-                    }
-                };
-            });
-        }
-
         // 保存字体到 IndexedDB
         async function saveFontToDB(name, data) {
-            const db = await initFontDB();
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([STORE_NAME], 'readwrite');
-                const store = transaction.objectStore(STORE_NAME);
-                const request = store.put({ name, data, timestamp: Date.now() });
-
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
+            try {
+                await fontDBManager.saveFont(name, data);
+            } catch (error) {
+                console.error('保存字体失败:', error);
+                throw error;
+            }
         }
 
         // 从 IndexedDB 加载所有字体
         async function loadFontsFromDB() {
-            const db = await initFontDB();
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([STORE_NAME], 'readonly');
-                const store = transaction.objectStore(STORE_NAME);
-                const request = store.getAll();
-
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
+            try {
+                return await fontDBManager.getAllFonts();
+            } catch (error) {
+                console.error('加载字体失败:', error);
+                throw error;
+            }
         }
 
         // 从 IndexedDB 删除字体
         async function deleteFontFromDB(name) {
-            const db = await initFontDB();
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([STORE_NAME], 'readwrite');
-                const store = transaction.objectStore(STORE_NAME);
-                const request = store.delete(name);
-
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
+            try {
+                await fontDBManager.deleteFont(name);
+            } catch (error) {
+                console.error('删除字体失败:', error);
+                throw error;
+            }
         }
 
         // 清空 IndexedDB 中的所有字体
         async function clearFontsFromDB() {
-            const db = await initFontDB();
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([STORE_NAME], 'readwrite');
-                const store = transaction.objectStore(STORE_NAME);
-                const request = store.clear();
-
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
+            try {
+                await fontDBManager.clearAllFonts();
+            } catch (error) {
+                console.error('清空字体失败:', error);
+                throw error;
+            }
         }
 
         // 字体管理相关变量
@@ -6655,7 +6957,7 @@ window.applyText = function() {
         let updateCanvasScheduled = false;
 
         function updateCanvas() {
-            if (!processor) return;
+            if (!appState.processor) return;
 
             // 使用 requestAnimationFrame 实现节流，避免短时间内多次调用
             if (updateCanvasScheduled) {
@@ -6671,8 +6973,8 @@ window.applyText = function() {
                     updateCanvasPromise = null;
                 }
 
-            const width = processor.get_width();
-            const height = processor.get_height();
+            const width = appState.processor.get_width();
+            const height = appState.processor.get_height();
             const canvas = document.getElementById('imageCanvas');
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
@@ -6681,15 +6983,15 @@ window.applyText = function() {
             canvas.height = height;
 
             // 初始化或更新离屏 Canvas
-            if (!offscreenCanvas || offscreenCanvas.width !== width || offscreenCanvas.height !== height) {
-                offscreenCanvas = document.createElement('canvas');
-                offscreenCanvas.width = width;
-                offscreenCanvas.height = height;
-                offscreenCtx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
+            if (!appState.offscreenCanvas || appState.offscreenCanvas.width !== width || appState.offscreenCanvas.height !== height) {
+                appState.offscreenCanvas = document.createElement('canvas');
+                appState.offscreenCanvas.width = width;
+                appState.offscreenCanvas.height = height;
+                appState.offscreenCtx = appState.offscreenCanvas.getContext('2d', { willReadFrequently: true });
             }
 
             // 使用 get_raw_pixels() 获取原始 RGBA 像素数据
-            const pixels = processor.get_raw_pixels();
+            const pixels = appState.processor.get_raw_pixels();
             const expectedLength = width * height * 4;
 
             // 验证像素数据长度
@@ -6700,18 +7002,18 @@ window.applyText = function() {
                 const adjustedPixels = new Uint8ClampedArray(expectedLength);
                 adjustedPixels.set(pixels.subarray(0, validLength));
                 const imageData = new ImageData(adjustedPixels, width, height);
-                offscreenCtx.putImageData(imageData, 0, 0);
+                appState.offscreenCtx.putImageData(imageData, 0, 0);
             } else {
                 // 直接使用原始像素数据
                 const imageData = new ImageData(new Uint8ClampedArray(pixels), width, height);
-                offscreenCtx.putImageData(imageData, 0, 0);
+                appState.offscreenCtx.putImageData(imageData, 0, 0);
             }
 
             // 将离屏 Canvas 内容绘制到主画布（快速合成，不会闪烁）
-            ctx.drawImage(offscreenCanvas, 0, 0);
+            ctx.drawImage(appState.offscreenCanvas, 0, 0);
 
             // 更新文件大小显示
-            const fileSize = Number(processor.get_estimated_filesize());
+            const fileSize = Number(appState.processor.get_estimated_filesize());
             const fileSizeKB = (fileSize / 1024).toFixed(2);
             const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
             const fileSizeStr = fileSize > 1024 * 1024
@@ -6738,65 +7040,65 @@ window.applyText = function() {
 
         // 更新笔刷颜色（侧边栏）
         window.updateBrushColorFromSidebar = function() {
-            brushSettings.color = document.getElementById('sidebarBrushColor').value;
+            appState.brushSettings.color = document.getElementById('sidebarBrushColor').value;
             // 同步到工具栏
             const toolbarColor = document.getElementById('brushColor');
-            if (toolbarColor) toolbarColor.value = brushSettings.color;
+            if (toolbarColor) toolbarColor.value = appState.brushSettings.color;
         }
 
         // 更新笔刷宽度（侧边栏）
         window.updateBrushWidthFromSidebar = function() {
-            brushSettings.width = parseInt(document.getElementById('sidebarBrushWidth').value);
-            document.getElementById('sidebarBrushWidthValue').textContent = brushSettings.width;
+            appState.brushSettings.width = parseInt(document.getElementById('sidebarBrushWidth').value);
+            document.getElementById('sidebarBrushWidthValue').textContent = appState.brushSettings.width;
             // 同步到工具栏
             const toolbarWidth = document.getElementById('brushWidth');
             const toolbarWidthValue = document.getElementById('brushWidthValue');
-            if (toolbarWidth) toolbarWidth.value = brushSettings.width;
-            if (toolbarWidthValue) toolbarWidthValue.textContent = brushSettings.width;
+            if (toolbarWidth) toolbarWidth.value = appState.brushSettings.width;
+            if (toolbarWidthValue) toolbarWidthValue.textContent = appState.brushSettings.width;
         }
 
         // 更新笔刷类型（侧边栏）
         window.updateBrushTypeFromSidebar = function() {
-            brushSettings.type = document.getElementById('sidebarBrushType').value;
+            appState.brushSettings.type = document.getElementById('sidebarBrushType').value;
             // 同步到工具栏
             const toolbarType = document.getElementById('brushType');
-            if (toolbarType) toolbarType.value = brushSettings.type;
+            if (toolbarType) toolbarType.value = appState.brushSettings.type;
         }
 
         // 更新笔刷颜色（工具栏）
         window.updateBrushColor = function() {
-            brushSettings.color = document.getElementById('brushColor').value;
+            appState.brushSettings.color = document.getElementById('brushColor').value;
             // 同步到侧边栏
             const sidebarColor = document.getElementById('sidebarBrushColor');
-            if (sidebarColor) sidebarColor.value = brushSettings.color;
+            if (sidebarColor) sidebarColor.value = appState.brushSettings.color;
         }
 
         // 更新笔刷宽度（工具栏）
         window.updateBrushWidth = function() {
-            brushSettings.width = parseInt(document.getElementById('brushWidth').value);
-            document.getElementById('brushWidthValue').textContent = brushSettings.width;
+            appState.brushSettings.width = parseInt(document.getElementById('brushWidth').value);
+            document.getElementById('brushWidthValue').textContent = appState.brushSettings.width;
             // 同步到侧边栏
             const sidebarWidth = document.getElementById('sidebarBrushWidth');
             const sidebarWidthValue = document.getElementById('sidebarBrushWidthValue');
-            if (sidebarWidth) sidebarWidth.value = brushSettings.width;
-            if (sidebarWidthValue) sidebarWidthValue.textContent = brushSettings.width;
+            if (sidebarWidth) sidebarWidth.value = appState.brushSettings.width;
+            if (sidebarWidthValue) sidebarWidthValue.textContent = appState.brushSettings.width;
         }
 
         // 更新笔刷类型（工具栏）
         window.updateBrushType = function() {
-            brushSettings.type = document.getElementById('brushType').value;
+            appState.brushSettings.type = document.getElementById('brushType').value;
             // 同步到侧边栏
             const sidebarType = document.getElementById('sidebarBrushType');
-            if (sidebarType) sidebarType.value = brushSettings.type;
+            if (sidebarType) sidebarType.value = appState.brushSettings.type;
         }
 
         // 启用笔刷模式
         window.enableBrushMode = function() {
-            if (!processor) {
+            if (!appState.processor) {
                 alert('请先上传图片');
                 return;
             }
-            isBrushMode = true;
+            appState.isBrushMode = true;
             // 更新工具栏按钮
             const enableBtn = document.getElementById('enableBrushBtn');
             const disableBtn = document.getElementById('disableBrushBtn');
@@ -6817,8 +7119,8 @@ window.applyText = function() {
 
         // 禁用笔刷模式
         window.disableBrushMode = function() {
-            isBrushMode = false;
-            isBrushDrawing = false;
+            appState.isBrushMode = false;
+            appState.isBrushDrawing = false;
             // 更新工具栏按钮
             const enableBtn = document.getElementById('enableBrushBtn');
             const disableBtn = document.getElementById('disableBrushBtn');
@@ -6839,8 +7141,8 @@ window.applyText = function() {
 
         // 撤销上一笔
         window.undoBrushStroke = function() {
-            if (processor) {
-                const success = processor.undo_stroke();
+            if (appState.processor) {
+                const success = appState.processor.undo_stroke();
                 if (success) {
                     updateCanvas();
                     // 同步到通用历史记录
@@ -6854,8 +7156,8 @@ window.applyText = function() {
         // 清除所有笔刷
         window.clearBrushStrokes = function() {
             if (confirm('确定要清除所有笔刷吗？')) {
-                if (processor) {
-                    processor.clear_strokes();
+                if (appState.processor) {
+                    appState.processor.clear_strokes();
                     updateCanvas();
                     saveToHistory();
                 }
@@ -6877,7 +7179,7 @@ window.applyText = function() {
             }
 
             // 如果已有图像，确认是否覆盖
-            if (processor && currentImage) {
+            if (appState.processor && appState.currentImage) {
                 if (!confirm('创建新画布将覆盖当前图像，确定继续吗？')) {
                     return;
                 }
