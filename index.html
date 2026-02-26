@@ -2903,7 +2903,9 @@
         watermarkUpload.addEventListener('click', (e) => {
             if (currentImage) {
                 e.stopPropagation();
-                watermarkInput.click();
+                // 清空 value 以允许重复选择相同文件
+                watermarkInput.value = '';
+                // label 标签会自动触发 input 的点击，不需要再次调用 click()
             }
         });
 
@@ -3197,7 +3199,9 @@
         blendUpload.addEventListener('click', (e) => {
             if (currentImage) {
                 e.stopPropagation();
-                blendInput.click();
+                // 清空 value 以允许重复选择相同文件
+                blendInput.value = '';
+                // label 标签会自动触发 input 的点击，不需要再次调用 click()
             }
         });
 
@@ -6445,7 +6449,7 @@ window.applyText = function() {
             e.stopPropagation();
             // 清空 value 以允许重复选择相同文件
             fontInput.value = '';
-            fontInput.click();
+            // label 标签会自动触发 input 的点击，不需要再次调用 click()
         });
 
         fontInput.addEventListener('change', (e) => {
