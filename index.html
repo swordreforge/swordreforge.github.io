@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=1.0, user-scalable=no">
     <title>WebAssembly 图像处理器</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>">
     <script src="coi-serviceworker.min.js"></script>
@@ -1967,6 +1967,36 @@
                 </div>
 
                 <div class="section">
+                    <h3>笔刷工具</h3>
+                    <div class="slider-container">
+                        <label>颜色</label>
+                        <input type="color" id="sidebarBrushColor" value="#000000" onchange="updateBrushColorFromSidebar()">
+                    </div>
+                    <div class="slider-container">
+                        <label>宽度: <span id="sidebarBrushWidthValue">5</span>px</label>
+                        <input type="range" id="sidebarBrushWidth" min="1" max="100" value="5" oninput="updateBrushWidthFromSidebar()">
+                    </div>
+                    <div class="slider-container">
+                        <label>笔刷类型</label>
+                        <select id="sidebarBrushType" onchange="updateBrushTypeFromSidebar()" style="width: 100%; padding: 8px; background: #444; color: #e0e0e0; border: 1px solid #555; border-radius: 6px;">
+                            <option value="basic">基础笔刷</option>
+                            <option value="pencil">铅笔</option>
+                            <option value="marker">马克笔</option>
+                            <option value="watercolor">水彩</option>
+                            <option value="eraser">橡皮擦</option>
+                        </select>
+                    </div>
+                    <div class="btn-group" style="margin-top: 10px;">
+                        <button class="btn btn-success" onclick="enableBrushMode()" id="sidebarEnableBrushBtn">启用笔刷</button>
+                        <button class="btn btn-danger" onclick="disableBrushMode()" id="sidebarDisableBrushBtn" style="display: none;">禁用笔刷</button>
+                    </div>
+                    <div class="btn-group" style="margin-top: 10px;">
+                        <button class="btn" onclick="undoBrushStroke()" disabled id="sidebarUndoBrushBtn">撤销上一笔</button>
+                        <button class="btn btn-danger" onclick="clearBrushStrokes()" disabled id="sidebarClearBrushBtn">清除所有笔刷</button>
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>操作</h3>
                     <div class="btn-group">
                         <button class="btn" onclick="undo()" disabled id="undoBtn">↩ 撤销</button>
@@ -2708,6 +2738,17 @@
             document.getElementById('autoCropBtn').disabled = !currentImage;
             document.getElementById('refineEdgesBtn').disabled = !currentImage;
             document.getElementById('smartCropBtn').disabled = !currentImage;
+
+            // 启用笔刷控件
+            document.getElementById('sidebarBrushColor').disabled = !currentImage;
+            document.getElementById('sidebarBrushWidth').disabled = !currentImage;
+            document.getElementById('sidebarBrushType').disabled = !currentImage;
+            document.getElementById('sidebarEnableBrushBtn').disabled = !currentImage;
+            // 笔刷禁用状态下的撤销和清除按钮保持禁用
+            if (!isBrushMode) {
+                document.getElementById('sidebarUndoBrushBtn').disabled = true;
+                document.getElementById('sidebarClearBrushBtn').disabled = true;
+            }
         }
 
         // 切换侧边栏
@@ -6691,20 +6732,58 @@ window.applyText = function() {
 
         // ==================== 笔刷功能 ====================
 
-        // 更新笔刷颜色
-        window.updateBrushColor = function() {
-            brushSettings.color = document.getElementById('brushColor').value;
+        // 更新笔刷颜色（侧边栏）
+        window.updateBrushColorFromSidebar = function() {
+            brushSettings.color = document.getElementById('sidebarBrushColor').value;
+            // 同步到工具栏
+            const toolbarColor = document.getElementById('brushColor');
+            if (toolbarColor) toolbarColor.value = brushSettings.color;
         }
 
-        // 更新笔刷宽度
+        // 更新笔刷宽度（侧边栏）
+        window.updateBrushWidthFromSidebar = function() {
+            brushSettings.width = parseInt(document.getElementById('sidebarBrushWidth').value);
+            document.getElementById('sidebarBrushWidthValue').textContent = brushSettings.width;
+            // 同步到工具栏
+            const toolbarWidth = document.getElementById('brushWidth');
+            const toolbarWidthValue = document.getElementById('brushWidthValue');
+            if (toolbarWidth) toolbarWidth.value = brushSettings.width;
+            if (toolbarWidthValue) toolbarWidthValue.textContent = brushSettings.width;
+        }
+
+        // 更新笔刷类型（侧边栏）
+        window.updateBrushTypeFromSidebar = function() {
+            brushSettings.type = document.getElementById('sidebarBrushType').value;
+            // 同步到工具栏
+            const toolbarType = document.getElementById('brushType');
+            if (toolbarType) toolbarType.value = brushSettings.type;
+        }
+
+        // 更新笔刷颜色（工具栏）
+        window.updateBrushColor = function() {
+            brushSettings.color = document.getElementById('brushColor').value;
+            // 同步到侧边栏
+            const sidebarColor = document.getElementById('sidebarBrushColor');
+            if (sidebarColor) sidebarColor.value = brushSettings.color;
+        }
+
+        // 更新笔刷宽度（工具栏）
         window.updateBrushWidth = function() {
             brushSettings.width = parseInt(document.getElementById('brushWidth').value);
             document.getElementById('brushWidthValue').textContent = brushSettings.width;
+            // 同步到侧边栏
+            const sidebarWidth = document.getElementById('sidebarBrushWidth');
+            const sidebarWidthValue = document.getElementById('sidebarBrushWidthValue');
+            if (sidebarWidth) sidebarWidth.value = brushSettings.width;
+            if (sidebarWidthValue) sidebarWidthValue.textContent = brushSettings.width;
         }
 
-        // 更新笔刷类型
+        // 更新笔刷类型（工具栏）
         window.updateBrushType = function() {
             brushSettings.type = document.getElementById('brushType').value;
+            // 同步到侧边栏
+            const sidebarType = document.getElementById('sidebarBrushType');
+            if (sidebarType) sidebarType.value = brushSettings.type;
         }
 
         // 启用笔刷模式
@@ -6714,8 +6793,21 @@ window.applyText = function() {
                 return;
             }
             isBrushMode = true;
-            document.getElementById('enableBrushBtn').style.display = 'none';
-            document.getElementById('disableBrushBtn').style.display = 'block';
+            // 更新工具栏按钮
+            const enableBtn = document.getElementById('enableBrushBtn');
+            const disableBtn = document.getElementById('disableBrushBtn');
+            if (enableBtn) enableBtn.style.display = 'none';
+            if (disableBtn) disableBtn.style.display = 'block';
+            // 更新侧边栏按钮
+            const sidebarEnableBtn = document.getElementById('sidebarEnableBrushBtn');
+            const sidebarDisableBtn = document.getElementById('sidebarDisableBrushBtn');
+            if (sidebarEnableBtn) sidebarEnableBtn.style.display = 'none';
+            if (sidebarDisableBtn) sidebarDisableBtn.style.display = 'block';
+            // 更新侧边栏撤销和清除按钮状态
+            const sidebarUndoBtn = document.getElementById('sidebarUndoBrushBtn');
+            const sidebarClearBtn = document.getElementById('sidebarClearBrushBtn');
+            if (sidebarUndoBtn) sidebarUndoBtn.disabled = false;
+            if (sidebarClearBtn) sidebarClearBtn.disabled = false;
             document.getElementById('canvasContainer').style.cursor = 'crosshair';
         }
 
@@ -6723,8 +6815,21 @@ window.applyText = function() {
         window.disableBrushMode = function() {
             isBrushMode = false;
             isBrushDrawing = false;
-            document.getElementById('enableBrushBtn').style.display = 'block';
-            document.getElementById('disableBrushBtn').style.display = 'none';
+            // 更新工具栏按钮
+            const enableBtn = document.getElementById('enableBrushBtn');
+            const disableBtn = document.getElementById('disableBrushBtn');
+            if (enableBtn) enableBtn.style.display = 'block';
+            if (disableBtn) disableBtn.style.display = 'none';
+            // 更新侧边栏按钮
+            const sidebarEnableBtn = document.getElementById('sidebarEnableBrushBtn');
+            const sidebarDisableBtn = document.getElementById('sidebarDisableBrushBtn');
+            if (sidebarEnableBtn) sidebarEnableBtn.style.display = 'block';
+            if (sidebarDisableBtn) sidebarDisableBtn.style.display = 'none';
+            // 更新侧边栏撤销和清除按钮状态
+            const sidebarUndoBtn = document.getElementById('sidebarUndoBrushBtn');
+            const sidebarClearBtn = document.getElementById('sidebarClearBrushBtn');
+            if (sidebarUndoBtn) sidebarUndoBtn.disabled = true;
+            if (sidebarClearBtn) sidebarClearBtn.disabled = true;
             document.getElementById('canvasContainer').style.cursor = 'default';
         }
 
