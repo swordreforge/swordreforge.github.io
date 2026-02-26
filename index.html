@@ -6264,6 +6264,8 @@ window.applyText = function() {
 
         fontUpload.addEventListener('click', (e) => {
             e.stopPropagation();
+            // 清空 value 以允许重复选择相同文件
+            fontInput.value = '';
             fontInput.click();
         });
 
@@ -6298,6 +6300,8 @@ window.applyText = function() {
                 return;
             }
 
+            const fontNameToRegister = uploadedFontName; // 保存字体名称用于提示
+
             try {
                 // 检查字体是否已注册
                 if (wasm_is_font_registered(uploadedFontName)) {
@@ -6324,9 +6328,9 @@ window.applyText = function() {
                 uploadedFontName = null;
                 fontFileName.textContent = '点击上传自定义字体';
                 fontFileName.style.color = '#888';
-                document.getElementById('applyFontBtn').disabled = false;
+                document.getElementById('applyFontBtn').disabled = true; // 注册成功后禁用按钮
 
-                alert(`字体 "${uploadedFontName}" 注册成功！`);
+                alert(`字体 "${fontNameToRegister}" 注册成功！`);
             } catch (error) {
                 console.error('字体注册失败:', error);
                 alert(`字体注册失败: ${error.message}`);
