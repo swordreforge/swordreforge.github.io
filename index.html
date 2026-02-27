@@ -1910,7 +1910,7 @@
                     </div>
                     <div class="checkbox-container" style="margin-top: 15px;">
                         <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="checkbox" id="bilateralFastMode" checked onchange="applyAdjustments()" disabled style="margin-right: 8px;">
+                            <input type="checkbox" id="bilateralFastMode" checked onchange="applyBilateralAdjustments()" disabled style="margin-right: 8px;">
                             <span style="font-size: 0.95em; font-weight: 600; color: #ccc;">快速模式 (降低质量换取速度)</span>
                         </label>
                     </div>
@@ -5913,17 +5913,6 @@
                     // 应用降噪 (0.0 到 10.0)
                     if (noiseReductionStrength !== 0.0) {
                         appState.processor.apply_noise_reduction(noiseReductionStrength);
-                    }
-
-                    // 应用双边滤波器
-                    const bilateralSigmaSpatial = parseFloat(document.getElementById('bilateralSigmaSpatialSlider').value) / 10;
-                    const bilateralSigmaRange = parseFloat(document.getElementById('bilateralSigmaRangeSlider').value) / 10;
-                    const bilateralFastMode = document.getElementById('bilateralFastMode').checked;
-                    // 如果用户没有手动设置为 0,则应用双边滤波器
-                    const isBilateralEnabled = document.getElementById('bilateralSigmaSpatialSlider').value > 0 ||
-                                             document.getElementById('bilateralSigmaRangeSlider').value > 0;
-                    if (isBilateralEnabled) {
-                        appState.processor.apply_bilateral_filter(bilateralSigmaSpatial, bilateralSigmaRange, bilateralFastMode);
                     }
 
                     // 应用噪点 (0.0 到 10.0)
