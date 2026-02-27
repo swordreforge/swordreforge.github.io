@@ -6650,12 +6650,26 @@
             const canvas = document.getElementById('imageCanvas');
             const width = canvas.width;
             const height = canvas.height;
-            rectSelectionBox = {
-                x: width * 0.25,
-                y: height * 0.25,
-                width: width * 0.5,
-                height: height * 0.5
-            };
+
+            // 圆形抠图使用以短边为准的正方形选框
+            if (type === 'circular') {
+                const minSide = Math.min(width, height);
+                const boxSize = minSide * 0.6; // 使用短边的60%作为选框大小
+                rectSelectionBox = {
+                    x: (width - boxSize) / 2,
+                    y: (height - boxSize) / 2,
+                    width: boxSize,
+                    height: boxSize
+                };
+            } else {
+                // 其他抠图类型保持原有的矩形选框
+                rectSelectionBox = {
+                    x: width * 0.25,
+                    y: height * 0.25,
+                    width: width * 0.5,
+                    height: height * 0.5
+                };
+            }
 
             // 显示裁剪覆盖层作为选框覆盖层
             const cropOverlay = document.getElementById('cropOverlay');
