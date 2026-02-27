@@ -3651,20 +3651,24 @@
             const relativeX = screenX - rect.left;
             const relativeY = screenY - rect.top;
 
-            // 如果缩放为1，直接使用原始计算方式（考虑画布在容器中的实际位置）
-            if (appState.zoom === 1) {
-                const canvasRect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / canvasRect.width;
-                const scaleY = canvas.height / canvasRect.height;
-                return {
-                    x: (screenX - canvasRect.left) * scaleX,
-                    y: (screenY - canvasRect.top) * scaleY
-                };
-            }
+            // 获取Canvas的实际显示尺寸（考虑CSS transform的影响）
+            const canvasRect = canvas.getBoundingClientRect();
 
-            // 如果有缩放，考虑平移和缩放
-            const canvasX = (relativeX - appState.panX) / appState.zoom;
-            const canvasY = (relativeY - appState.panY) / appState.zoom;
+            // 计算相对于Canvas显示区域的坐标
+            const canvasRelativeX = screenX - canvasRect.left;
+            const canvasRelativeY = screenY - canvasRect.top;
+
+            // Canvas的原始尺寸（即图像尺寸）
+            const originalWidth = canvas.width;
+            const originalHeight = canvas.height;
+
+            // 计算缩放比例（显示尺寸 / 原始尺寸）
+            const scaleX = canvasRect.width / originalWidth;
+            const scaleY = canvasRect.height / originalHeight;
+
+            // 转换为原始像素坐标
+            const canvasX = canvasRelativeX / scaleX;
+            const canvasY = canvasRelativeY / scaleY;
 
             return { x: canvasX, y: canvasY };
         }
