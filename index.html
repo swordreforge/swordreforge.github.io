@@ -6766,12 +6766,12 @@
                 const centerX = rectSelectionBox.x + rectSelectionBox.width / 2;
                 const centerY = rectSelectionBox.y + rectSelectionBox.height / 2;
                 const radius = Math.min(rectSelectionBox.width, rectSelectionBox.height) / 2;
-                
+
                 handles.push(
                     { x: centerX - handleSize/2, y: rectSelectionBox.y - handleSize/2 }, // 上（圆形顶部）
                     { x: centerX - handleSize/2, y: rectSelectionBox.y + rectSelectionBox.height - handleSize/2 }, // 下（圆形底部）
-                    { x: rectSelectionBox.x + radius - handleSize/2, y: centerY - handleSize/2 }, // 左（圆形左侧）
-                    { x: rectSelectionBox.x + rectSelectionBox.width - radius - handleSize/2, y: centerY - handleSize/2 } // 右（圆形右侧）
+                    { x: centerX - radius - handleSize/2, y: centerY - handleSize/2 }, // 左（圆形左侧）
+                    { x: centerX + radius - handleSize/2, y: centerY - handleSize/2 } // 右（圆形右侧）
                 );
             } else {
                 // 其他抠图类型：显示8个手柄（四角 + 四边中点）
@@ -6839,8 +6839,8 @@
                     handles = {
                         'n': { x: centerX, y: rectSelectionBox.y },
                         's': { x: centerX, y: rectSelectionBox.y + rectSelectionBox.height },
-                        'w': { x: rectSelectionBox.x + radius, y: centerY },
-                        'e': { x: rectSelectionBox.x + rectSelectionBox.width - radius, y: centerY }
+                        'w': { x: centerX - radius, y: centerY },
+                        'e': { x: centerX + radius, y: centerY }
                     };
                 } else {
                     // 其他抠图类型：检测8个方向的手柄
