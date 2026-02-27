@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>WebAssembly 图像处理器</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>">
     <script src="coi-serviceworker.min.js"></script>
@@ -3326,6 +3326,32 @@
 
         // 在页面卸载时执行清理
         window.addEventListener('beforeunload', cleanupApplication);
+
+        // 防止移动端下拉刷新
+        window.addEventListener('touchmove', function(e) {
+            // 如果在Canvas区域内，阻止默认行为
+            const canvasContainer = document.getElementById('canvasContainer');
+            if (canvasContainer && canvasContainer.contains(e.target)) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // 防止移动端下拉刷新（pull-to-refresh）
+        let startY = 0;
+        window.addEventListener('touchstart', function(e) {
+            startY = e.touches[0].clientY;
+        }, { passive: true });
+
+        window.addEventListener('touchmove', function(e) {
+            const currentY = e.touches[0].clientY;
+            // 如果是向下拖动且在页面顶部，阻止默认行为
+            if (currentY > startY && window.scrollY === 0) {
+                const canvasContainer = document.getElementById('canvasContainer');
+                if (canvasContainer && canvasContainer.contains(e.target)) {
+                    e.preventDefault();
+                }
+            }
+        }, { passive: false });
 
         // 加载 WASM 模块并初始化
         async function loadWasmModule() {
