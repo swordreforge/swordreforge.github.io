@@ -234,6 +234,14 @@ export class BrushStroke {
         return BrushConfig.__wrap(ret);
     }
     /**
+     * 获取点数量
+     * @returns {number}
+     */
+    get_points_count() {
+        const ret = wasm.brushstroke_get_points_count(this.__wbg_ptr);
+        return ret >>> 0;
+    }
+    /**
      * 清除路径缓存（当点集改变时调用）
      */
     invalidate_path_cache() {
@@ -257,6 +265,23 @@ export class BrushStroke {
     point_count() {
         const ret = wasm.brushstroke_point_count(this.__wbg_ptr);
         return ret >>> 0;
+    }
+    /**
+     * 笔刷配置
+     * @returns {BrushConfig}
+     */
+    get config() {
+        const ret = wasm.__wbg_get_brushstroke_config(this.__wbg_ptr);
+        return BrushConfig.__wrap(ret);
+    }
+    /**
+     * 笔刷配置
+     * @param {BrushConfig} arg0
+     */
+    set config(arg0) {
+        _assertClass(arg0, BrushConfig);
+        var ptr0 = arg0.__destroy_into_raw();
+        wasm.__wbg_set_brushstroke_config(this.__wbg_ptr, ptr0);
     }
 }
 if (Symbol.dispose) BrushStroke.prototype[Symbol.dispose] = BrushStroke.prototype.free;
@@ -289,6 +314,120 @@ export const BrushType = Object.freeze({
 });
 
 /**
+ * Color struct for representing RGBA colors.
+ */
+export class Color {
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(Color.prototype);
+        obj.__wbg_ptr = ptr;
+        ColorFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        ColorFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_color_free(ptr, 0);
+    }
+    /**
+     * @returns {number}
+     */
+    brightness() {
+        const ret = wasm.color_brightness(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} r
+     * @param {number} g
+     * @param {number} b
+     * @param {number} a
+     * @returns {Color}
+     */
+    static new(r, g, b, a) {
+        const ret = wasm.color_new(r, g, b, a);
+        return Color.__wrap(ret);
+    }
+    /**
+     * @param {boolean} include_alpha
+     * @returns {string}
+     */
+    to_hex(include_alpha) {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.color_to_hex(retptr, this.__wbg_ptr, include_alpha);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            deferred1_0 = r0;
+            deferred1_1 = r1;
+            return getStringFromWasm0(r0, r1);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+            wasm.__wbindgen_export4(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
+     * @returns {number}
+     */
+    get a() {
+        const ret = wasm.__wbg_get_color_a(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get b() {
+        const ret = wasm.__wbg_get_color_b(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get g() {
+        const ret = wasm.__wbg_get_color_g(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get r() {
+        const ret = wasm.__wbg_get_color_r(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set a(arg0) {
+        wasm.__wbg_set_color_a(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set b(arg0) {
+        wasm.__wbg_set_color_b(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set g(arg0) {
+        wasm.__wbg_set_color_g(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set r(arg0) {
+        wasm.__wbg_set_color_r(this.__wbg_ptr, arg0);
+    }
+}
+if (Symbol.dispose) Color.prototype[Symbol.dispose] = Color.prototype.free;
+
+/**
  * 颜色空间枚举，用于明度调整
  * @enum {0 | 1 | 2 | 3}
  */
@@ -311,6 +450,10 @@ export const ColorSpace = Object.freeze({
     Hsluv: 3, "3": "Hsluv",
 });
 
+/**
+ * 图像处理器结构体
+ * 这是公共 API，封装了所有图像处理功能
+ */
 export class ImageProcessor {
     static __wrap(ptr) {
         ptr = ptr >>> 0;
@@ -339,20 +482,12 @@ export class ImageProcessor {
         wasm.imageprocessor_add_stroke_point(this.__wbg_ptr, x, y, pressure);
     }
     /**
-     * 调整亮度（统一接口）
-     *
-     * # 参数
-     * * `level` - 亮度级别（正值变亮，负值变暗）
      * @param {number} level
      */
     adjust_lightness(level) {
         wasm.imageprocessor_adjust_lightness(this.__wbg_ptr, level);
     }
     /**
-     * 调整饱和度（统一接口）
-     *
-     * # 参数
-     * * `level` - 饱和度级别（正值增加饱和度，负值减少饱和度）
      * @param {number} level
      */
     adjust_saturation(level) {
@@ -396,20 +531,6 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_b_grayscale(this.__wbg_ptr);
     }
     /**
-     * 应用双边滤波器
-     *
-     * 双边滤波器是一种非线性的、保边的降噪滤波器
-     * 与高斯模糊不同,它在平滑均匀区域的同时保持边缘清晰
-     *
-     * # 参数
-     * * `sigma_spatial` - 空间域标准偏差,控制平滑半径(范围: 1.0-20.0)
-     * * `sigma_range` - 范围域标准偏差,控制边缘敏感度(范围: 10.0-150.0)
-     * * `fast_mode` - 快速模式,降低质量换取速度(默认: true)
-     *
-     * # 使用建议
-     * * `sigma_spatial`: 较大的值会产生更强的平滑效果
-     * * `sigma_range`: 较大的值会允许更大的颜色差异,从而保持更多细节
-     * * `fast_mode`: 快速模式使用采样加速,计算速度提升约4倍,质量略有下降
      * @param {number} sigma_spatial
      * @param {number} sigma_range
      * @param {boolean} fast_mode
@@ -427,13 +548,6 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_brightness(this.__wbg_ptr, level);
     }
     /**
-     * 应用圆形遮罩
-     *
-     * # 参数
-     * * `center_x` - 圆心 X 坐标
-     * * `center_y` - 圆心 Y 坐标
-     * * `radius` - 圆半径
-     * * `feather_radius` - 羽化半径（像素）
      * @param {number} center_x
      * @param {number} center_y
      * @param {number} radius
@@ -608,13 +722,6 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_pixelate(this.__wbg_ptr, pixel_size);
     }
     /**
-     * 应用多边形遮罩（不规则形状抠图）
-     *
-     * # 参数
-     * * `vertices` - 多边形顶点坐标数组 [x1, y1, x2, y2, ...]
-     * * `anti_aliased` - 是否启用抗锯齿
-     * * `smooth_edges` - 是否平滑边缘
-     * * `smoothing_radius` - 平滑半径（像素）
      * @param {Float32Array} vertices
      * @param {boolean} anti_aliased
      * @param {boolean} smooth_edges
@@ -670,14 +777,6 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_solarize(this.__wbg_ptr);
     }
     /**
-     * 应用条纹效果，支持水平和垂直方向，可选颜色
-     *
-     * # 参数
-     * * `num_strips` - 条纹数量
-     * * `horizontal` - 是否为水平方向（true=水平，false=垂直）
-     * * `color_r` - 条纹颜色 R 分量（可选，默认白色）
-     * * `color_g` - 条纹颜色 G 分量（可选，默认白色）
-     * * `color_b` - 条纹颜色 B 分量（可选，默认白色）
      * @param {number} num_strips
      * @param {boolean} horizontal
      * @param {number | null} [color_r]
@@ -702,15 +801,6 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_tint(this.__wbg_ptr, r, g, b);
     }
     /**
-     * 应用水印，支持缩放、旋转、透明度等高级选项
-     *
-     * # 参数
-     * * `watermark_bytes` - 水印图像的字节数据
-     * * `x` - 水印 X 坐标
-     * * `y` - 水印 Y 坐标
-     * * `scale` - 缩放比例（可选，默认 1.0）
-     * * `opacity` - 透明度（可选，默认 1.0，范围 0.0-1.0）
-     * * `rotation` - 旋转角度（可选，默认 0.0，度）
      * @param {Uint8Array} watermark_bytes
      * @param {bigint} x
      * @param {bigint} y
@@ -724,36 +814,20 @@ export class ImageProcessor {
         wasm.imageprocessor_apply_watermark(this.__wbg_ptr, ptr0, len0, x, y, isLikeNone(scale) ? 0x100000001 : Math.fround(scale), isLikeNone(opacity) ? 0x100000001 : Math.fround(opacity), isLikeNone(rotation) ? 0x100000001 : Math.fround(rotation));
     }
     /**
-     * 应用水印带混合模式（便捷方法，保持向后兼容）
-     *
-     * # 参数
-     * * `watermark_bytes` - 水印图像的字节数据
-     * * `x` - 水印 X 坐标
-     * * `y` - 水印 Y 坐标
-     * * `scale` - 缩放比例
-     * * `blend_mode` - 混合模式（当前实现中暂不使用，仅用于接口兼容）
      * @param {Uint8Array} watermark_bytes
      * @param {bigint} x
      * @param {bigint} y
      * @param {number} scale
-     * @param {string} _blend_mode
+     * @param {string} blend_mode
      */
-    apply_watermark_with_blend(watermark_bytes, x, y, scale, _blend_mode) {
+    apply_watermark_with_blend(watermark_bytes, x, y, scale, blend_mode) {
         const ptr0 = passArray8ToWasm0(watermark_bytes, wasm.__wbindgen_export);
         const len0 = WASM_VECTOR_LEN;
-        const ptr1 = passStringToWasm0(_blend_mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const ptr1 = passStringToWasm0(blend_mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
         const len1 = WASM_VECTOR_LEN;
         wasm.imageprocessor_apply_watermark_with_blend(this.__wbg_ptr, ptr0, len0, x, y, scale, ptr1, len1);
     }
     /**
-     * 自动抠图 - 基于颜色
-     *
-     * # 参数
-     * * `target_r` - 目标颜色 R 分量
-     * * `target_g` - 目标颜色 G 分量
-     * * `target_b` - 目标颜色 B 分量
-     * * `tolerance` - 颜色容差（0-255）
-     * * `feather_radius` - 边缘羽化半径
      * @param {number} target_r
      * @param {number} target_g
      * @param {number} target_b
@@ -773,41 +847,6 @@ export class ImageProcessor {
         wasm.imageprocessor_begin_stroke(this.__wbg_ptr, ptr0);
     }
     /**
-     * 混合两张图像（支持任意大小的图像）
-     *
-     * 这个函数会自动调整第二张图像的大小以匹配第一张图像，然后使用指定的混合模式进行混合。
-     *
-     * # 参数
-     * * `overlay_bytes` - 要混合的第二张图像的字节数据
-     * * `blend_mode` - 混合模式，支持以下模式：
-     *   - "overlay": 叠加混合
-     *   - "over": 覆盖混合
-     *   - "atop": 顶部混合
-     *   - "xor": 异或混合
-     *   - "plus": 加法混合
-     *   - "multiply": 正片叠底
-     *   - "burn": 线性加深
-     *   - "difference": 差值混合
-     *   - "soft_light": 柔光混合
-     *   - "screen": 滤色混合
-     *   - "hard_light": 强光混合
-     *   - "dodge": 颜色减淡
-     *   - "exclusion": 排除混合
-     *   - "lighten": 变亮混合
-     *   - "darken": 变暗混合
-     *
-     * # 示例
-     * ```no_run
-     * // 在两张图像之间应用叠加混合
-     * let overlay_bytes = std::fs::read("overlay.png").unwrap();
-     * processor.blend_images(&overlay_bytes, "overlay");
-     * ```
-     * 混合两张图像，支持可选的缩放参数
-     *
-     * # 参数
-     * * `overlay_bytes` - 要混合的第二张图像的字节数据
-     * * `blend_mode` - 混合模式
-     * * `scale` - 缩放比例（可选，默认 1.0，表示自动匹配主图像尺寸）
      * @param {Uint8Array} overlay_bytes
      * @param {string} blend_mode
      * @param {number | null} [scale]
@@ -820,12 +859,6 @@ export class ImageProcessor {
         wasm.imageprocessor_blend_images(this.__wbg_ptr, ptr0, len0, ptr1, len1, isLikeNone(scale) ? 0x100000001 : Math.fround(scale));
     }
     /**
-     * 混合两张图像带缩放参数（便捷方法，保持向后兼容）
-     *
-     * # 参数
-     * * `overlay_bytes` - 要混合的第二张图像的字节数据
-     * * `scale` - 缩放比例（0.1 ~ 2.0），1.0 表示不缩放
-     * * `blend_mode` - 混合模式
      * @param {Uint8Array} overlay_bytes
      * @param {number} scale
      * @param {string} blend_mode
@@ -853,14 +886,12 @@ export class ImageProcessor {
         wasm.imageprocessor_crop(this.__wbg_ptr, x1, y1, x2, y2);
     }
     /**
-     * HSL 变暗（便捷方法）
      * @param {number} level
      */
     darken_hsl(level) {
         wasm.imageprocessor_darken_hsl(this.__wbg_ptr, level);
     }
     /**
-     * HSL 减少饱和度（便捷方法）
      * @param {number} level
      */
     desaturate_hsl(level) {
@@ -868,13 +899,6 @@ export class ImageProcessor {
     }
     /**
      * 直接绘制一笔（简化接口，向后兼容）
-     *
-     * # 参数
-     * * `points_js` - 点数据，支持两种格式：
-     *   - Float32Array: [x1, y1, x2, y2, ...] （推荐，性能更高）
-     *   - 普通数组: [{x, y}, {x, y}, ...] （兼容性）
-     * * `r, g, b, a` - 颜色值
-     * * `width` - 笔刷宽度
      * @param {any} points_js
      * @param {number} r
      * @param {number} g
@@ -887,16 +911,6 @@ export class ImageProcessor {
     }
     /**
      * 绘制一笔（高性能版本，使用 Float32Array）
-     *
-     * # 参数
-     * * `points_array` - Float32Array 格式的点数据：[x1, y1, x2, y2, ...]
-     * * `r, g, b, a` - 颜色值（0-255）
-     * * `width` - 笔刷宽度
-     *
-     * # 性能优势
-     * - 使用 Float32Array 避免 Reflect.get 调用
-     * - 直接内存访问，减少跨边界调用
-     * - 比普通数组版本快约 30%
      * @param {Float32Array} points_array
      * @param {number} r
      * @param {number} g
@@ -908,45 +922,22 @@ export class ImageProcessor {
         wasm.imageprocessor_draw_stroke_array(this.__wbg_ptr, addHeapObject(points_array), r, g, b, a, width);
     }
     /**
-     * 绘制文本，支持可选参数控制字体、阴影和颜色
-     *
-     * # 参数
-     * * `text` - 要绘制的文本
-     * * `x` - X 坐标
-     * * `y` - Y 坐标
-     * * `font_size` - 字体大小
-     * * `font_type` - 字体类型（可选，默认 0）：目前所有选项都使用默认字体
-     * * `has_shadow` - 是否绘制阴影（可选，默认 false）
-     * * `color_r` - 文本颜色 R 分量（可选，默认黑色）
-     * * `color_g` - 文本颜色 G 分量（可选，默认黑色）
-     * * `color_b` - 文本颜色 B 分量（可选，默认黑色）
      * @param {string} text
      * @param {number} x
      * @param {number} y
      * @param {number} font_size
-     * @param {number | null} [_font_type]
+     * @param {number | null} [font_type]
      * @param {boolean | null} [has_shadow]
      * @param {number | null} [color_r]
      * @param {number | null} [color_g]
      * @param {number | null} [color_b]
      */
-    draw_text(text, x, y, font_size, _font_type, has_shadow, color_r, color_g, color_b) {
+    draw_text(text, x, y, font_size, font_type, has_shadow, color_r, color_g, color_b) {
         const ptr0 = passStringToWasm0(text, wasm.__wbindgen_export, wasm.__wbindgen_export2);
         const len0 = WASM_VECTOR_LEN;
-        wasm.imageprocessor_draw_text(this.__wbg_ptr, ptr0, len0, x, y, font_size, isLikeNone(_font_type) ? 0xFFFFFF : _font_type, isLikeNone(has_shadow) ? 0xFFFFFF : has_shadow ? 1 : 0, isLikeNone(color_r) ? 0xFFFFFF : color_r, isLikeNone(color_g) ? 0xFFFFFF : color_g, isLikeNone(color_b) ? 0xFFFFFF : color_b);
+        wasm.imageprocessor_draw_text(this.__wbg_ptr, ptr0, len0, x, y, font_size, isLikeNone(font_type) ? 0xFFFFFF : font_type, isLikeNone(has_shadow) ? 0xFFFFFF : has_shadow ? 1 : 0, isLikeNone(color_r) ? 0xFFFFFF : color_r, isLikeNone(color_g) ? 0xFFFFFF : color_g, isLikeNone(color_b) ? 0xFFFFFF : color_b);
     }
     /**
-     * 绘制带颜色的文本，支持选择字体类型（便捷方法）
-     *
-     * # 参数
-     * * `text` - 要绘制的文本
-     * * `x` - X 坐标
-     * * `y` - Y 坐标
-     * * `font_size` - 字体大小
-     * * `r` - 文本颜色 R 分量
-     * * `g` - 文本颜色 G 分量
-     * * `b` - 文本颜色 B 分量
-     * * `font_type` - 字体类型：目前所有选项都使用默认字体
      * @param {string} text
      * @param {number} x
      * @param {number} y
@@ -954,26 +945,14 @@ export class ImageProcessor {
      * @param {number} r
      * @param {number} g
      * @param {number} b
-     * @param {number} _font_type
+     * @param {number} font_type
      */
-    draw_text_with_color_and_font(text, x, y, font_size, r, g, b, _font_type) {
+    draw_text_with_color_and_font(text, x, y, font_size, r, g, b, font_type) {
         const ptr0 = passStringToWasm0(text, wasm.__wbindgen_export, wasm.__wbindgen_export2);
         const len0 = WASM_VECTOR_LEN;
-        wasm.imageprocessor_draw_text_with_color_and_font(this.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b, _font_type);
+        wasm.imageprocessor_draw_text_with_color_and_font(this.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b, font_type);
     }
     /**
-     * 使用动态注册的字体名称绘制文本（支持阴影和颜色）
-     *
-     * # 参数
-     * * `text` - 要绘制的文本
-     * * `x` - X 坐标
-     * * `y` - Y 坐标
-     * * `font_size` - 字体大小
-     * * `font_name` - 已注册的字体名称
-     * * `has_shadow` - 是否绘制阴影
-     * * `color_r` - 文本颜色 R 分量（可选，默认黑色）
-     * * `color_g` - 文本颜色 G 分量（可选，默认黑色）
-     * * `color_b` - 文本颜色 B 分量（可选，默认黑色）
      * @param {string} text
      * @param {number} x
      * @param {number} y
@@ -992,17 +971,6 @@ export class ImageProcessor {
         wasm.imageprocessor_draw_text_with_font_name(this.__wbg_ptr, ptr0, len0, x, y, font_size, ptr1, len1, isLikeNone(has_shadow) ? 0xFFFFFF : has_shadow ? 1 : 0, isLikeNone(color_r) ? 0xFFFFFF : color_r, isLikeNone(color_g) ? 0xFFFFFF : color_g, isLikeNone(color_b) ? 0xFFFFFF : color_b);
     }
     /**
-     * 绘制带阴影和颜色的文本，支持选择字体类型（便捷方法）
-     *
-     * # 参数
-     * * `text` - 要绘制的文本
-     * * `x` - X 坐标
-     * * `y` - Y 坐标
-     * * `font_size` - 字体大小
-     * * `r` - 文本颜色 R 分量
-     * * `g` - 文本颜色 G 分量
-     * * `b` - 文本颜色 B 分量
-     * * `font_type` - 字体类型：目前所有选项都使用默认字体
      * @param {string} text
      * @param {number} x
      * @param {number} y
@@ -1010,12 +978,12 @@ export class ImageProcessor {
      * @param {number} r
      * @param {number} g
      * @param {number} b
-     * @param {number} _font_type
+     * @param {number} font_type
      */
-    draw_text_with_shadow_and_color_and_font(text, x, y, font_size, r, g, b, _font_type) {
+    draw_text_with_shadow_and_color_and_font(text, x, y, font_size, r, g, b, font_type) {
         const ptr0 = passStringToWasm0(text, wasm.__wbindgen_export, wasm.__wbindgen_export2);
         const len0 = WASM_VECTOR_LEN;
-        wasm.imageprocessor_draw_text_with_shadow_and_color_and_font(this.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b, _font_type);
+        wasm.imageprocessor_draw_text_with_shadow_and_color_and_font(this.__wbg_ptr, ptr0, len0, x, y, font_size, r, g, b, font_type);
     }
     /**
      * 结束当前笔划并渲染
@@ -1046,6 +1014,32 @@ export class ImageProcessor {
         }
     }
     /**
+     * 获取图像的调色板
+     *
+     * # 参数
+     * * `num_colors` - 要提取的颜色数量
+     *
+     * # 返回值
+     * 返回包含颜色数组的 JsValue (Array<Uint8Array>)，每个颜色是 [r, g, b, a] 格式
+     * @param {number} num_colors
+     * @returns {any}
+     */
+    get_color_palette(num_colors) {
+        const ret = wasm.imageprocessor_get_color_palette(this.__wbg_ptr, num_colors);
+        return takeObject(ret);
+    }
+    /**
+     * 获取整个图像的主色调
+     *
+     * # 返回值
+     * 返回包含 RGBA 值的 JsValue (Uint8Array)
+     * @returns {any}
+     */
+    get_dominant_color() {
+        const ret = wasm.imageprocessor_get_dominant_color(this.__wbg_ptr);
+        return takeObject(ret);
+    }
+    /**
      * @returns {bigint}
      */
     get_estimated_filesize() {
@@ -1060,7 +1054,71 @@ export class ImageProcessor {
         return ret >>> 0;
     }
     /**
-     * 获取原始像素数据（RGBA 格式，每个像素 4 字节）
+     * 获取指定坐标的像素亮度
+     *
+     * # 参数
+     * * `x` - X 坐标 (0 到 width-1)
+     * * `y` - Y 坐标 (0 到 height-1)
+     *
+     * # 返回值
+     * 返回亮度值 (0-255)，如果坐标超出范围则返回 null
+     * @param {number} x
+     * @param {number} y
+     * @returns {number | undefined}
+     */
+    get_pixel_brightness(x, y) {
+        const ret = wasm.imageprocessor_get_pixel_brightness(this.__wbg_ptr, x, y);
+        return ret === 0xFFFFFF ? undefined : ret;
+    }
+    /**
+     * 获取指定坐标的像素颜色
+     *
+     * # 参数
+     * * `x` - X 坐标 (0 到 width-1)
+     * * `y` - Y 坐标 (0 到 height-1)
+     *
+     * # 返回值
+     * 返回包含 RGBA 值的 JsValue (Uint8Array)，如果坐标超出范围则返回 null
+     * @param {number} x
+     * @param {number} y
+     * @returns {any}
+     */
+    get_pixel_color(x, y) {
+        const ret = wasm.imageprocessor_get_pixel_color(this.__wbg_ptr, x, y);
+        return takeObject(ret);
+    }
+    /**
+     * 获取指定坐标的像素颜色的十六进制表示
+     *
+     * # 参数
+     * * `x` - X 坐标 (0 到 width-1)
+     * * `y` - Y 坐标 (0 到 height-1)
+     * * `include_alpha` - 是否包含 alpha 通道
+     *
+     * # 返回值
+     * 返回十六进制颜色字符串，如果坐标超出范围则返回 null
+     * @param {number} x
+     * @param {number} y
+     * @param {boolean} include_alpha
+     * @returns {string | undefined}
+     */
+    get_pixel_color_hex(x, y, include_alpha) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.imageprocessor_get_pixel_color_hex(retptr, this.__wbg_ptr, x, y, include_alpha);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            let v1;
+            if (r0 !== 0) {
+                v1 = getStringFromWasm0(r0, r1).slice();
+                wasm.__wbindgen_export4(r0, r1 * 1, 1);
+            }
+            return v1;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
      * @returns {Uint8Array}
      */
     get_raw_pixels() {
@@ -1075,6 +1133,69 @@ export class ImageProcessor {
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
         }
+    }
+    /**
+     * 获取指定区域的平均亮度
+     *
+     * # 参数
+     * * `x` - 区域左上角 X 坐标
+     * * `y` - 区域左上角 Y 坐标
+     * * `width` - 区域宽度
+     * * `height` - 区域高度
+     *
+     * # 返回值
+     * 返回平均亮度值 (0-255)，如果区域超出范围则返回 null
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @returns {number | undefined}
+     */
+    get_region_average_brightness(x, y, width, height) {
+        const ret = wasm.imageprocessor_get_region_average_brightness(this.__wbg_ptr, x, y, width, height);
+        return ret === 0xFFFFFF ? undefined : ret;
+    }
+    /**
+     * 获取指定区域的平均颜色
+     *
+     * # 参数
+     * * `x` - 区域左上角 X 坐标
+     * * `y` - 区域左上角 Y 坐标
+     * * `width` - 区域宽度
+     * * `height` - 区域高度
+     *
+     * # 返回值
+     * 返回包含 RGBA 平均值的 JsValue (Uint8Array)，如果区域超出范围则返回 null
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @returns {any}
+     */
+    get_region_average_color(x, y, width, height) {
+        const ret = wasm.imageprocessor_get_region_average_color(this.__wbg_ptr, x, y, width, height);
+        return takeObject(ret);
+    }
+    /**
+     * 获取指定区域的主色调
+     *
+     * # 参数
+     * * `x` - 区域左上角 X 坐标
+     * * `y` - 区域左上角 Y 坐标
+     * * `width` - 区域宽度
+     * * `height` - 区域高度
+     *
+     * # 返回值
+     * 返回包含 RGBA 值的 JsValue (Uint8Array)，如果区域超出范围则返回 null
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @returns {any}
+     */
+    get_region_dominant_color(x, y, width, height) {
+        const ret = wasm.imageprocessor_get_region_dominant_color(this.__wbg_ptr, x, y, width, height);
+        return takeObject(ret);
     }
     /**
      * 获取历史笔划数量
@@ -1092,11 +1213,6 @@ export class ImageProcessor {
         return ret >>> 0;
     }
     /**
-     * 色相旋转（统一接口，支持 HSL、HSV、LCH 颜色空间）
-     *
-     * # 参数
-     * * `degrees` - 旋转角度（度）
-     * * `color_space` - 颜色空间：0=HSL, 1=HSV, 2=LCH
      * @param {number} degrees
      * @param {number} color_space
      */
@@ -1104,14 +1220,12 @@ export class ImageProcessor {
         wasm.imageprocessor_hue_rotate(this.__wbg_ptr, degrees, color_space);
     }
     /**
-     * HSL 色相旋转（便捷方法）
      * @param {number} degrees
      */
     hue_rotate_hsl(degrees) {
         wasm.imageprocessor_hue_rotate_hsl(this.__wbg_ptr, degrees);
     }
     /**
-     * HSL 变亮（便捷方法）
      * @param {number} level
      */
     lighten_hsl(level) {
@@ -1202,12 +1316,6 @@ export class ImageProcessor {
         wasm.imageprocessor_offset_red(this.__wbg_ptr, offset_amt);
     }
     /**
-     * 优化图像边缘（自动边缘检测和优化）
-     *
-     * 这个方法会对当前图像的边缘进行优化，使边缘更加平滑自然
-     *
-     * # 参数
-     * * `smoothing_radius` - 平滑半径（像素），推荐值 1-5
      * @param {number} smoothing_radius
      */
     refine_edges(smoothing_radius) {
@@ -1236,28 +1344,18 @@ export class ImageProcessor {
         wasm.imageprocessor_rotate_90(this.__wbg_ptr);
     }
     /**
-     * 任意角度旋转
-     * angle: 旋转角度（度），支持 -360 到 360
      * @param {number} angle
      */
     rotate_any(angle) {
         wasm.imageprocessor_rotate_any(this.__wbg_ptr, angle);
     }
     /**
-     * HSL 增加饱和度（便捷方法）
      * @param {number} level
      */
     saturate_hsl(level) {
         wasm.imageprocessor_saturate_hsl(this.__wbg_ptr, level);
     }
     /**
-     * 智能抠图 - 自动检测主体并进行抠图
-     *
-     * 这个方法会尝试自动检测图像中的主体并创建遮罩
-     *
-     * # 参数
-     * * `threshold` - 边缘检测阈值（0-255）
-     * * `feather_radius` - 边缘羽化半径
      * @param {number} threshold
      * @param {number} feather_radius
      */
@@ -1485,6 +1583,62 @@ export class PhotonImage {
         }
     }
     /**
+     * Get the color palette of the image.
+     *
+     * Returns a list of the most frequent colors in the image.
+     *
+     * # Arguments
+     * * `num_colors` - Number of colors to extract (default 5)
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255, 0, 255, 0, 255], 2, 1);
+     * let palette = img.get_color_palette(5);
+     * for (i, color) in palette.iter().enumerate() {
+     *     println!("Color {}: #{:02x}{:02x}{:02x}", i + 1, color.r, color.g, color.b);
+     * }
+     * ```
+     * @param {number} num_colors
+     * @returns {Color[]}
+     */
+    get_color_palette(num_colors) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.photonimage_get_color_palette(retptr, this.__wbg_ptr, num_colors);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            var v1 = getArrayJsValueFromWasm0(r0, r1).slice();
+            wasm.__wbindgen_export4(r0, r1 * 4, 4);
+            return v1;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+     * Get the dominant color of the entire image.
+     *
+     * Uses a color quantization approach to find the most frequent color.
+     * Returns the RGBA color values as a Color struct.
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255], 1, 1);
+     * let color = img.get_dominant_color();
+     * println!("Dominant color: R={}, G={}, B={}, A={}", color.r, color.g, color.b, color.a);
+     * ```
+     * @returns {Color}
+     */
+    get_dominant_color() {
+        const ret = wasm.photonimage_get_dominant_color(this.__wbg_ptr);
+        return Color.__wrap(ret);
+    }
+    /**
      * Calculates estimated filesize and returns number of bytes
      * @returns {bigint}
      */
@@ -1509,6 +1663,104 @@ export class PhotonImage {
         return takeObject(ret);
     }
     /**
+     * Get the brightness of a pixel at the specified coordinates.
+     *
+     * Returns the brightness value (0-255) using the human-corrected formula.
+     * Returns None if the coordinates are out of bounds.
+     *
+     * # Arguments
+     * * `x` - X coordinate (0 to width-1)
+     * * `y` - Y coordinate (0 to height-1)
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255], 1, 1);
+     * if let Some(brightness) = img.get_pixel_brightness(0, 0) {
+     *     println!("Pixel brightness: {}", brightness);
+     * }
+     * ```
+     * @param {number} x
+     * @param {number} y
+     * @returns {number | undefined}
+     */
+    get_pixel_brightness(x, y) {
+        const ret = wasm.photonimage_get_pixel_brightness(this.__wbg_ptr, x, y);
+        return ret === 0xFFFFFF ? undefined : ret;
+    }
+    /**
+     * Get the color of a pixel at the specified coordinates.
+     *
+     * Returns the RGBA color values as a Color struct.
+     * Returns None if the coordinates are out of bounds.
+     *
+     * # Arguments
+     * * `x` - X coordinate (0 to width-1)
+     * * `y` - Y coordinate (0 to height-1)
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255], 1, 1);
+     * if let Some(color) = img.get_pixel_color(0, 0) {
+     *     println!("Pixel color: R={}, G={}, B={}, A={}", color.r, color.g, color.b, color.a);
+     * }
+     * ```
+     * @param {number} x
+     * @param {number} y
+     * @returns {Color | undefined}
+     */
+    get_pixel_color(x, y) {
+        const ret = wasm.photonimage_get_pixel_color(this.__wbg_ptr, x, y);
+        return ret === 0 ? undefined : Color.__wrap(ret);
+    }
+    /**
+     * Get the color of a pixel at the specified coordinates as a hex string.
+     *
+     * Returns the color in hex format (#RRGGBB or #RRGGBBAA).
+     * Returns None if the coordinates are out of bounds.
+     *
+     * # Arguments
+     * * `x` - X coordinate (0 to width-1)
+     * * `y` - Y coordinate (0 to height-1)
+     * * `include_alpha` - Whether to include alpha channel in the hex string
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255], 1, 1);
+     * if let Some(hex) = img.get_pixel_color_hex(0, 0, false) {
+     *     println!("Pixel color: {}", hex); // Output: #ff0000
+     * }
+     * ```
+     * @param {number} x
+     * @param {number} y
+     * @param {boolean} include_alpha
+     * @returns {string | undefined}
+     */
+    get_pixel_color_hex(x, y, include_alpha) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.photonimage_get_pixel_color_hex(retptr, this.__wbg_ptr, x, y, include_alpha);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            let v1;
+            if (r0 !== 0) {
+                v1 = getStringFromWasm0(r0, r1).slice();
+                wasm.__wbindgen_export4(r0, r1 * 1, 1);
+            }
+            return v1;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
      * Get the PhotonImage's pixels as a Vec of u8s.
      *
      * **Note**: This clones the pixel data, which can be expensive for large images.
@@ -1527,6 +1779,102 @@ export class PhotonImage {
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
         }
+    }
+    /**
+     * Get the average brightness of a rectangular region.
+     *
+     * Returns the average brightness value (0-255).
+     * Returns None if the region is out of bounds.
+     *
+     * # Arguments
+     * * `x` - X coordinate of the top-left corner
+     * * `y` - Y coordinate of the top-left corner
+     * * `width` - Width of the region
+     * * `height` - Height of the region
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255, 0, 255, 0, 255], 2, 1);
+     * if let Some(brightness) = img.get_region_average_brightness(0, 0, 2, 1) {
+     *     println!("Average brightness: {}", brightness);
+     * }
+     * ```
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @returns {number | undefined}
+     */
+    get_region_average_brightness(x, y, width, height) {
+        const ret = wasm.photonimage_get_region_average_brightness(this.__wbg_ptr, x, y, width, height);
+        return ret === 0xFFFFFF ? undefined : ret;
+    }
+    /**
+     * Get the average color of a rectangular region.
+     *
+     * Returns the average RGBA color values as a Color struct.
+     * Returns None if the region is out of bounds.
+     *
+     * # Arguments
+     * * `x` - X coordinate of the top-left corner
+     * * `y` - Y coordinate of the top-left corner
+     * * `width` - Width of the region
+     * * `height` - Height of the region
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255, 0, 255, 0, 255], 2, 1);
+     * if let Some(color) = img.get_region_average_color(0, 0, 2, 1) {
+     *     println!("Average color: R={}, G={}, B={}, A={}", color.r, color.g, color.b, color.a);
+     * }
+     * ```
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @returns {Color | undefined}
+     */
+    get_region_average_color(x, y, width, height) {
+        const ret = wasm.photonimage_get_region_average_color(this.__wbg_ptr, x, y, width, height);
+        return ret === 0 ? undefined : Color.__wrap(ret);
+    }
+    /**
+     * Get the dominant color of a rectangular region.
+     *
+     * Uses a color quantization approach to find the most frequent color in the region.
+     * Returns None if the region is out of bounds.
+     *
+     * # Arguments
+     * * `x` - X coordinate of the top-left corner
+     * * `y` - Y coordinate of the top-left corner
+     * * `width` - Width of the region
+     * * `height` - Height of the region
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255, 0, 255, 0, 255], 2, 1);
+     * if let Some(color) = img.get_region_dominant_color(0, 0, 2, 1) {
+     *     println!("Dominant color: R={}, G={}, B={}, A={}", color.r, color.g, color.b, color.a);
+     * }
+     * ```
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @returns {Color | undefined}
+     */
+    get_region_dominant_color(x, y, width, height) {
+        const ret = wasm.photonimage_get_region_dominant_color(this.__wbg_ptr, x, y, width, height);
+        return ret === 0 ? undefined : Color.__wrap(ret);
     }
     /**
      * Get the width of the PhotonImage.
@@ -2414,16 +2762,26 @@ export function batch_process_images(images, processor) {
  * Bilateral filter is a non-linear, edge-preserving, and noise-reducing smoothing filter.
  * Unlike Gaussian blur, it preserves edges while smoothing homogeneous regions.
  *
+ * # Algorithm Selection
+ * - When `fast_mode=true`: Uses Domain Transform algorithm (O(n) complexity, 10-50x faster)
+ * - When `fast_mode=false`: Uses standard bilateral filter with pre-computed weights (O(n*k²) complexity)
+ *
  * # Performance Optimizations
+ * Fast mode (Domain Transform):
+ * - Time Complexity: O(n) - independent of kernel size
+ * - Space Complexity: O(n)
+ * - Typical Speedup: 10-50x compared to standard mode
+ *
+ * Standard mode:
  * - Pre-computed spatial weights: O(1) lookup instead of exp() calculation
  * - Pre-computed range weights: O(1) lookup for color similarity
  * - Direct pixel access: Avoids expensive get_pixel() calls
- * - Separable approximation: Can be optimized further with separable kernel
  *
  * # Arguments
  * * `photon_image` - A PhotonImage to filter
  * * `sigma_spatial` - Spatial domain standard deviation (controls smoothing radius)
  * * `sigma_range` - Range domain standard deviation (controls edge sensitivity)
+ * * `fast_mode` - When true, uses fast Domain Transform algorithm (default: true for performance)
  *
  * # Example
  *
@@ -2432,7 +2790,10 @@ export function batch_process_images(images, processor) {
  * use photon_rs::native::open_image;
  *
  * let mut img = open_image("img.jpg").expect("File should open");
- * bilateral_filter(&mut img, 5.0, 30.0);
+ * // Fast mode (recommended for most use cases)
+ * bilateral_filter(&mut img, 5.0, 30.0, true);
+ * // Standard mode (when quality is paramount)
+ * bilateral_filter(&mut img, 5.0, 30.0, false);
  * ```
  * @param {PhotonImage} photon_image
  * @param {number} sigma_spatial
@@ -2442,6 +2803,79 @@ export function batch_process_images(images, processor) {
 export function bilateral_filter(photon_image, sigma_spatial, sigma_range, fast_mode) {
     _assertClass(photon_image, PhotonImage);
     wasm.bilateral_filter(photon_image.__wbg_ptr, sigma_spatial, sigma_range, fast_mode);
+}
+
+/**
+ * Fast bilateral filter using Domain Transform.
+ *
+ * This implementation uses the Domain Transform technique, which achieves O(n) complexity
+ * instead of O(n*k²) for the standard bilateral filter. It's particularly effective for
+ * real-time applications and large images.
+ *
+ * The algorithm works by:
+ * 1. Computing color-based distances between adjacent pixels
+ * 2. Applying recursive filtering along horizontal and vertical passes
+ * 3. Using a reference image to guide the filtering
+ *
+ * # Performance Characteristics
+ * - Time Complexity: O(n) where n is the number of pixels
+ * - Space Complexity: O(n) for temporary buffers
+ * - Typical Speedup: 10-50x compared to standard bilateral filter
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage to filter
+ * * `sigma_spatial` - Spatial domain standard deviation (controls smoothing radius)
+ * * `sigma_range` - Range domain standard deviation (controls edge sensitivity)
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::conv::bilateral_filter_fast;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * bilateral_filter_fast(&mut img, 5.0, 30.0);
+ * ```
+ * @param {PhotonImage} photon_image
+ * @param {number} sigma_spatial
+ * @param {number} sigma_range
+ */
+export function bilateral_filter_fast(photon_image, sigma_spatial, sigma_range) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.bilateral_filter_fast(photon_image.__wbg_ptr, sigma_spatial, sigma_range);
+}
+
+/**
+ * Fast bilateral filter with adjustable iterations.
+ *
+ * This is a more flexible version of bilateral_filter_fast that allows
+ * control over the number of filtering iterations. More iterations
+ * produce stronger smoothing at the cost of additional computation.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage to filter
+ * * `sigma_spatial` - Spatial domain standard deviation (controls smoothing radius)
+ * * `sigma_range` - Range domain standard deviation (controls edge sensitivity)
+ * * `iterations` - Number of filtering iterations (1-10, default 3)
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::conv::bilateral_filter_fast_iter;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * // 5 iterations for stronger smoothing
+ * bilateral_filter_fast_iter(&mut img, 5.0, 30.0, 5);
+ * ```
+ * @param {PhotonImage} photon_image
+ * @param {number} sigma_spatial
+ * @param {number} sigma_range
+ * @param {number} iterations
+ */
+export function bilateral_filter_fast_iter(photon_image, sigma_spatial, sigma_range, iterations) {
+    _assertClass(photon_image, PhotonImage);
+    wasm.bilateral_filter_fast_iter(photon_image.__wbg_ptr, sigma_spatial, sigma_range, iterations);
 }
 
 /**
@@ -4538,24 +4972,6 @@ export function init_parallel() {
 }
 
 /**
- * Initialize the thread pool for WebAssembly parallel processing.
- *
- * This function must be called from JavaScript before using any parallel processing features.
- * It sets up the worker threads for rayon parallel execution.
- *
- * # JavaScript Example
- * ```javascript
- * import { initThreadPool } from './photon_wasm.js';
- *
- * // Initialize with 4 threads
- * await initThreadPool(4);
- *
- * // Now you can use parallel processing features
- * ```
- *
- * # Arguments
- * * `num_threads` - Number of threads to use for parallel processing.
- *   If 0, it will use the hardware concurrency (number of logical CPUs).
  * @param {number} num_threads
  * @returns {Promise<void>}
  */
@@ -6940,6 +7356,10 @@ function __wbg_get_imports(memory) {
             const ret = getObject(arg0).call(getObject(arg1), getObject(arg2), getObject(arg3));
             return addHeapObject(ret);
         }, arguments); },
+        __wbg_color_new: function(arg0) {
+            const ret = Color.__wrap(arg0);
+            return addHeapObject(ret);
+        },
         __wbg_createElement_c28be812ac2ffe84: function() { return handleError(function (arg0, arg1, arg2) {
             const ret = getObject(arg0).createElement(getStringFromWasm0(arg1, arg2));
             return addHeapObject(ret);
@@ -7121,7 +7541,7 @@ function __wbg_get_imports(memory) {
                     const a = state0.a;
                     state0.a = 0;
                     try {
-                        return __wasm_bindgen_func_elem_2142(a, state0.b, arg0, arg1);
+                        return __wasm_bindgen_func_elem_2314(a, state0.b, arg0, arg1);
                     } finally {
                         state0.a = a;
                     }
@@ -7140,6 +7560,10 @@ function __wbg_get_imports(memory) {
             const ret = new Object();
             return addHeapObject(ret);
         },
+        __wbg_new_from_slice_d7e202fdbee3c396: function(arg0, arg1) {
+            const ret = new Uint8Array(getArrayU8FromWasm0(arg0, arg1));
+            return addHeapObject(ret);
+        },
         __wbg_new_typed_8258a0d8488ef2a2: function(arg0, arg1) {
             try {
                 var state0 = {a: arg0, b: arg1};
@@ -7147,7 +7571,7 @@ function __wbg_get_imports(memory) {
                     const a = state0.a;
                     state0.a = 0;
                     try {
-                        return __wasm_bindgen_func_elem_2142(a, state0.b, arg0, arg1);
+                        return __wasm_bindgen_func_elem_2314(a, state0.b, arg0, arg1);
                     } finally {
                         state0.a = a;
                     }
@@ -7309,17 +7733,17 @@ function __wbg_get_imports(memory) {
         },
         __wbindgen_cast_0000000000000001: function(arg0, arg1) {
             // Cast intrinsic for `Closure(Closure { dtor_idx: 240, function: Function { arguments: [Externref], shim_idx: 241, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-            const ret = makeMutClosure(arg0, arg1, wasm.__wasm_bindgen_func_elem_793, __wasm_bindgen_func_elem_794);
+            const ret = makeMutClosure(arg0, arg1, wasm.__wasm_bindgen_func_elem_907, __wasm_bindgen_func_elem_908);
             return addHeapObject(ret);
         },
         __wbindgen_cast_0000000000000002: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { dtor_idx: 390, function: Function { arguments: [Externref], shim_idx: 393, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
-            const ret = makeMutClosure(arg0, arg1, wasm.__wasm_bindgen_func_elem_1514, __wasm_bindgen_func_elem_1517);
+            // Cast intrinsic for `Closure(Closure { dtor_idx: 393, function: Function { arguments: [Externref], shim_idx: 396, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
+            const ret = makeMutClosure(arg0, arg1, wasm.__wasm_bindgen_func_elem_1686, __wasm_bindgen_func_elem_1689);
             return addHeapObject(ret);
         },
         __wbindgen_cast_0000000000000003: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { dtor_idx: 390, function: Function { arguments: [NamedExternref("MessageEvent")], shim_idx: 391, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-            const ret = makeMutClosure(arg0, arg1, wasm.__wasm_bindgen_func_elem_1514, __wasm_bindgen_func_elem_1515);
+            // Cast intrinsic for `Closure(Closure { dtor_idx: 393, function: Function { arguments: [NamedExternref("MessageEvent")], shim_idx: 394, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            const ret = makeMutClosure(arg0, arg1, wasm.__wasm_bindgen_func_elem_1686, __wasm_bindgen_func_elem_1687);
             return addHeapObject(ret);
         },
         __wbindgen_cast_0000000000000004: function(arg0) {
@@ -7378,18 +7802,18 @@ function __wbg_get_imports(memory) {
     };
 }
 
-function __wasm_bindgen_func_elem_794(arg0, arg1, arg2) {
-    wasm.__wasm_bindgen_func_elem_794(arg0, arg1, addHeapObject(arg2));
+function __wasm_bindgen_func_elem_908(arg0, arg1, arg2) {
+    wasm.__wasm_bindgen_func_elem_908(arg0, arg1, addHeapObject(arg2));
 }
 
-function __wasm_bindgen_func_elem_1515(arg0, arg1, arg2) {
-    wasm.__wasm_bindgen_func_elem_1515(arg0, arg1, addHeapObject(arg2));
+function __wasm_bindgen_func_elem_1687(arg0, arg1, arg2) {
+    wasm.__wasm_bindgen_func_elem_1687(arg0, arg1, addHeapObject(arg2));
 }
 
-function __wasm_bindgen_func_elem_1517(arg0, arg1, arg2) {
+function __wasm_bindgen_func_elem_1689(arg0, arg1, arg2) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        wasm.__wasm_bindgen_func_elem_1517(retptr, arg0, arg1, addHeapObject(arg2));
+        wasm.__wasm_bindgen_func_elem_1689(retptr, arg0, arg1, addHeapObject(arg2));
         var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
         var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
         if (r1) {
@@ -7400,8 +7824,8 @@ function __wasm_bindgen_func_elem_1517(arg0, arg1, arg2) {
     }
 }
 
-function __wasm_bindgen_func_elem_2142(arg0, arg1, arg2, arg3) {
-    wasm.__wasm_bindgen_func_elem_2142(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+function __wasm_bindgen_func_elem_2314(arg0, arg1, arg2, arg3) {
+    wasm.__wasm_bindgen_func_elem_2314(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
 }
 
 const BrushConfigFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -7410,6 +7834,9 @@ const BrushConfigFinalization = (typeof FinalizationRegistry === 'undefined')
 const BrushStrokeFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_brushstroke_free(ptr >>> 0, 1));
+const ColorFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_color_free(ptr >>> 0, 1));
 const ImageProcessorFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_imageprocessor_free(ptr >>> 0, 1));

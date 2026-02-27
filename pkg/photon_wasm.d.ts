@@ -76,6 +76,10 @@ export class BrushStroke {
      */
     get_config(): BrushConfig;
     /**
+     * 获取点数量
+     */
+    get_points_count(): number;
+    /**
      * 清除路径缓存（当点集改变时调用）
      */
     invalidate_path_cache(): void;
@@ -84,6 +88,10 @@ export class BrushStroke {
      * 获取点数量
      */
     point_count(): number;
+    /**
+     * 笔刷配置
+     */
+    config: BrushConfig;
 }
 
 /**
@@ -113,6 +121,22 @@ export enum BrushType {
 }
 
 /**
+ * Color struct for representing RGBA colors.
+ */
+export class Color {
+    private constructor();
+    free(): void;
+    [Symbol.dispose](): void;
+    brightness(): number;
+    static new(r: number, g: number, b: number, a: number): Color;
+    to_hex(include_alpha: boolean): string;
+    a: number;
+    b: number;
+    g: number;
+    r: number;
+}
+
+/**
  * 颜色空间枚举，用于明度调整
  */
 export enum ColorSpace {
@@ -134,6 +158,10 @@ export enum ColorSpace {
     Hsluv = 3,
 }
 
+/**
+ * 图像处理器结构体
+ * 这是公共 API，封装了所有图像处理功能
+ */
 export class ImageProcessor {
     free(): void;
     [Symbol.dispose](): void;
@@ -141,53 +169,16 @@ export class ImageProcessor {
      * 添加点到当前笔划
      */
     add_stroke_point(x: number, y: number, pressure: number): void;
-    /**
-     * 调整亮度（统一接口）
-     *
-     * # 参数
-     * * `level` - 亮度级别（正值变亮，负值变暗）
-     */
     adjust_lightness(level: number): void;
-    /**
-     * 调整饱和度（统一接口）
-     *
-     * # 参数
-     * * `level` - 饱和度级别（正值增加饱和度，负值减少饱和度）
-     */
     adjust_saturation(level: number): void;
     alter_blue_channel(amt: number): void;
     alter_green_channel(amt: number): void;
     alter_red_channel(amt: number): void;
     apply_all_adjustments(brightness: number, contrast: number, saturation: number, hue: number, lightness: number, lightness_color_space: ColorSpace, gamma_red: number, gamma_green: number, gamma_blue: number, sharpen_strength: number, noise_reduction_strength: number): void;
     apply_b_grayscale(): void;
-    /**
-     * 应用双边滤波器
-     *
-     * 双边滤波器是一种非线性的、保边的降噪滤波器
-     * 与高斯模糊不同,它在平滑均匀区域的同时保持边缘清晰
-     *
-     * # 参数
-     * * `sigma_spatial` - 空间域标准偏差,控制平滑半径(范围: 1.0-20.0)
-     * * `sigma_range` - 范围域标准偏差,控制边缘敏感度(范围: 10.0-150.0)
-     * * `fast_mode` - 快速模式,降低质量换取速度(默认: true)
-     *
-     * # 使用建议
-     * * `sigma_spatial`: 较大的值会产生更强的平滑效果
-     * * `sigma_range`: 较大的值会允许更大的颜色差异,从而保持更多细节
-     * * `fast_mode`: 快速模式使用采样加速,计算速度提升约4倍,质量略有下降
-     */
     apply_bilateral_filter(sigma_spatial: number, sigma_range: number, fast_mode: boolean): void;
     apply_box_blur(): void;
     apply_brightness(level: number): void;
-    /**
-     * 应用圆形遮罩
-     *
-     * # 参数
-     * * `center_x` - 圆心 X 坐标
-     * * `center_y` - 圆心 Y 坐标
-     * * `radius` - 圆半径
-     * * `feather_radius` - 羽化半径（像素）
-     */
     apply_circular_mask(center_x: number, center_y: number, radius: number, feather_radius: number): void;
     apply_color_noise_with_strength(r_factor: number, g_factor: number, b_factor: number, strength: number): void;
     apply_colorize(): void;
@@ -226,15 +217,6 @@ export class ImageProcessor {
     apply_oil(radius: number, intensity: number): void;
     apply_pink_noise(): void;
     apply_pixelate(pixel_size: number): void;
-    /**
-     * 应用多边形遮罩（不规则形状抠图）
-     *
-     * # 参数
-     * * `vertices` - 多边形顶点坐标数组 [x1, y1, x2, y2, ...]
-     * * `anti_aliased` - 是否启用抗锯齿
-     * * `smooth_edges` - 是否平滑边缘
-     * * `smoothing_radius` - 平滑半径（像素）
-     */
     apply_polygon_mask(vertices: Float32Array, anti_aliased: boolean, smooth_edges: boolean, smoothing_radius: number): void;
     apply_preset_filter(filter_name: string): void;
     apply_prewitt_horizontal(): void;
@@ -247,200 +229,37 @@ export class ImageProcessor {
     apply_sobel_horizontal(): void;
     apply_sobel_vertical(): void;
     apply_solarize(): void;
-    /**
-     * 应用条纹效果，支持水平和垂直方向，可选颜色
-     *
-     * # 参数
-     * * `num_strips` - 条纹数量
-     * * `horizontal` - 是否为水平方向（true=水平，false=垂直）
-     * * `color_r` - 条纹颜色 R 分量（可选，默认白色）
-     * * `color_g` - 条纹颜色 G 分量（可选，默认白色）
-     * * `color_b` - 条纹颜色 B 分量（可选，默认白色）
-     */
     apply_strips(num_strips: number, horizontal: boolean, color_r?: number | null, color_g?: number | null, color_b?: number | null): void;
     apply_threshold(threshold: number): void;
     apply_tint(r: number, g: number, b: number): void;
-    /**
-     * 应用水印，支持缩放、旋转、透明度等高级选项
-     *
-     * # 参数
-     * * `watermark_bytes` - 水印图像的字节数据
-     * * `x` - 水印 X 坐标
-     * * `y` - 水印 Y 坐标
-     * * `scale` - 缩放比例（可选，默认 1.0）
-     * * `opacity` - 透明度（可选，默认 1.0，范围 0.0-1.0）
-     * * `rotation` - 旋转角度（可选，默认 0.0，度）
-     */
     apply_watermark(watermark_bytes: Uint8Array, x: bigint, y: bigint, scale?: number | null, opacity?: number | null, rotation?: number | null): void;
-    /**
-     * 应用水印带混合模式（便捷方法，保持向后兼容）
-     *
-     * # 参数
-     * * `watermark_bytes` - 水印图像的字节数据
-     * * `x` - 水印 X 坐标
-     * * `y` - 水印 Y 坐标
-     * * `scale` - 缩放比例
-     * * `blend_mode` - 混合模式（当前实现中暂不使用，仅用于接口兼容）
-     */
-    apply_watermark_with_blend(watermark_bytes: Uint8Array, x: bigint, y: bigint, scale: number, _blend_mode: string): void;
-    /**
-     * 自动抠图 - 基于颜色
-     *
-     * # 参数
-     * * `target_r` - 目标颜色 R 分量
-     * * `target_g` - 目标颜色 G 分量
-     * * `target_b` - 目标颜色 B 分量
-     * * `tolerance` - 颜色容差（0-255）
-     * * `feather_radius` - 边缘羽化半径
-     */
+    apply_watermark_with_blend(watermark_bytes: Uint8Array, x: bigint, y: bigint, scale: number, blend_mode: string): void;
     auto_crop_by_color(target_r: number, target_g: number, target_b: number, tolerance: number, feather_radius: number): void;
     /**
      * 开始一笔新画
      */
     begin_stroke(config: BrushConfig): void;
-    /**
-     * 混合两张图像（支持任意大小的图像）
-     *
-     * 这个函数会自动调整第二张图像的大小以匹配第一张图像，然后使用指定的混合模式进行混合。
-     *
-     * # 参数
-     * * `overlay_bytes` - 要混合的第二张图像的字节数据
-     * * `blend_mode` - 混合模式，支持以下模式：
-     *   - "overlay": 叠加混合
-     *   - "over": 覆盖混合
-     *   - "atop": 顶部混合
-     *   - "xor": 异或混合
-     *   - "plus": 加法混合
-     *   - "multiply": 正片叠底
-     *   - "burn": 线性加深
-     *   - "difference": 差值混合
-     *   - "soft_light": 柔光混合
-     *   - "screen": 滤色混合
-     *   - "hard_light": 强光混合
-     *   - "dodge": 颜色减淡
-     *   - "exclusion": 排除混合
-     *   - "lighten": 变亮混合
-     *   - "darken": 变暗混合
-     *
-     * # 示例
-     * ```no_run
-     * // 在两张图像之间应用叠加混合
-     * let overlay_bytes = std::fs::read("overlay.png").unwrap();
-     * processor.blend_images(&overlay_bytes, "overlay");
-     * ```
-     * 混合两张图像，支持可选的缩放参数
-     *
-     * # 参数
-     * * `overlay_bytes` - 要混合的第二张图像的字节数据
-     * * `blend_mode` - 混合模式
-     * * `scale` - 缩放比例（可选，默认 1.0，表示自动匹配主图像尺寸）
-     */
     blend_images(overlay_bytes: Uint8Array, blend_mode: string, scale?: number | null): void;
-    /**
-     * 混合两张图像带缩放参数（便捷方法，保持向后兼容）
-     *
-     * # 参数
-     * * `overlay_bytes` - 要混合的第二张图像的字节数据
-     * * `scale` - 缩放比例（0.1 ~ 2.0），1.0 表示不缩放
-     * * `blend_mode` - 混合模式
-     */
     blend_images_with_scale(overlay_bytes: Uint8Array, scale: number, blend_mode: string): void;
     /**
      * 清除所有笔划
      */
     clear_strokes(): void;
     crop(x1: number, y1: number, x2: number, y2: number): void;
-    /**
-     * HSL 变暗（便捷方法）
-     */
     darken_hsl(level: number): void;
-    /**
-     * HSL 减少饱和度（便捷方法）
-     */
     desaturate_hsl(level: number): void;
     /**
      * 直接绘制一笔（简化接口，向后兼容）
-     *
-     * # 参数
-     * * `points_js` - 点数据，支持两种格式：
-     *   - Float32Array: [x1, y1, x2, y2, ...] （推荐，性能更高）
-     *   - 普通数组: [{x, y}, {x, y}, ...] （兼容性）
-     * * `r, g, b, a` - 颜色值
-     * * `width` - 笔刷宽度
      */
     draw_stroke(points_js: any, r: number, g: number, b: number, a: number, width: number): void;
     /**
      * 绘制一笔（高性能版本，使用 Float32Array）
-     *
-     * # 参数
-     * * `points_array` - Float32Array 格式的点数据：[x1, y1, x2, y2, ...]
-     * * `r, g, b, a` - 颜色值（0-255）
-     * * `width` - 笔刷宽度
-     *
-     * # 性能优势
-     * - 使用 Float32Array 避免 Reflect.get 调用
-     * - 直接内存访问，减少跨边界调用
-     * - 比普通数组版本快约 30%
      */
     draw_stroke_array(points_array: Float32Array, r: number, g: number, b: number, a: number, width: number): void;
-    /**
-     * 绘制文本，支持可选参数控制字体、阴影和颜色
-     *
-     * # 参数
-     * * `text` - 要绘制的文本
-     * * `x` - X 坐标
-     * * `y` - Y 坐标
-     * * `font_size` - 字体大小
-     * * `font_type` - 字体类型（可选，默认 0）：目前所有选项都使用默认字体
-     * * `has_shadow` - 是否绘制阴影（可选，默认 false）
-     * * `color_r` - 文本颜色 R 分量（可选，默认黑色）
-     * * `color_g` - 文本颜色 G 分量（可选，默认黑色）
-     * * `color_b` - 文本颜色 B 分量（可选，默认黑色）
-     */
-    draw_text(text: string, x: number, y: number, font_size: number, _font_type?: number | null, has_shadow?: boolean | null, color_r?: number | null, color_g?: number | null, color_b?: number | null): void;
-    /**
-     * 绘制带颜色的文本，支持选择字体类型（便捷方法）
-     *
-     * # 参数
-     * * `text` - 要绘制的文本
-     * * `x` - X 坐标
-     * * `y` - Y 坐标
-     * * `font_size` - 字体大小
-     * * `r` - 文本颜色 R 分量
-     * * `g` - 文本颜色 G 分量
-     * * `b` - 文本颜色 B 分量
-     * * `font_type` - 字体类型：目前所有选项都使用默认字体
-     */
-    draw_text_with_color_and_font(text: string, x: number, y: number, font_size: number, r: number, g: number, b: number, _font_type: number): void;
-    /**
-     * 使用动态注册的字体名称绘制文本（支持阴影和颜色）
-     *
-     * # 参数
-     * * `text` - 要绘制的文本
-     * * `x` - X 坐标
-     * * `y` - Y 坐标
-     * * `font_size` - 字体大小
-     * * `font_name` - 已注册的字体名称
-     * * `has_shadow` - 是否绘制阴影
-     * * `color_r` - 文本颜色 R 分量（可选，默认黑色）
-     * * `color_g` - 文本颜色 G 分量（可选，默认黑色）
-     * * `color_b` - 文本颜色 B 分量（可选，默认黑色）
-     */
+    draw_text(text: string, x: number, y: number, font_size: number, font_type?: number | null, has_shadow?: boolean | null, color_r?: number | null, color_g?: number | null, color_b?: number | null): void;
+    draw_text_with_color_and_font(text: string, x: number, y: number, font_size: number, r: number, g: number, b: number, font_type: number): void;
     draw_text_with_font_name(text: string, x: number, y: number, font_size: number, font_name: string, has_shadow?: boolean | null, color_r?: number | null, color_g?: number | null, color_b?: number | null): void;
-    /**
-     * 绘制带阴影和颜色的文本，支持选择字体类型（便捷方法）
-     *
-     * # 参数
-     * * `text` - 要绘制的文本
-     * * `x` - X 坐标
-     * * `y` - Y 坐标
-     * * `font_size` - 字体大小
-     * * `r` - 文本颜色 R 分量
-     * * `g` - 文本颜色 G 分量
-     * * `b` - 文本颜色 B 分量
-     * * `font_type` - 字体类型：目前所有选项都使用默认字体
-     */
-    draw_text_with_shadow_and_color_and_font(text: string, x: number, y: number, font_size: number, r: number, g: number, b: number, _font_type: number): void;
+    draw_text_with_shadow_and_color_and_font(text: string, x: number, y: number, font_size: number, r: number, g: number, b: number, font_type: number): void;
     /**
      * 结束当前笔划并渲染
      */
@@ -448,32 +267,106 @@ export class ImageProcessor {
     flip_horizontal(): void;
     flip_vertical(): void;
     get_bytes(): Uint8Array;
+    /**
+     * 获取图像的调色板
+     *
+     * # 参数
+     * * `num_colors` - 要提取的颜色数量
+     *
+     * # 返回值
+     * 返回包含颜色数组的 JsValue (Array<Uint8Array>)，每个颜色是 [r, g, b, a] 格式
+     */
+    get_color_palette(num_colors: number): any;
+    /**
+     * 获取整个图像的主色调
+     *
+     * # 返回值
+     * 返回包含 RGBA 值的 JsValue (Uint8Array)
+     */
+    get_dominant_color(): any;
     get_estimated_filesize(): bigint;
     get_height(): number;
     /**
-     * 获取原始像素数据（RGBA 格式，每个像素 4 字节）
+     * 获取指定坐标的像素亮度
+     *
+     * # 参数
+     * * `x` - X 坐标 (0 到 width-1)
+     * * `y` - Y 坐标 (0 到 height-1)
+     *
+     * # 返回值
+     * 返回亮度值 (0-255)，如果坐标超出范围则返回 null
      */
+    get_pixel_brightness(x: number, y: number): number | undefined;
+    /**
+     * 获取指定坐标的像素颜色
+     *
+     * # 参数
+     * * `x` - X 坐标 (0 到 width-1)
+     * * `y` - Y 坐标 (0 到 height-1)
+     *
+     * # 返回值
+     * 返回包含 RGBA 值的 JsValue (Uint8Array)，如果坐标超出范围则返回 null
+     */
+    get_pixel_color(x: number, y: number): any;
+    /**
+     * 获取指定坐标的像素颜色的十六进制表示
+     *
+     * # 参数
+     * * `x` - X 坐标 (0 到 width-1)
+     * * `y` - Y 坐标 (0 到 height-1)
+     * * `include_alpha` - 是否包含 alpha 通道
+     *
+     * # 返回值
+     * 返回十六进制颜色字符串，如果坐标超出范围则返回 null
+     */
+    get_pixel_color_hex(x: number, y: number, include_alpha: boolean): string | undefined;
     get_raw_pixels(): Uint8Array;
+    /**
+     * 获取指定区域的平均亮度
+     *
+     * # 参数
+     * * `x` - 区域左上角 X 坐标
+     * * `y` - 区域左上角 Y 坐标
+     * * `width` - 区域宽度
+     * * `height` - 区域高度
+     *
+     * # 返回值
+     * 返回平均亮度值 (0-255)，如果区域超出范围则返回 null
+     */
+    get_region_average_brightness(x: number, y: number, width: number, height: number): number | undefined;
+    /**
+     * 获取指定区域的平均颜色
+     *
+     * # 参数
+     * * `x` - 区域左上角 X 坐标
+     * * `y` - 区域左上角 Y 坐标
+     * * `width` - 区域宽度
+     * * `height` - 区域高度
+     *
+     * # 返回值
+     * 返回包含 RGBA 平均值的 JsValue (Uint8Array)，如果区域超出范围则返回 null
+     */
+    get_region_average_color(x: number, y: number, width: number, height: number): any;
+    /**
+     * 获取指定区域的主色调
+     *
+     * # 参数
+     * * `x` - 区域左上角 X 坐标
+     * * `y` - 区域左上角 Y 坐标
+     * * `width` - 区域宽度
+     * * `height` - 区域高度
+     *
+     * # 返回值
+     * 返回包含 RGBA 值的 JsValue (Uint8Array)，如果区域超出范围则返回 null
+     */
+    get_region_dominant_color(x: number, y: number, width: number, height: number): any;
     /**
      * 获取历史笔划数量
      */
     get_stroke_count(): number;
     get_width(): number;
-    /**
-     * 色相旋转（统一接口，支持 HSL、HSV、LCH 颜色空间）
-     *
-     * # 参数
-     * * `degrees` - 旋转角度（度）
-     * * `color_space` - 颜色空间：0=HSL, 1=HSV, 2=LCH
-     */
     hue_rotate(degrees: number, color_space: number): void;
-    /**
-     * HSL 色相旋转（便捷方法）
-     */
     hue_rotate_hsl(degrees: number): void;
-    /**
-     * HSL 变亮（便捷方法）
-     */
     lighten_hsl(level: number): void;
     constructor(width: number, height: number, data: Uint8Array);
     static new_from_bytes(bytes: Uint8Array): ImageProcessor;
@@ -484,14 +377,6 @@ export class ImageProcessor {
     offset_blue(offset_amt: number): void;
     offset_green(offset_amt: number): void;
     offset_red(offset_amt: number): void;
-    /**
-     * 优化图像边缘（自动边缘检测和优化）
-     *
-     * 这个方法会对当前图像的边缘进行优化，使边缘更加平滑自然
-     *
-     * # 参数
-     * * `smoothing_radius` - 平滑半径（像素），推荐值 1-5
-     */
     refine_edges(smoothing_radius: number): void;
     remove_blue_channel(): void;
     remove_green_channel(): void;
@@ -499,24 +384,8 @@ export class ImageProcessor {
     reset(): void;
     resize(new_width: number, new_height: number): void;
     rotate_90(): void;
-    /**
-     * 任意角度旋转
-     * angle: 旋转角度（度），支持 -360 到 360
-     */
     rotate_any(angle: number): void;
-    /**
-     * HSL 增加饱和度（便捷方法）
-     */
     saturate_hsl(level: number): void;
-    /**
-     * 智能抠图 - 自动检测主体并进行抠图
-     *
-     * 这个方法会尝试自动检测图像中的主体并创建遮罩
-     *
-     * # 参数
-     * * `threshold` - 边缘检测阈值（0-255）
-     * * `feather_radius` - 边缘羽化半径
-     */
     smart_crop(threshold: number, feather_radius: number): void;
     swap_gb_channels(): void;
     swap_rb_channels(): void;
@@ -569,6 +438,44 @@ export class PhotonImage {
      */
     get_bytes_webp_with_quality(_quality: number): Uint8Array;
     /**
+     * Get the color palette of the image.
+     *
+     * Returns a list of the most frequent colors in the image.
+     *
+     * # Arguments
+     * * `num_colors` - Number of colors to extract (default 5)
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255, 0, 255, 0, 255], 2, 1);
+     * let palette = img.get_color_palette(5);
+     * for (i, color) in palette.iter().enumerate() {
+     *     println!("Color {}: #{:02x}{:02x}{:02x}", i + 1, color.r, color.g, color.b);
+     * }
+     * ```
+     */
+    get_color_palette(num_colors: number): Color[];
+    /**
+     * Get the dominant color of the entire image.
+     *
+     * Uses a color quantization approach to find the most frequent color.
+     * Returns the RGBA color values as a Color struct.
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255], 1, 1);
+     * let color = img.get_dominant_color();
+     * println!("Dominant color: R={}, G={}, B={}, A={}", color.r, color.g, color.b, color.a);
+     * ```
+     */
+    get_dominant_color(): Color;
+    /**
      * Calculates estimated filesize and returns number of bytes
      */
     get_estimated_filesize(): bigint;
@@ -581,12 +488,151 @@ export class PhotonImage {
      */
     get_image_data(): ImageData;
     /**
+     * Get the brightness of a pixel at the specified coordinates.
+     *
+     * Returns the brightness value (0-255) using the human-corrected formula.
+     * Returns None if the coordinates are out of bounds.
+     *
+     * # Arguments
+     * * `x` - X coordinate (0 to width-1)
+     * * `y` - Y coordinate (0 to height-1)
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255], 1, 1);
+     * if let Some(brightness) = img.get_pixel_brightness(0, 0) {
+     *     println!("Pixel brightness: {}", brightness);
+     * }
+     * ```
+     */
+    get_pixel_brightness(x: number, y: number): number | undefined;
+    /**
+     * Get the color of a pixel at the specified coordinates.
+     *
+     * Returns the RGBA color values as a Color struct.
+     * Returns None if the coordinates are out of bounds.
+     *
+     * # Arguments
+     * * `x` - X coordinate (0 to width-1)
+     * * `y` - Y coordinate (0 to height-1)
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255], 1, 1);
+     * if let Some(color) = img.get_pixel_color(0, 0) {
+     *     println!("Pixel color: R={}, G={}, B={}, A={}", color.r, color.g, color.b, color.a);
+     * }
+     * ```
+     */
+    get_pixel_color(x: number, y: number): Color | undefined;
+    /**
+     * Get the color of a pixel at the specified coordinates as a hex string.
+     *
+     * Returns the color in hex format (#RRGGBB or #RRGGBBAA).
+     * Returns None if the coordinates are out of bounds.
+     *
+     * # Arguments
+     * * `x` - X coordinate (0 to width-1)
+     * * `y` - Y coordinate (0 to height-1)
+     * * `include_alpha` - Whether to include alpha channel in the hex string
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255], 1, 1);
+     * if let Some(hex) = img.get_pixel_color_hex(0, 0, false) {
+     *     println!("Pixel color: {}", hex); // Output: #ff0000
+     * }
+     * ```
+     */
+    get_pixel_color_hex(x: number, y: number, include_alpha: boolean): string | undefined;
+    /**
      * Get the PhotonImage's pixels as a Vec of u8s.
      *
      * **Note**: This clones the pixel data, which can be expensive for large images.
      * For read-only access, prefer `get_raw_pixels_slice()` which returns a reference without cloning.
      */
     get_raw_pixels(): Uint8Array;
+    /**
+     * Get the average brightness of a rectangular region.
+     *
+     * Returns the average brightness value (0-255).
+     * Returns None if the region is out of bounds.
+     *
+     * # Arguments
+     * * `x` - X coordinate of the top-left corner
+     * * `y` - Y coordinate of the top-left corner
+     * * `width` - Width of the region
+     * * `height` - Height of the region
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255, 0, 255, 0, 255], 2, 1);
+     * if let Some(brightness) = img.get_region_average_brightness(0, 0, 2, 1) {
+     *     println!("Average brightness: {}", brightness);
+     * }
+     * ```
+     */
+    get_region_average_brightness(x: number, y: number, width: number, height: number): number | undefined;
+    /**
+     * Get the average color of a rectangular region.
+     *
+     * Returns the average RGBA color values as a Color struct.
+     * Returns None if the region is out of bounds.
+     *
+     * # Arguments
+     * * `x` - X coordinate of the top-left corner
+     * * `y` - Y coordinate of the top-left corner
+     * * `width` - Width of the region
+     * * `height` - Height of the region
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255, 0, 255, 0, 255], 2, 1);
+     * if let Some(color) = img.get_region_average_color(0, 0, 2, 1) {
+     *     println!("Average color: R={}, G={}, B={}, A={}", color.r, color.g, color.b, color.a);
+     * }
+     * ```
+     */
+    get_region_average_color(x: number, y: number, width: number, height: number): Color | undefined;
+    /**
+     * Get the dominant color of a rectangular region.
+     *
+     * Uses a color quantization approach to find the most frequent color in the region.
+     * Returns None if the region is out of bounds.
+     *
+     * # Arguments
+     * * `x` - X coordinate of the top-left corner
+     * * `y` - Y coordinate of the top-left corner
+     * * `width` - Width of the region
+     * * `height` - Height of the region
+     *
+     * # Example
+     *
+     * ```no_run
+     * use photon_rs::PhotonImage;
+     *
+     * let img = PhotonImage::new(vec![255, 0, 0, 255, 0, 255, 0, 255], 2, 1);
+     * if let Some(color) = img.get_region_dominant_color(0, 0, 2, 1) {
+     *     println!("Dominant color: R={}, G={}, B={}, A={}", color.r, color.g, color.b, color.a);
+     * }
+     * ```
+     */
+    get_region_dominant_color(x: number, y: number, width: number, height: number): Color | undefined;
     /**
      * Get the width of the PhotonImage.
      */
@@ -1123,11 +1169,58 @@ export function batch_process_images(images: Array<any>, processor: Function): A
  * Bilateral filter is a non-linear, edge-preserving, and noise-reducing smoothing filter.
  * Unlike Gaussian blur, it preserves edges while smoothing homogeneous regions.
  *
+ * # Algorithm Selection
+ * - When `fast_mode=true`: Uses Domain Transform algorithm (O(n) complexity, 10-50x faster)
+ * - When `fast_mode=false`: Uses standard bilateral filter with pre-computed weights (O(n*k²) complexity)
+ *
  * # Performance Optimizations
+ * Fast mode (Domain Transform):
+ * - Time Complexity: O(n) - independent of kernel size
+ * - Space Complexity: O(n)
+ * - Typical Speedup: 10-50x compared to standard mode
+ *
+ * Standard mode:
  * - Pre-computed spatial weights: O(1) lookup instead of exp() calculation
  * - Pre-computed range weights: O(1) lookup for color similarity
  * - Direct pixel access: Avoids expensive get_pixel() calls
- * - Separable approximation: Can be optimized further with separable kernel
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage to filter
+ * * `sigma_spatial` - Spatial domain standard deviation (controls smoothing radius)
+ * * `sigma_range` - Range domain standard deviation (controls edge sensitivity)
+ * * `fast_mode` - When true, uses fast Domain Transform algorithm (default: true for performance)
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::conv::bilateral_filter;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * // Fast mode (recommended for most use cases)
+ * bilateral_filter(&mut img, 5.0, 30.0, true);
+ * // Standard mode (when quality is paramount)
+ * bilateral_filter(&mut img, 5.0, 30.0, false);
+ * ```
+ */
+export function bilateral_filter(photon_image: PhotonImage, sigma_spatial: number, sigma_range: number, fast_mode: boolean): void;
+
+/**
+ * Fast bilateral filter using Domain Transform.
+ *
+ * This implementation uses the Domain Transform technique, which achieves O(n) complexity
+ * instead of O(n*k²) for the standard bilateral filter. It's particularly effective for
+ * real-time applications and large images.
+ *
+ * The algorithm works by:
+ * 1. Computing color-based distances between adjacent pixels
+ * 2. Applying recursive filtering along horizontal and vertical passes
+ * 3. Using a reference image to guide the filtering
+ *
+ * # Performance Characteristics
+ * - Time Complexity: O(n) where n is the number of pixels
+ * - Space Complexity: O(n) for temporary buffers
+ * - Typical Speedup: 10-50x compared to standard bilateral filter
  *
  * # Arguments
  * * `photon_image` - A PhotonImage to filter
@@ -1137,14 +1230,40 @@ export function batch_process_images(images: Array<any>, processor: Function): A
  * # Example
  *
  * ```no_run
- * use photon_rs::conv::bilateral_filter;
+ * use photon_rs::conv::bilateral_filter_fast;
  * use photon_rs::native::open_image;
  *
  * let mut img = open_image("img.jpg").expect("File should open");
- * bilateral_filter(&mut img, 5.0, 30.0);
+ * bilateral_filter_fast(&mut img, 5.0, 30.0);
  * ```
  */
-export function bilateral_filter(photon_image: PhotonImage, sigma_spatial: number, sigma_range: number, fast_mode: boolean): void;
+export function bilateral_filter_fast(photon_image: PhotonImage, sigma_spatial: number, sigma_range: number): void;
+
+/**
+ * Fast bilateral filter with adjustable iterations.
+ *
+ * This is a more flexible version of bilateral_filter_fast that allows
+ * control over the number of filtering iterations. More iterations
+ * produce stronger smoothing at the cost of additional computation.
+ *
+ * # Arguments
+ * * `photon_image` - A PhotonImage to filter
+ * * `sigma_spatial` - Spatial domain standard deviation (controls smoothing radius)
+ * * `sigma_range` - Range domain standard deviation (controls edge sensitivity)
+ * * `iterations` - Number of filtering iterations (1-10, default 3)
+ *
+ * # Example
+ *
+ * ```no_run
+ * use photon_rs::conv::bilateral_filter_fast_iter;
+ * use photon_rs::native::open_image;
+ *
+ * let mut img = open_image("img.jpg").expect("File should open");
+ * // 5 iterations for stronger smoothing
+ * bilateral_filter_fast_iter(&mut img, 5.0, 30.0, 5);
+ * ```
+ */
+export function bilateral_filter_fast_iter(photon_image: PhotonImage, sigma_spatial: number, sigma_range: number, iterations: number): void;
 
 /**
  * Blend two images together.
@@ -2685,26 +2804,6 @@ export function initThreadPool(num_threads: number): Promise<any>;
  */
 export function init_parallel(): void;
 
-/**
- * Initialize the thread pool for WebAssembly parallel processing.
- *
- * This function must be called from JavaScript before using any parallel processing features.
- * It sets up the worker threads for rayon parallel execution.
- *
- * # JavaScript Example
- * ```javascript
- * import { initThreadPool } from './photon_wasm.js';
- *
- * // Initialize with 4 threads
- * await initThreadPool(4);
- *
- * // Now you can use parallel processing features
- * ```
- *
- * # Arguments
- * * `num_threads` - Number of threads to use for parallel processing.
- *   If 0, it will use the hardware concurrency (number of logical CPUs).
- */
 export function init_thread_pool(num_threads: number): Promise<void>;
 
 /**
@@ -4419,6 +4518,7 @@ export interface InitOutput {
     readonly __wbg_get_brushconfig_color_r: (a: number) => number;
     readonly __wbg_get_brushconfig_pressure_sensitivity: (a: number) => number;
     readonly __wbg_get_brushconfig_smoothness: (a: number) => number;
+    readonly __wbg_get_brushstroke_config: (a: number) => number;
     readonly __wbg_get_strokepoint_pressure: (a: number) => number;
     readonly __wbg_get_strokepoint_timestamp: (a: number) => bigint;
     readonly __wbg_get_strokepoint_x: (a: number) => number;
@@ -4433,6 +4533,7 @@ export interface InitOutput {
     readonly __wbg_set_brushconfig_color_r: (a: number, b: number) => void;
     readonly __wbg_set_brushconfig_pressure_sensitivity: (a: number, b: number) => void;
     readonly __wbg_set_brushconfig_smoothness: (a: number, b: number) => void;
+    readonly __wbg_set_brushstroke_config: (a: number, b: number) => void;
     readonly __wbg_set_strokepoint_pressure: (a: number, b: number) => void;
     readonly __wbg_set_strokepoint_timestamp: (a: number, b: bigint) => void;
     readonly __wbg_set_strokepoint_x: (a: number, b: number) => void;
@@ -4445,9 +4546,9 @@ export interface InitOutput {
     readonly brushstroke_add_point: (a: number, b: number) => void;
     readonly brushstroke_clear_points: (a: number) => void;
     readonly brushstroke_get_config: (a: number) => number;
+    readonly brushstroke_get_points_count: (a: number) => number;
     readonly brushstroke_invalidate_path_cache: (a: number) => void;
     readonly brushstroke_new: (a: number) => number;
-    readonly brushstroke_point_count: (a: number) => number;
     readonly create_circular_mask: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly create_polygon_mask: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
     readonly imageprocessor_add_stroke_point: (a: number, b: number, c: number, d: number) => void;
@@ -4532,9 +4633,17 @@ export interface InitOutput {
     readonly imageprocessor_flip_horizontal: (a: number) => void;
     readonly imageprocessor_flip_vertical: (a: number) => void;
     readonly imageprocessor_get_bytes: (a: number, b: number) => void;
+    readonly imageprocessor_get_color_palette: (a: number, b: number) => number;
+    readonly imageprocessor_get_dominant_color: (a: number) => number;
     readonly imageprocessor_get_estimated_filesize: (a: number) => bigint;
     readonly imageprocessor_get_height: (a: number) => number;
+    readonly imageprocessor_get_pixel_brightness: (a: number, b: number, c: number) => number;
+    readonly imageprocessor_get_pixel_color: (a: number, b: number, c: number) => number;
+    readonly imageprocessor_get_pixel_color_hex: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly imageprocessor_get_raw_pixels: (a: number, b: number) => void;
+    readonly imageprocessor_get_region_average_brightness: (a: number, b: number, c: number, d: number, e: number) => number;
+    readonly imageprocessor_get_region_average_color: (a: number, b: number, c: number, d: number, e: number) => number;
+    readonly imageprocessor_get_region_dominant_color: (a: number, b: number, c: number, d: number, e: number) => number;
     readonly imageprocessor_get_stroke_count: (a: number) => number;
     readonly imageprocessor_get_width: (a: number) => number;
     readonly imageprocessor_hue_rotate: (a: number, b: number, c: number) => void;
@@ -4568,10 +4677,19 @@ export interface InitOutput {
     readonly init_thread_pool: (a: number) => number;
     readonly refine_mask_edges: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
     readonly strokepoint_new: (a: number, b: number, c: number, d: bigint) => number;
+    readonly brushstroke_point_count: (a: number) => number;
     readonly imageprocessor_apply_prewitt_horizontal: (a: number) => void;
     readonly imageprocessor_apply_sobel_global: (a: number) => void;
+    readonly __wbg_color_free: (a: number, b: number) => void;
+    readonly __wbg_get_color_a: (a: number) => number;
+    readonly __wbg_get_color_b: (a: number) => number;
+    readonly __wbg_get_color_g: (a: number) => number;
+    readonly __wbg_get_color_r: (a: number) => number;
     readonly __wbg_photonimage_free: (a: number, b: number) => void;
-    readonly __wbg_rgb_free: (a: number, b: number) => void;
+    readonly __wbg_set_color_a: (a: number, b: number) => void;
+    readonly __wbg_set_color_b: (a: number, b: number) => void;
+    readonly __wbg_set_color_g: (a: number, b: number) => void;
+    readonly __wbg_set_color_r: (a: number, b: number) => void;
     readonly add_noise_rand: (a: number) => void;
     readonly add_noise_rand_parallel: (a: number, b: number) => void;
     readonly add_noise_rand_with_strength: (a: number, b: number) => void;
@@ -4591,11 +4709,16 @@ export interface InitOutput {
     readonly base64_to_vec: (a: number, b: number, c: number) => void;
     readonly batch_process_images: (a: number, b: number, c: number) => void;
     readonly bilateral_filter: (a: number, b: number, c: number, d: number) => void;
+    readonly bilateral_filter_fast: (a: number, b: number, c: number) => void;
+    readonly bilateral_filter_fast_iter: (a: number, b: number, c: number, d: number) => void;
     readonly blend: (a: number, b: number, c: number, d: number) => void;
     readonly blend_fast: (a: number, b: number, c: number, d: number) => void;
     readonly box_blur: (a: number) => void;
     readonly cali: (a: number) => void;
+    readonly color_brightness: (a: number) => number;
     readonly color_horizontal_strips: (a: number, b: number, c: number) => void;
+    readonly color_new: (a: number, b: number, c: number, d: number) => number;
+    readonly color_to_hex: (a: number, b: number, c: number) => void;
     readonly color_vertical_strips: (a: number, b: number, c: number) => void;
     readonly colorize: (a: number) => void;
     readonly create_gradient: (a: number, b: number) => number;
@@ -4709,10 +4832,18 @@ export interface InitOutput {
     readonly photonimage_get_bytes_jpeg: (a: number, b: number, c: number) => void;
     readonly photonimage_get_bytes_webp: (a: number, b: number) => void;
     readonly photonimage_get_bytes_webp_with_quality: (a: number, b: number, c: number) => void;
+    readonly photonimage_get_color_palette: (a: number, b: number, c: number) => void;
+    readonly photonimage_get_dominant_color: (a: number) => number;
     readonly photonimage_get_estimated_filesize: (a: number) => bigint;
     readonly photonimage_get_height: (a: number) => number;
     readonly photonimage_get_image_data: (a: number) => number;
+    readonly photonimage_get_pixel_brightness: (a: number, b: number, c: number) => number;
+    readonly photonimage_get_pixel_color: (a: number, b: number, c: number) => number;
+    readonly photonimage_get_pixel_color_hex: (a: number, b: number, c: number, d: number, e: number) => void;
     readonly photonimage_get_raw_pixels: (a: number, b: number) => void;
+    readonly photonimage_get_region_average_brightness: (a: number, b: number, c: number, d: number, e: number) => number;
+    readonly photonimage_get_region_average_color: (a: number, b: number, c: number, d: number, e: number) => number;
+    readonly photonimage_get_region_dominant_color: (a: number, b: number, c: number, d: number, e: number) => number;
     readonly photonimage_get_width: (a: number) => number;
     readonly photonimage_init_thread_pool: (a: number) => number;
     readonly photonimage_new: (a: number, b: number, c: number, d: number) => number;
@@ -4742,7 +4873,6 @@ export interface InitOutput {
     readonly rgb_set_green: (a: number, b: number) => void;
     readonly rgb_set_red: (a: number, b: number) => void;
     readonly rgba_get_alpha: (a: number) => number;
-    readonly rgba_new: (a: number, b: number, c: number, d: number) => number;
     readonly rgba_set_alpha: (a: number, b: number) => void;
     readonly rotate: (a: number, b: number) => number;
     readonly run: (a: number) => void;
@@ -4793,6 +4923,8 @@ export interface InitOutput {
     readonly rgba_set_green: (a: number, b: number) => void;
     readonly blend_adaptive: (a: number, b: number, c: number, d: number) => void;
     readonly rgba_set_red: (a: number, b: number) => void;
+    readonly rgba_new: (a: number, b: number, c: number, d: number) => number;
+    readonly __wbg_rgb_free: (a: number, b: number) => void;
     readonly __wbg_rgba_free: (a: number, b: number) => void;
     readonly __wbg_wbg_rayon_poolbuilder_free: (a: number, b: number) => void;
     readonly initThreadPool: (a: number) => number;
@@ -4800,12 +4932,12 @@ export interface InitOutput {
     readonly wbg_rayon_poolbuilder_numThreads: (a: number) => number;
     readonly wbg_rayon_poolbuilder_receiver: (a: number) => number;
     readonly wbg_rayon_start_worker: (a: number) => void;
-    readonly __wasm_bindgen_func_elem_793: (a: number, b: number) => void;
-    readonly __wasm_bindgen_func_elem_1514: (a: number, b: number) => void;
-    readonly __wasm_bindgen_func_elem_1517: (a: number, b: number, c: number, d: number) => void;
-    readonly __wasm_bindgen_func_elem_2142: (a: number, b: number, c: number, d: number) => void;
-    readonly __wasm_bindgen_func_elem_794: (a: number, b: number, c: number) => void;
-    readonly __wasm_bindgen_func_elem_1515: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_907: (a: number, b: number) => void;
+    readonly __wasm_bindgen_func_elem_1686: (a: number, b: number) => void;
+    readonly __wasm_bindgen_func_elem_1689: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_2314: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_908: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_1687: (a: number, b: number, c: number) => void;
     readonly memory: WebAssembly.Memory;
     readonly __wbindgen_export: (a: number, b: number) => number;
     readonly __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
