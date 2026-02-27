@@ -488,6 +488,215 @@
             background: #555;
         }
 
+        /* 悬浮导航按钮 */
+        .quick-nav-toggle {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 16px 10px;
+            cursor: pointer;
+            z-index: 1000;
+            border-radius: 8px 0 0 8px;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            box-shadow: -2px 0 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .quick-nav-toggle:hover {
+            background: #5568d3;
+            box-shadow: -4px 0 12px rgba(102, 126, 234, 0.6);
+        }
+
+        .quick-nav-toggle.active {
+            background: #5568d3;
+        }
+
+        /* 导航面板 */
+        .quick-nav-panel {
+            position: fixed;
+            right: -320px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 300px;
+            max-height: 70vh;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px 0 0 8px;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            scrollbar-width: thin;
+            scrollbar-color: #555 #2a2a2a;
+        }
+
+        .quick-nav-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .quick-nav-panel::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+
+        .quick-nav-panel::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 3px;
+        }
+
+        .quick-nav-panel.active {
+            right: 0;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .quick-nav-header {
+            padding: 15px;
+            background: #333;
+            border-bottom: 1px solid #444;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .quick-nav-header h4 {
+            color: #e0e0e0;
+            font-size: 1em;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .quick-nav-items {
+            padding: 10px;
+        }
+
+        .quick-nav-item {
+            display: block;
+            width: 100%;
+            padding: 12px 14px;
+            margin-bottom: 4px;
+            background: transparent;
+            color: #c0c0c0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-align: left;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+        }
+
+        .quick-nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: #667eea;
+            border-radius: 0 2px 2px 0;
+            transition: height 0.2s ease;
+        }
+
+        .quick-nav-item:hover {
+            background: rgba(102, 126, 234, 0.15);
+            color: #e0e0e0;
+            padding-left: 18px;
+        }
+
+        .quick-nav-item:hover::before {
+            height: 60%;
+        }
+
+        .quick-nav-item:active {
+            background: rgba(102, 126, 234, 0.25);
+            transform: translateX(-3px);
+        }
+
+        .quick-nav-item.active-section {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            font-weight: 600;
+            padding-left: 18px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .quick-nav-item.active-section::before {
+            height: 70%;
+        }
+
+        /* 移动端优化 */
+        @media (max-width: 768px) {
+            .quick-nav-toggle {
+                right: 8px;
+                top: 100px;
+                padding: 12px 10px;
+                font-size: 16px;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
+            }
+
+            .quick-nav-panel {
+                right: -260px;
+                width: 260px;
+                max-height: 55vh;
+                top: 140px;
+                transform: none;
+            }
+
+            .quick-nav-panel.active {
+                right: 8px;
+            }
+
+            .quick-nav-item {
+                padding: 10px 12px;
+                font-size: 0.85em;
+            }
+
+            .quick-nav-header {
+                padding: 12px;
+            }
+
+            .quick-nav-header h4 {
+                font-size: 0.9em;
+            }
+        }
+
+        /* 超小屏幕优化 */
+        @media (max-width: 480px) {
+            .quick-nav-toggle {
+                right: 4px;
+                top: 90px;
+                padding: 10px 8px;
+                font-size: 14px;
+            }
+
+            .quick-nav-panel {
+                right: -240px;
+                width: 240px;
+                max-height: 50vh;
+                top: 130px;
+            }
+
+            .quick-nav-panel.active {
+                right: 4px;
+            }
+
+            .quick-nav-item {
+                padding: 8px 10px;
+                font-size: 0.8em;
+            }
+        }
+
         .sidebar {
             width: 320px;
             background: #333;
@@ -689,6 +898,21 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        @keyframes markerPulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.3);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
         }
 
         .slider-container {
@@ -1379,6 +1603,31 @@
 
     <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
 
+    <!-- 悬浮快速导航 -->
+    <button class="quick-nav-toggle" id="quickNavToggle" onclick="toggleQuickNav()" title="快速导航">
+        ≡
+    </button>
+    <div class="quick-nav-panel" id="quickNavPanel">
+        <div class="quick-nav-header">
+            <h4>快速导航</h4>
+        </div>
+        <div style="padding: 10px; border-bottom: 1px solid #444;">
+            <input
+                type="text"
+                id="quickNavSearch"
+                placeholder="搜索功能..."
+                style="width: 100%; padding: 8px 12px; background: #333; color: #e0e0e0; border: 1px solid #555; border-radius: 6px; font-size: 0.85em;"
+                oninput="filterQuickNavItems(this.value)"
+            />
+        </div>
+        <div class="quick-nav-items" id="quickNavItems">
+            <!-- 导航项将通过JavaScript动态生成 -->
+        </div>
+        <div style="padding: 8px 10px; border-top: 1px solid #444; font-size: 0.75em; color: #888;">
+            提示：使用 ↑ ↓ 键快速切换
+        </div>
+    </div>
+
     <div class="main-content">
             <div class="sidebar" id="sidebar">
                 <div id="sidebarContent">
@@ -1699,6 +1948,27 @@
                         <label>蓝色通道 (-255 ~ 255)</label>
                         <input type="range" id="blueChannelSlider" min="-255" max="255" value="0" oninput="applyAdjustments()" disabled>
                         <div class="slider-value"><span id="blueChannelValue">0</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>取色器</h3>
+                    <div class="color-picker-container">
+                        <div class="color-display" id="colorDisplay" style="background: #000000; border: 2px solid #555; border-radius: 6px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.2s ease;">
+                            <div style="color: #fff; font-size: 0.9em; font-weight: 600; margin-bottom: 8px;">点击画布取色</div>
+                            <div id="colorValue" style="color: #fff; font-size: 1.1em; font-weight: 700; font-family: monospace;">#000000</div>
+                            <div id="colorRgbValue" style="color: #ccc; font-size: 0.85em; margin-top: 4px; font-family: monospace;">RGB(0, 0, 0)</div>
+                        </div>
+                        <div class="btn-group" style="margin-top: 10px;">
+                            <button class="btn" id="enableColorPickerBtn" onclick="enableColorPickerMode()" disabled>启用取色器</button>
+                            <button class="btn" id="disableColorPickerBtn" onclick="disableColorPickerMode()" style="display: none;">禁用取色器</button>
+                        </div>
+                        <div class="color-palette" style="margin-top: 10px;">
+                            <div style="color: #e0e0e0; font-size: 0.85em; margin-bottom: 6px; font-weight: 600;">图像主色调</div>
+                            <div id="dominantColorDisplay" style="display: flex; gap: 5px; flex-wrap: wrap;">
+                                <div class="palette-color" style="width: 40px; height: 40px; border-radius: 4px; border: 2px solid #555; background: #888; transition: all 0.2s ease; cursor: pointer;" title="RGB(136, 136, 136)"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2714,12 +2984,16 @@
                 this.isCropMode = false;
                 this.isPolygonCropMode = false;
                 this.isRectSelectionMode = false;
+                this.isColorPickerMode = false;
 
                 this.brushSettings = {
                     color: '#000000',
                     width: 5,
                     type: 'basic'
                 };
+
+                this.pickedColor = { r: 0, g: 0, b: 0, hex: '#000000' };
+                this.colorPalette = [];
 
                 this.polygonPoints = [];
                 this.cropBox = { x: 0, y: 0, width: 0, height: 0 };
@@ -2750,6 +3024,7 @@
                 this.isCropMode = false;
                 this.isPolygonCropMode = false;
                 this.isRectSelectionMode = false;
+                this.isColorPickerMode = false;
             }
 
             resetTempData() {
@@ -3147,6 +3422,9 @@
 
             appState.processor.clear_strokes();
             updateCanvas();
+
+            // 更新主色调显示
+            updateDominantColors();
         }
 
         // 更新撤销/重做按钮状态
@@ -3230,6 +3508,27 @@
                 enableButtons();
                 // 初始化全局事件监听器
                 initGlobalEvents();
+
+                // 检查快速导航相关元素是否存在
+                const quickNavToggle = document.getElementById('quickNavToggle');
+                const quickNavPanel = document.getElementById('quickNavPanel');
+                const quickNavItems = document.getElementById('quickNavItems');
+
+                console.log('快速导航元素检查:');
+                console.log('- quickNavToggle存在:', !!quickNavToggle);
+                console.log('- quickNavPanel存在:', !!quickNavPanel);
+                console.log('- quickNavItems存在:', !!quickNavItems);
+
+                if (quickNavToggle && quickNavPanel && quickNavItems) {
+                    console.log('✅ 快速导航元素全部存在，开始初始化...');
+                    // 初始化快速导航
+                    setTimeout(() => {
+                        initializeQuickNav();
+                    }, 100);
+                } else {
+                    console.error('❌ 快速导航元素不完整，跳过初始化');
+                }
+
                 Logger.log('Application initialized successfully');
             } catch (error) {
                 console.error('Failed to initialize application:', error);
@@ -3516,16 +3815,22 @@
 
         // 点击处理函数
         function handleCanvasClick(e) {
+            // 取色器模式：点击画布取色
+            if (appState.isColorPickerMode) {
+                pickColorAtPosition(e);
+                return;
+            }
+
             // 点击非水印区域确认应用
             if (!appState.isWatermarkMode) return;
-            
+
             const watermarkPreviewEl = document.getElementById('watermarkPreview');
             if (!watermarkPreviewEl || watermarkPreviewEl.style.display === 'none') return;
-            
+
             const rect = watermarkPreviewEl.getBoundingClientRect();
             const isInWatermark = e.clientX >= rect.left && e.clientX <= rect.right &&
                                e.clientY >= rect.top && e.clientY <= rect.bottom;
-            
+
             if (!isInWatermark && !appState.isWatermarkDragging && !appState.isWatermarkResizing) {
                 confirmWatermark();
             }
@@ -3541,7 +3846,272 @@
             }
         }
 
-        // 启用按钮
+        // ==================== 取色器功能 ====================
+
+        /**
+         * 启用取色器模式
+         */
+        window.enableColorPickerMode = function() {
+            if (!appState.processor) {
+                alert('请先加载图像');
+                return;
+            }
+
+            appState.isColorPickerMode = true;
+            appState.resetModes();
+            appState.isColorPickerMode = true; // 保持取色器模式
+
+            const enableBtn = document.getElementById('enableColorPickerBtn');
+            const disableBtn = document.getElementById('disableColorPickerBtn');
+            const colorDisplay = document.getElementById('colorDisplay');
+
+            enableBtn.style.display = 'none';
+            disableBtn.style.display = 'block';
+            colorDisplay.style.borderColor = '#667eea';
+            colorDisplay.style.boxShadow = '0 0 10px rgba(102, 126, 234, 0.5)';
+
+            // 改变鼠标样式为吸管
+            document.getElementById('imageCanvas').style.cursor = 'crosshair';
+
+            Logger.log('取色器模式已启用');
+        }
+
+        /**
+         * 禁用取色器模式
+         */
+        window.disableColorPickerMode = function() {
+            appState.isColorPickerMode = false;
+
+            const enableBtn = document.getElementById('enableColorPickerBtn');
+            const disableBtn = document.getElementById('disableColorPickerBtn');
+            const colorDisplay = document.getElementById('colorDisplay');
+
+            enableBtn.style.display = 'block';
+            disableBtn.style.display = 'none';
+            colorDisplay.style.borderColor = '#555';
+            colorDisplay.style.boxShadow = 'none';
+
+            // 恢复鼠标样式
+            document.getElementById('imageCanvas').style.cursor = 'default';
+
+            Logger.log('取色器模式已禁用');
+        }
+
+        /**
+         * 在指定位置取色
+         * @param {MouseEvent} e - 鼠标事件
+         */
+        window.pickColorAtPosition = function(e) {
+            if (!appState.processor) return;
+
+            const canvas = document.getElementById('imageCanvas');
+            const rect = canvas.getBoundingClientRect();
+
+            // 计算点击位置相对于画布的坐标
+            const x = Math.floor(e.clientX - rect.left);
+            const y = Math.floor(e.clientY - rect.top);
+
+            // 转换为图像坐标（考虑画布缩放）
+            const scaleX = appState.processor.get_width() / rect.width;
+            const scaleY = appState.processor.get_height() / rect.height;
+
+            const imageX = Math.floor(x * scaleX);
+            const imageY = Math.floor(y * scaleY);
+
+            // 检查坐标是否在图像范围内
+            if (imageX < 0 || imageX >= appState.processor.get_width() ||
+                imageY < 0 || imageY >= appState.processor.get_height()) {
+                Logger.warn('取色位置超出图像范围');
+                return;
+            }
+
+            // 使用WASM API获取像素颜色
+            const colorData = appState.processor.get_pixel_color(imageX, imageY);
+
+            if (colorData && colorData.length >= 3) {
+                const r = colorData[0];
+                const g = colorData[1];
+                const b = colorData[2];
+                const a = colorData[3] !== undefined ? colorData[3] : 255;
+
+                // 转换为十六进制颜色
+                const hex = rgbToHex(r, g, b);
+
+                // 更新应用状态
+                appState.pickedColor = { r, g, b, hex };
+
+                // 更新UI显示
+                updateColorDisplay(r, g, b, hex);
+
+                // 显示取色点标记
+                showColorPickerMarker(x, y, hex);
+
+                Logger.log(`取色成功: RGB(${r}, ${g}, ${b}) - ${hex}`);
+            } else {
+                Logger.error('取色失败：无法获取像素颜色');
+            }
+        }
+
+        /**
+         * 显示取色点标记
+         * @param {number} x - 画布上的X坐标
+         * @param {number} y - 画布上的Y坐标
+         * @param {string} hex - 取色的十六进制值
+         */
+        function showColorPickerMarker(x, y, hex) {
+            // 移除旧的标记
+            const oldMarker = document.getElementById('colorPickerMarker');
+            if (oldMarker) {
+                oldMarker.remove();
+            }
+
+            const canvasContainer = document.getElementById('canvasContainer');
+            const marker = document.createElement('div');
+            marker.id = 'colorPickerMarker';
+            marker.style.cssText = `
+                position: absolute;
+                left: ${x}px;
+                top: ${y}px;
+                width: 12px;
+                height: 12px;
+                border: 2px solid white;
+                border-radius: 50%;
+                background: ${hex};
+                transform: translate(-50%, -50%);
+                pointer-events: none;
+                z-index: 100;
+                box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+                animation: markerPulse 0.3s ease-out;
+            `;
+
+            canvasContainer.appendChild(marker);
+
+            // 2秒后自动移除标记
+            setTimeout(() => {
+                const m = document.getElementById('colorPickerMarker');
+                if (m) {
+                    m.style.transition = 'opacity 0.3s ease';
+                    m.style.opacity = '0';
+                    setTimeout(() => m.remove(), 300);
+                }
+            }, 2000);
+        }
+
+        /**
+         * 更新颜色显示
+         * @param {number} r - 红色值
+         * @param {number} g - 绿色值
+         * @param {number} b - 蓝色值
+         * @param {string} hex - 十六进制颜色值
+         */
+        function updateColorDisplay(r, g, b, hex) {
+            const colorDisplay = document.getElementById('colorDisplay');
+            const colorValue = document.getElementById('colorValue');
+            const colorRgbValue = document.getElementById('colorRgbValue');
+
+            colorDisplay.style.background = hex;
+            colorValue.textContent = hex.toUpperCase();
+            colorValue.style.color = (r * 0.299 + g * 0.587 + b * 0.114) > 128 ? '#000000' : '#ffffff';
+            colorRgbValue.textContent = `RGB(${r}, ${g}, ${b})`;
+        }
+
+        /**
+         * RGB转十六进制颜色
+         * @param {number} r - 红色值
+         * @param {number} g - 绿色值
+         * @param {number} b - 蓝色值
+         * @returns {string} 十六进制颜色值
+         */
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
+        }
+
+        /**
+         * 获取图像的主色调并显示
+         */
+        function updateDominantColors() {
+            if (!appState.processor) return;
+
+            try {
+                // 获取颜色调色板（5种主要颜色）
+                const palette = appState.processor.get_color_palette(5);
+
+                Logger.log('调色板数据:', palette);
+                Logger.log('调色板类型:', typeof palette);
+                Logger.log('调色板长度:', palette ? palette.length : 0);
+
+                if (palette && palette.length > 0) {
+                    // 检查第一个元素的结构
+                    Logger.log('第一个颜色对象:', palette[0]);
+                    Logger.log('第一个颜色类型:', typeof palette[0]);
+
+                    const paletteHtml = palette.map(color => {
+                        // 颜色数据是Uint8Array格式: [r, g, b, a]
+                        let r, g, b;
+                        if (color instanceof Uint8Array) {
+                            r = color[0];
+                            g = color[1];
+                            b = color[2];
+                        } else if (color && typeof color === 'object') {
+                            // 也可能是Color对象，尝试访问属性
+                            r = color.r !== undefined ? color.r : color[0];
+                            g = color.g !== undefined ? color.g : color[1];
+                            b = color.b !== undefined ? color.b : color[2];
+                        } else {
+                            Logger.error('未知的颜色格式:', color);
+                            r = 128;
+                            g = 128;
+                            b = 128;
+                        }
+
+                        const hex = rgbToHex(r, g, b);
+                        Logger.log(`处理颜色: RGB(${r}, ${g}, ${b}) -> ${hex}`);
+                        return `
+                            <div class="palette-color"
+                                 style="width: 40px; height: 40px; border-radius: 4px; border: 2px solid #555; background: ${hex}; transition: all 0.2s ease; cursor: pointer;"
+                                 title="RGB(${r}, ${g}, ${b})"
+                                 onclick="copyColorToClipboard('${hex}')">
+                            </div>
+                        `;
+                    }).join('');
+
+                    const dominantColorDisplay = document.getElementById('dominantColorDisplay');
+                    dominantColorDisplay.innerHTML = paletteHtml;
+
+                    // 记录第一个颜色作为主色调
+                    if (palette[0]) {
+                        const dominant = palette[0];
+                        const r = dominant[0];
+                        const g = dominant[1];
+                        const b = dominant[2];
+                        Logger.log(`主色调: RGB(${r}, ${g}, ${b}) - ${rgbToHex(r, g, b)}`);
+                    }
+
+                    Logger.log('颜色调色板已更新');
+                }
+            } catch (error) {
+                Logger.error('获取主色调失败:', error);
+            }
+        }
+
+        /**
+         * 复制颜色到剪贴板
+         * @param {string} hex - 十六进制颜色值
+         */
+        window.copyColorToClipboard = function(hex) {
+            navigator.clipboard.writeText(hex).then(() => {
+                Logger.log(`颜色 ${hex} 已复制到剪贴板`);
+                alert(`颜色 ${hex} 已复制到剪贴板`);
+            }).catch(err => {
+                Logger.error('复制颜色失败:', err);
+                alert('复制颜色失败，请手动复制');
+            });
+        }
+
+// 启用按钮
         function enableButtons() {
             Logger.log('enableButtons() 被调用，appState.currentImage:', !!appState.currentImage);
             const buttons = document.querySelectorAll('.btn, .toolbar-btn');
@@ -3622,6 +4192,9 @@
                 document.getElementById('sidebarUndoBrushBtn').disabled = true;
                 document.getElementById('sidebarClearBrushBtn').disabled = true;
             }
+
+            // 启用取色器控件
+            document.getElementById('enableColorPickerBtn').disabled = !appState.currentImage;
         }
 
         // 切换侧边栏
@@ -3637,6 +4210,223 @@
                 toggle.style.left = '320px';
             }
         }
+
+        // 切换快速导航面板
+        window.toggleQuickNav = function() {
+            const panel = document.getElementById('quickNavPanel');
+            const toggle = document.getElementById('quickNavToggle');
+            panel.classList.toggle('active');
+            toggle.classList.toggle('active');
+        }
+
+        // 初始化快速导航
+        window.initializeQuickNav = function() {
+            console.log('===== 快速导航初始化开始 =====');
+
+            const sidebar = document.getElementById('sidebar');
+            const sidebarContent = document.getElementById('sidebarContent');
+            const navItemsContainer = document.getElementById('quickNavItems');
+
+            console.log('DOM元素检查:');
+            console.log('- sidebar存在:', !!sidebar);
+            console.log('- sidebarContent存在:', !!sidebarContent);
+            console.log('- navItemsContainer存在:', !!navItemsContainer);
+
+            if (!sidebarContent) {
+                console.error('❌ 找不到sidebarContent元素');
+                return;
+            }
+
+            navItemsContainer.innerHTML = '';
+
+            // 只获取sidebarContent内部的section
+            const sections = sidebarContent.querySelectorAll('.section');
+            console.log('✅ 找到的section数量:', sections.length);
+
+            if (sections.length === 0) {
+                console.warn('没有找到任何section元素');
+                navItemsContainer.innerHTML = '<div style="padding: 20px; color: #888; text-align: center;">暂无导航项</div>';
+                return;
+            }
+
+            sections.forEach((section, index) => {
+                const title = section.querySelector('h3');
+                if (title) {
+                    // 为section添加唯一ID（如果没有的话）
+                    if (!section.id) {
+                        section.id = `section-${index}`;
+                    }
+
+                    const navItem = document.createElement('button');
+                    navItem.className = 'quick-nav-item';
+                    navItem.textContent = title.textContent.trim();
+                    navItem.dataset.sectionId = section.id;
+                    navItem.onclick = () => scrollToSection(section, navItem);
+                    navItemsContainer.appendChild(navItem);
+
+                    console.log(`添加导航项: ${title.textContent.trim()} (ID: ${section.id})`);
+                } else {
+                    console.warn(`Section ${index} 没有找到h3标题`);
+                }
+            });
+
+            // 移除旧的监听器（避免重复添加）
+            const oldHandler = sidebar._scrollHandler;
+            if (oldHandler) {
+                sidebar.removeEventListener('scroll', oldHandler);
+            }
+
+            // 添加滚动监听以高亮当前可见的section
+            sidebar._scrollHandler = updateActiveNavItem;
+            sidebar.addEventListener('scroll', sidebar._scrollHandler);
+
+            // 初始化时高亮第一个可见的section
+            setTimeout(updateActiveNavItem, 100);
+        }
+
+        // 滚动到指定section
+        window.scrollToSection = function(section, navItem) {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarRect = sidebar.getBoundingClientRect();
+            const sectionRect = section.getBoundingClientRect();
+            const scrollTop = sidebar.scrollTop;
+
+            // 计算目标滚动位置,使section居中显示
+            let targetScroll = scrollTop + (sectionRect.top - sidebarRect.top) - (sidebarRect.height / 2) + (sectionRect.height / 2);
+
+            // 边界检查：确保不会滚动到顶部以下或底部以上
+            const maxScroll = sidebar.scrollHeight - sidebar.clientHeight;
+            targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+
+            sidebar.scrollTo({
+                top: targetScroll,
+                behavior: 'smooth'
+            });
+
+            // 更新活动状态
+            document.querySelectorAll('.quick-nav-item').forEach(item => {
+                item.classList.remove('active-section');
+            });
+            if (navItem) {
+                navItem.classList.add('active-section');
+            }
+
+            // 关闭导航面板
+            setTimeout(() => {
+                const panel = document.getElementById('quickNavPanel');
+                const toggle = document.getElementById('quickNavToggle');
+                panel.classList.remove('active');
+                toggle.classList.remove('active');
+            }, 300);
+        }
+
+        // 更新活动导航项
+        window.updateActiveNavItem = function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarRect = sidebar.getBoundingClientRect();
+            const sections = document.querySelectorAll('.section');
+            const navItems = document.querySelectorAll('.quick-nav-item');
+
+            let maxVisibility = 0;
+            let activeSectionId = null;
+
+            sections.forEach((section) => {
+                const sectionRect = section.getBoundingClientRect();
+                const visibleHeight = Math.min(sectionRect.bottom, sidebarRect.bottom) - Math.max(sectionRect.top, sidebarRect.top);
+                const visibility = visibleHeight / sectionRect.height;
+
+                if (visibility > maxVisibility && visibility > 0.3) {
+                    maxVisibility = visibility;
+                    activeSectionId = section.id;
+                }
+            });
+
+            navItems.forEach((item) => {
+                if (item.dataset.sectionId === activeSectionId) {
+                    item.classList.add('active-section');
+                } else {
+                    item.classList.remove('active-section');
+                }
+            });
+        }
+
+        // 点击其他区域关闭快速导航面板
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('quickNavPanel');
+            const toggle = document.getElementById('quickNavToggle');
+            if (!panel.contains(e.target) && !toggle.contains(e.target)) {
+                panel.classList.remove('active');
+                toggle.classList.remove('active');
+            }
+        });
+
+        // 搜索过滤导航项
+        window.filterQuickNavItems = function(searchText) {
+            const navItems = document.querySelectorAll('.quick-nav-item');
+            const lowerSearchText = searchText.toLowerCase().trim();
+
+            navItems.forEach(item => {
+                const itemText = item.textContent.toLowerCase();
+                if (itemText.includes(lowerSearchText)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // 键盘导航支持
+        document.addEventListener('keydown', (e) => {
+            const panel = document.getElementById('quickNavPanel');
+            const toggle = document.getElementById('quickNavToggle');
+
+            // 只有当导航面板打开时才响应键盘
+            if (!panel.classList.contains('active')) {
+                return;
+            }
+
+            // Escape键关闭面板
+            if (e.key === 'Escape') {
+                panel.classList.remove('active');
+                toggle.classList.remove('active');
+                return;
+            }
+
+            // 上下箭头键导航
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+
+                const navItems = Array.from(document.querySelectorAll('.quick-nav-item')).filter(
+                    item => item.style.display !== 'none'
+                );
+
+                if (navItems.length === 0) return;
+
+                let currentIndex = navItems.findIndex(item => item.classList.contains('active-section'));
+                let newIndex;
+
+                if (e.key === 'ArrowUp') {
+                    newIndex = currentIndex > 0 ? currentIndex - 1 : navItems.length - 1;
+                } else {
+                    newIndex = currentIndex < navItems.length - 1 ? currentIndex + 1 : 0;
+                }
+
+                // 移除旧的活动状态
+                navItems.forEach(item => item.classList.remove('active-section'));
+
+                // 设置新的活动状态
+                const activeItem = navItems[newIndex];
+                activeItem.classList.add('active-section');
+                activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+                // Enter键确认选择
+            } else if (e.key === 'Enter') {
+                const activeItem = document.querySelector('.quick-nav-item.active-section');
+                if (activeItem) {
+                    activeItem.click();
+                }
+            }
+        });
 
         // 切换下拉菜单
         window.toggleDropdown = function(dropdownId) {
@@ -4230,6 +5020,9 @@
                         Logger.log('调用 enableButtons()...');
                         enableButtons();
                         Logger.log('enableButtons() 调用完成');
+
+                        // 更新主色调显示
+                        updateDominantColors();
                     } catch (error) {
                         console.error('Failed to load image:', error);
                         console.error('错误详情:', error.stack);
