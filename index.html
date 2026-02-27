@@ -6579,6 +6579,22 @@
 
             // 使用当前的 appState.processor（已经应用了抠图效果）
             updateCanvas();
+            
+            // 清理多边形抠图的状态
+            if (currentMaskType === 'polygon') {
+                appState.polygonPoints = [];
+                const cropOverlay = document.getElementById('cropOverlay');
+                if (cropOverlay) {
+                    cropOverlay.style.display = 'none';
+                    const ctx = cropOverlay.getContext('2d');
+                    ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
+                }
+                const canvas = document.getElementById('imageCanvas');
+                if (canvas) canvas.style.cursor = 'default';
+                const btn = document.getElementById('polygonCropBtn');
+                if (btn) btn.classList.remove('active');
+            }
+            
             hideMaskPreviewControls();
             currentMaskType = null;
             maskPreviewImageData = null;
