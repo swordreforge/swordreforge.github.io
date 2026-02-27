@@ -4001,6 +4001,11 @@
 
         // 触摸开始处理函数（移动端）
         function handleCanvasTouchStart(e) {
+            // 如果没有图片且点击的是 emptyState 或其子元素，不阻止默认行为，允许点击触发上传
+            if (!appState.currentImage && e.target.closest('#emptyState')) {
+                return;
+            }
+
             e.preventDefault();
 
             // 双指缩放
@@ -4035,6 +4040,11 @@
 
         // 触摸移动处理函数（移动端）
         function handleCanvasTouchMove(e) {
+            // 如果没有图片且触摸的是 emptyState 或其子元素，不阻止默认行为
+            if (!appState.currentImage && e.target.closest('#emptyState')) {
+                return;
+            }
+
             e.preventDefault();
 
             // 双指缩放
