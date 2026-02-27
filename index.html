@@ -4185,6 +4185,12 @@
                 select.disabled = !appState.currentImage;
             });
 
+            // 启用复选框
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.disabled = !appState.currentImage;
+            });
+
             // 启用文本绘制控件
             document.getElementById('textInput').disabled = !appState.currentImage;
             document.getElementById('fontSizeSlider').disabled = !appState.currentImage;
