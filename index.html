@@ -7087,6 +7087,11 @@
             if (cropOverlay) {
                 const newCropOverlay = cropOverlay.cloneNode(true);
                 cropOverlay.parentNode.replaceChild(newCropOverlay, cropOverlay);
+                
+                // 重新添加多边形抠图的事件监听器
+                newCropOverlay.addEventListener('click', handlePolygonClick);
+                newCropOverlay.addEventListener('contextmenu', handlePolygonContextMenu);
+                newCropOverlay.addEventListener('dblclick', handlePolygonDoubleClick);
             }
         }
 
