@@ -20,6 +20,8 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
+            touch-action: none;
+            overscroll-behavior: none;
         }
 
         /* 应用标题栏 */
@@ -872,6 +874,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            touch-action: none;
         }
 
         #imageCanvas {
@@ -879,6 +882,13 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+            touch-action: none;
+            transition: transform 0.05s ease-out;
+            cursor: grab;
+        }
+
+        #imageCanvas:active {
+            cursor: grabbing;
         }
 
         .info-panel {
@@ -1614,10 +1624,38 @@
                         <path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.3"></path>
                     </svg>
                 </button>
-                <button class="toolbar-action-btn btn-danger" onclick="clearImage()" id="toolbarClearBtn" disabled title="清除图片">
+                <button class="toolbar-action-btn" onclick="clearImage()" id="toolbarClearBtn" disabled title="清除图片">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="3 6 5 6 21 6"></polyline>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+                <div class="toolbar-divider"></div>
+                <button class="toolbar-action-btn" onclick="zoomOut()" title="缩小">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                </button>
+                <button class="toolbar-action-btn" onclick="resetZoom()" title="重置缩放">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <circle cx="11" cy="11" r="3"></circle>
+                    </svg>
+                </button>
+                <button class="toolbar-action-btn" onclick="zoomIn()" title="放大">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="11" y1="8" x2="11" y2="14"></line>
+                        <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                </button>
+                <button class="toolbar-action-btn" onclick="fitToScreen()" title="适应屏幕">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+                        <path d="M21 8V5a2 2 0 0 0-2-2h-3"></path>
+                        <path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
+                        <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
                     </svg>
                 </button>
             </div>
@@ -3055,6 +3093,15 @@
                 // 定时器 ID
                 this.adjustmentTimeout = null;
                 this.rotationTimeout = null;
+
+                // 缩放和平移状态
+                this.zoom = 1;
+                this.panX = 0;
+                this.panY = 0;
+                this.isPanning = false;
+                this.lastPanPoint = { x: 0, y: 0 };
+                this.pinchStartDistance = 0;
+                this.pinchStartZoom = 1;
             }
 
             resetModes() {
@@ -3210,7 +3257,6 @@
                     totalRaw: memory.totalJSHeapSize,
                     limitRaw: memory.jsHeapSizeLimit
                 };
-                Logger.log('📊 内存使用:', memoryInfo);
                 return memoryInfo;
             } else {
                 Logger.warn('⚠️ 内存监控不可用（仅 Chrome/Edge 支持）');
@@ -3276,7 +3322,6 @@
         window.stopMemoryMonitor = stopMemoryMonitor;
 
         // 初始内存检查
-        Logger.log('🔍 初始内存状态:');
         monitorMemory();
 
         // 在页面卸载时执行清理
@@ -3287,14 +3332,12 @@
             try {
                 // 检测SharedArrayBuffer支持（并行化需要）
                 const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
-                Logger.log('SharedArrayBuffer support:', hasSharedArrayBuffer);
 
                 // 从 photon_wasm.js 导入初始化函数和所有导出
                 const { default: initWasm, ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint, wasm_register_font, wasm_is_font_registered, wasm_get_registered_fonts, wasm_unregister_font, wasm_clear_fonts, initThreadPool } = await import('./pkg/photon_wasm.js?v=27');
 
                 // 调用初始化函数来加载 WASM 模块
                 await initWasm();
-                Logger.log('WASM module loaded successfully');
 
                 // 只在支持SharedArrayBuffer时尝试初始化线程池
                 if (hasSharedArrayBuffer) {
@@ -3305,8 +3348,7 @@
                         const messageEl = document.getElementById('loadingMessage');
                         messageEl.textContent = `正在初始化多线程加速模块（${numThreads} 线程）...`;
                         await initThreadPool(numThreads);
-                        Logger.log(`✓ WASM thread pool initialized with ${numThreads} threads (parallelization enabled)`);
-                    } catch (threadError) {
+                        } catch (threadError) {
                         Logger.warn('⚠ Thread pool initialization failed:', threadError.message);
                         Logger.info('Running in single-threaded mode (parallelization disabled)');
                         Logger.info('To enable parallelization, the server must send these headers:');
@@ -3544,7 +3586,6 @@
             try {
                 // WASM 模块已在 loadWasmModule 中加载并初始化
                 // 这里只需要启用按钮和初始化事件监听器
-                Logger.log('Initializing application...');
                 enableButtons();
                 // 初始化全局事件监听器
                 initGlobalEvents();
@@ -3554,22 +3595,12 @@
                 const quickNavPanel = document.getElementById('quickNavPanel');
                 const quickNavItems = document.getElementById('quickNavItems');
 
-                console.log('快速导航元素检查:');
-                console.log('- quickNavToggle存在:', !!quickNavToggle);
-                console.log('- quickNavPanel存在:', !!quickNavPanel);
-                console.log('- quickNavItems存在:', !!quickNavItems);
-
                 if (quickNavToggle && quickNavPanel && quickNavItems) {
-                    console.log('✅ 快速导航元素全部存在，开始初始化...');
                     // 初始化快速导航
                     setTimeout(() => {
                         initializeQuickNav();
                     }, 100);
-                } else {
-                    console.error('❌ 快速导航元素不完整，跳过初始化');
                 }
-
-                Logger.log('Application initialized successfully');
             } catch (error) {
                 console.error('Failed to initialize application:', error);
                 alert('应用初始化失败');
@@ -3587,6 +3618,14 @@
             eventManager.on(canvasContainer, 'mouseleave', handleCanvasMouseLeave);
             eventManager.on(canvasContainer, 'click', handleCanvasClick);
             eventManager.on(canvasContainer, 'mousedown', handleCanvasMouseDown);
+
+            // 添加触摸事件支持（移动端）
+            eventManager.on(canvasContainer, 'touchstart', handleCanvasTouchStart, { passive: false });
+            eventManager.on(canvasContainer, 'touchmove', handleCanvasTouchMove, { passive: false });
+            eventManager.on(canvasContainer, 'touchend', handleCanvasTouchEnd, { passive: false });
+
+            // 添加滚轮缩放事件
+            eventManager.on(canvasContainer, 'wheel', handleCanvasWheel, { passive: false });
         }
 
         // 获取 Canvas 缩放比例
@@ -3600,17 +3639,61 @@
             };
         }
 
-        // 鼠标按下处理函数
-        function handleCanvasMouseDown(e) {
-            if (e.button !== 0) return; // 只处理左键
-
+        // 将屏幕坐标转换为画布原始坐标（考虑缩放和平移）
+        function screenToCanvas(screenX, screenY) {
             const canvasContainer = document.getElementById('canvasContainer');
-            if (!canvasContainer) return;
+            if (!canvasContainer) return { x: screenX, y: screenY };
 
             const rect = canvasContainer.getBoundingClientRect();
-            const scale = getCanvasScale();
-            const mouseOrigX = (e.clientX - rect.left) * scale.scaleX;
-            const mouseOrigY = (e.clientY - rect.top) * scale.scaleY;
+            const canvas = document.getElementById('imageCanvas');
+
+            // 计算相对于容器的坐标
+            const relativeX = screenX - rect.left;
+            const relativeY = screenY - rect.top;
+
+            // 如果缩放为1，直接使用原始计算方式（考虑画布在容器中的实际位置）
+            if (appState.zoom === 1) {
+                const canvasRect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / canvasRect.width;
+                const scaleY = canvas.height / canvasRect.height;
+                return {
+                    x: (screenX - canvasRect.left) * scaleX,
+                    y: (screenY - canvasRect.top) * scaleY
+                };
+            }
+
+            // 如果有缩放，考虑平移和缩放
+            const canvasX = (relativeX - appState.panX) / appState.zoom;
+            const canvasY = (relativeY - appState.panY) / appState.zoom;
+
+            return { x: canvasX, y: canvasY };
+        }
+
+        // 鼠标按下处理函数
+        function handleCanvasMouseDown(e) {
+            // 中键（button 1）用于拖动平移
+            if (e.button === 1) {
+                e.preventDefault();
+                appState.isPanning = true;
+                appState.lastPanPoint = { x: e.clientX, y: e.clientY };
+                return;
+            }
+
+            if (e.button !== 0) return; // 只处理左键
+
+            // 如果已缩放（非1x），且不在特殊模式下，则准备拖动平移
+            if (appState.zoom !== 1 && !appState.isBrushMode && !appState.isWatermarkMode &&
+                !appState.isTextMode && !appState.isCropMode && !appState.isPolygonCropMode &&
+                !appState.isRectSelectionMode && !appState.isColorPickerMode) {
+                appState.isPanning = true;
+                appState.lastPanPoint = { x: e.clientX, y: e.clientY };
+                return;
+            }
+
+            // 将屏幕坐标转换为画布坐标
+            const canvasPos = screenToCanvas(e.clientX, e.clientY);
+            const mouseOrigX = canvasPos.x;
+            const mouseOrigY = canvasPos.y;
 
             // 笔刷绘制开始
             if (appState.isBrushMode) {
@@ -3660,15 +3743,19 @@
 
         // 鼠标移动处理函数
         function handleCanvasMouseMove(e) {
-            const canvasContainer = document.getElementById('canvasContainer');
-            if (!canvasContainer) return;
-            
-            const rect = canvasContainer.getBoundingClientRect();
-            const scale = getCanvasScale();
-            const mouseOrigX = (e.clientX - rect.left) * scale.scaleX;
-            const mouseOrigY = (e.clientY - rect.top) * scale.scaleY;
+            // 处理拖动平移
+            if (appState.isPanning) {
+                handlePan(e.clientX, e.clientY);
+                return;
+            }
+
+            // 将屏幕坐标转换为画布坐标
+            const canvasPos = screenToCanvas(e.clientX, e.clientY);
+            const mouseOrigX = canvasPos.x;
+            const mouseOrigY = canvasPos.y;
+
             const canvas = document.getElementById('imageCanvas');
-            
+
             // 水印拖动
             if (appState.isWatermarkMode && appState.isWatermarkDragging) {
                 let newX = mouseOrigX - appState.watermarkDragStart.x;
@@ -3817,6 +3904,12 @@
 
         // 鼠标释放处理函数
         function handleCanvasMouseUp() {
+            // 停止拖动平移
+            if (appState.isPanning) {
+                appState.isPanning = false;
+                return;
+            }
+
             // 笔刷绘制结束
             if (appState.isBrushMode && appState.isBrushDrawing) {
                 appState.isBrushDrawing = false;
@@ -3875,6 +3968,312 @@
                 confirmWatermark();
             }
         }
+
+        // 触摸开始处理函数（移动端）
+        function handleCanvasTouchStart(e) {
+            e.preventDefault();
+
+            // 双指缩放
+            if (e.touches.length === 2) {
+                appState.pinchStartDistance = getTouchDistance(e.touches[0], e.touches[1]);
+                appState.pinchStartZoom = appState.zoom;
+                return;
+            }
+
+            // 单指触摸
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+
+                // 如果已缩放（非1x），且不在特殊模式下，则准备拖动平移
+                if (appState.zoom !== 1 && !appState.isBrushMode && !appState.isWatermarkMode &&
+                    !appState.isTextMode && !appState.isCropMode && !appState.isPolygonCropMode &&
+                    !appState.isRectSelectionMode && !appState.isColorPickerMode) {
+                    appState.isPanning = true;
+                    appState.lastPanPoint = { x: touch.clientX, y: touch.clientY };
+                    return;
+                }
+
+                // 否则处理其他操作（如笔刷绘制）
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY,
+                    button: 0
+                });
+                handleCanvasMouseDown(mouseEvent);
+            }
+        }
+
+        // 触摸移动处理函数（移动端）
+        function handleCanvasTouchMove(e) {
+            e.preventDefault();
+
+            // 双指缩放
+            if (e.touches.length === 2 && appState.pinchStartDistance > 0) {
+                const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+                // 降低灵敏度：使用指数函数使缩放更平滑
+                const scaleFactor = Math.pow(currentDistance / appState.pinchStartDistance, 0.7);
+
+                const newZoom = appState.pinchStartZoom * scaleFactor;
+                appState.zoom = Math.max(0.1, Math.min(20, newZoom)); // 限制缩放范围
+
+                // 计算图像中心点（相对于画布容器）
+                const canvasContainer = document.getElementById('canvasContainer');
+                const containerRect = canvasContainer.getBoundingClientRect();
+                const centerX = containerRect.width / 2;
+                const centerY = containerRect.height / 2;
+
+                // 计算图像中心相对于当前变换后的位置
+                const currentCenterX = (centerX - appState.panX) / appState.pinchStartZoom;
+                const currentCenterY = (centerY - appState.panY) / appState.pinchStartZoom;
+
+                // 如果缩放接近1，重置平移
+                if (Math.abs(appState.zoom - 1) < 0.1) {
+                    appState.zoom = 1;
+                    appState.panX = 0;
+                    appState.panY = 0;
+                } else {
+                    // 调整平移位置，使图像中心保持在容器中心
+                    appState.panX = centerX - currentCenterX * appState.zoom;
+                    appState.panY = centerY - currentCenterY * appState.zoom;
+                    // 应用边界限制
+                    constrainPan();
+                }
+
+                updateCanvasTransform();
+                return;
+            }
+
+            // 单指触摸 - 处理拖动平移或其他操作
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+
+                // 如果已缩放（非1x），且不在特殊模式下，则处理拖动平移
+                if (appState.zoom !== 1 && !appState.isBrushMode && !appState.isWatermarkMode &&
+                    !appState.isTextMode && !appState.isCropMode && !appState.isPolygonCropMode &&
+                    !appState.isRectSelectionMode && !appState.isColorPickerMode) {
+                    handlePan(touch.clientX, touch.clientY);
+                    return;
+                }
+
+                // 否则处理其他操作（如笔刷绘制）
+                const mouseEvent = new MouseEvent('mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY,
+                    button: 0
+                });
+                handleCanvasMouseMove(mouseEvent);
+            }
+        }
+
+        // 获取两指之间的距离
+        function getTouchDistance(touch1, touch2) {
+            const dx = touch1.clientX - touch2.clientX;
+            const dy = touch1.clientY - touch2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // 处理拖动平移
+        function handlePan(clientX, clientY) {
+            if (!appState.isPanning) return;
+
+            const deltaX = clientX - appState.lastPanPoint.x;
+            const deltaY = clientY - appState.lastPanPoint.y;
+
+            appState.panX += deltaX;
+            appState.panY += deltaY;
+
+            appState.lastPanPoint = { x: clientX, y: clientY };
+
+            // 应用边界限制
+            constrainPan();
+
+            updateCanvasTransform();
+        }
+
+        // 限制平移范围，防止图像拖出可视区域
+        function constrainPan() {
+            const canvas = document.getElementById('imageCanvas');
+            const canvasContainer = document.getElementById('canvasContainer');
+            if (!canvas || !canvasContainer) return;
+
+            const containerRect = canvasContainer.getBoundingClientRect();
+            const canvasWidth = canvas.width * appState.zoom;
+            const canvasHeight = canvas.height * appState.zoom;
+
+            // 计算允许的平移范围
+            // 如果图像比容器大，允许拖动直到边缘对齐
+            // 如果图像比容器小，保持在中心
+            let minX, maxX, minY, maxY;
+
+            if (canvasWidth > containerRect.width) {
+                // 图像比容器宽，可以水平拖动
+                minX = containerRect.width - canvasWidth;
+                maxX = 0;
+            } else {
+                // 图像比容器窄，水平居中
+                minX = (containerRect.width - canvasWidth) / 2;
+                maxX = minX;
+            }
+
+            if (canvasHeight > containerRect.height) {
+                // 图像比容器高，可以垂直拖动
+                minY = containerRect.height - canvasHeight;
+                maxY = 0;
+            } else {
+                // 图像比容器矮，垂直居中
+                minY = (containerRect.height - canvasHeight) / 2;
+                maxY = minY;
+            }
+
+            // 限制平移范围
+            appState.panX = Math.max(minX, Math.min(maxX, appState.panX));
+            appState.panY = Math.max(minY, Math.min(maxY, appState.panY));
+        }
+
+        // 触摸结束处理函数（移动端）
+        function handleCanvasTouchEnd(e) {
+            e.preventDefault();
+            handleCanvasMouseUp();
+
+            // 停止拖动平移
+            if (appState.isPanning) {
+                appState.isPanning = false;
+            }
+
+            // 清除捏合状态
+            if (appState.pinchStartDistance > 0) {
+                appState.pinchStartDistance = 0;
+                appState.pinchStartZoom = 1;
+            }
+        }
+
+        // 滚轮缩放处理函数（桌面端）
+        function handleCanvasWheel(e) {
+            e.preventDefault();
+
+            if (!appState.currentImage || !appState.processor) return;
+
+            // 如果在特殊模式下（笔刷、水印、文本等），不处理缩放
+            if (appState.isBrushMode || appState.isWatermarkMode || appState.isTextMode ||
+                appState.isCropMode || appState.isPolygonCropMode || appState.isRectSelectionMode ||
+                appState.isColorPickerMode) {
+                return;
+            }
+
+            const delta = e.deltaY;
+            const zoomFactor = delta > 0 ? 0.9 : 1.1; // 滚轮向下缩小，向上放大
+
+            // 计算图像中心点（相对于画布容器）
+            const canvasContainer = document.getElementById('canvasContainer');
+            const containerRect = canvasContainer.getBoundingClientRect();
+            const centerX = containerRect.width / 2;
+            const centerY = containerRect.height / 2;
+
+            // 计算图像中心相对于当前变换后的位置
+            const currentCenterX = (centerX - appState.panX) / appState.zoom;
+            const currentCenterY = (centerY - appState.panY) / appState.zoom;
+
+            // 应用缩放
+            appState.zoom *= zoomFactor;
+            appState.zoom = Math.max(0.1, Math.min(20, appState.zoom)); // 限制缩放范围
+
+            // 如果缩放接近1，重置平移
+            if (Math.abs(appState.zoom - 1) < 0.1) {
+                appState.zoom = 1;
+                appState.panX = 0;
+                appState.panY = 0;
+            } else {
+                // 调整平移位置，使图像中心保持在容器中心
+                appState.panX = centerX - currentCenterX * appState.zoom;
+                appState.panY = centerY - currentCenterY * appState.zoom;
+                // 应用边界限制
+                constrainPan();
+            }
+
+            updateCanvasTransform();
+        }
+
+        // 更新画布变换（缩放和平移）
+        function updateCanvasTransform() {
+            const canvas = document.getElementById('imageCanvas');
+            if (!canvas) return;
+
+            canvas.style.transform = `translate(${appState.panX}px, ${appState.panY}px) scale(${appState.zoom})`;
+            canvas.style.transformOrigin = '0 0';
+        }
+
+        // 重置缩放和位置
+        window.resetZoom = function() {
+            appState.zoom = 1;
+            appState.panX = 0;
+            appState.panY = 0;
+            updateCanvasTransform();
+        };
+
+        // 放大
+        window.zoomIn = function() {
+            if (!appState.currentImage) return;
+
+            // 计算图像中心点（相对于画布容器）
+            const canvasContainer = document.getElementById('canvasContainer');
+            const containerRect = canvasContainer.getBoundingClientRect();
+            const centerX = containerRect.width / 2;
+            const centerY = containerRect.height / 2;
+
+            // 计算图像中心相对于当前变换后的位置
+            const currentCenterX = (centerX - appState.panX) / appState.zoom;
+            const currentCenterY = (centerY - appState.panY) / appState.zoom;
+
+            appState.zoom *= 1.2;
+            appState.zoom = Math.min(20, appState.zoom);
+
+            // 调整平移位置，使图像中心保持在容器中心
+            appState.panX = centerX - currentCenterX * appState.zoom;
+            appState.panY = centerY - currentCenterY * appState.zoom;
+
+            // 应用边界限制
+            constrainPan();
+
+            updateCanvasTransform();
+        };
+
+        // 缩小
+        window.zoomOut = function() {
+            if (!appState.currentImage) return;
+
+            // 计算图像中心点（相对于画布容器）
+            const canvasContainer = document.getElementById('canvasContainer');
+            const containerRect = canvasContainer.getBoundingClientRect();
+            const centerX = containerRect.width / 2;
+            const centerY = containerRect.height / 2;
+
+            // 计算图像中心相对于当前变换后的位置
+            const currentCenterX = (centerX - appState.panX) / appState.zoom;
+            const currentCenterY = (centerY - appState.panY) / appState.zoom;
+
+            appState.zoom /= 1.2;
+
+            // 如果缩放接近1，直接重置到1并清除平移
+            if (Math.abs(appState.zoom - 1) < 0.1) {
+                appState.zoom = 1;
+                appState.panX = 0;
+                appState.panY = 0;
+            } else {
+                // 调整平移位置，使图像中心保持在容器中心
+                appState.panX = centerX - currentCenterX * appState.zoom;
+                appState.panY = centerY - currentCenterY * appState.zoom;
+                // 应用边界限制
+                constrainPan();
+            }
+
+            appState.zoom = Math.max(0.1, appState.zoom);
+            updateCanvasTransform();
+        };
+
+        // 适应屏幕
+        window.fitToScreen = function() {
+            resetZoom();
+        };
 
         // 显示/隐藏加载动画
         function showLoading(show, message = '正在加载...') {
@@ -3944,19 +4343,10 @@
         window.pickColorAtPosition = function(e) {
             if (!appState.processor) return;
 
-            const canvas = document.getElementById('imageCanvas');
-            const rect = canvas.getBoundingClientRect();
-
-            // 计算点击位置相对于画布的坐标
-            const x = Math.floor(e.clientX - rect.left);
-            const y = Math.floor(e.clientY - rect.top);
-
-            // 转换为图像坐标（考虑画布缩放）
-            const scaleX = appState.processor.get_width() / rect.width;
-            const scaleY = appState.processor.get_height() / rect.height;
-
-            const imageX = Math.floor(x * scaleX);
-            const imageY = Math.floor(y * scaleY);
+            // 使用新的坐标转换函数
+            const canvasPos = screenToCanvas(e.clientX, e.clientY);
+            const imageX = Math.floor(canvasPos.x);
+            const imageY = Math.floor(canvasPos.y);
 
             // 检查坐标是否在图像范围内
             if (imageX < 0 || imageX >= appState.processor.get_width() ||
@@ -4079,15 +4469,7 @@
                 // 获取颜色调色板（5种主要颜色）
                 const palette = appState.processor.get_color_palette(5);
 
-                Logger.log('调色板数据:', palette);
-                Logger.log('调色板类型:', typeof palette);
-                Logger.log('调色板长度:', palette ? palette.length : 0);
-
                 if (palette && palette.length > 0) {
-                    // 检查第一个元素的结构
-                    Logger.log('第一个颜色对象:', palette[0]);
-                    Logger.log('第一个颜色类型:', typeof palette[0]);
-
                     const paletteHtml = palette.map(color => {
                         // 颜色数据是Uint8Array格式: [r, g, b, a]
                         let r, g, b;
@@ -4108,7 +4490,6 @@
                         }
 
                         const hex = rgbToHex(r, g, b);
-                        Logger.log(`处理颜色: RGB(${r}, ${g}, ${b}) -> ${hex}`);
                         return `
                             <div class="palette-color"
                                  style="width: 40px; height: 40px; border-radius: 4px; border: 2px solid #555; background: ${hex}; transition: all 0.2s ease; cursor: pointer;"
@@ -4120,17 +4501,6 @@
 
                     const dominantColorDisplay = document.getElementById('dominantColorDisplay');
                     dominantColorDisplay.innerHTML = paletteHtml;
-
-                    // 记录第一个颜色作为主色调
-                    if (palette[0]) {
-                        const dominant = palette[0];
-                        const r = dominant[0];
-                        const g = dominant[1];
-                        const b = dominant[2];
-                        Logger.log(`主色调: RGB(${r}, ${g}, ${b}) - ${rgbToHex(r, g, b)}`);
-                    }
-
-                    Logger.log('颜色调色板已更新');
                 }
             } catch (error) {
                 Logger.error('获取主色调失败:', error);
@@ -4153,7 +4523,6 @@
 
 // 启用按钮
         function enableButtons() {
-            Logger.log('enableButtons() 被调用，appState.currentImage:', !!appState.currentImage);
             const buttons = document.querySelectorAll('.btn, .toolbar-btn');
             buttons.forEach(btn => {
                 // 下载和清空图像按钮需要 appState.currentImage
@@ -4267,16 +4636,9 @@
 
         // 初始化快速导航
         window.initializeQuickNav = function() {
-            console.log('===== 快速导航初始化开始 =====');
-
             const sidebar = document.getElementById('sidebar');
             const sidebarContent = document.getElementById('sidebarContent');
             const navItemsContainer = document.getElementById('quickNavItems');
-
-            console.log('DOM元素检查:');
-            console.log('- sidebar存在:', !!sidebar);
-            console.log('- sidebarContent存在:', !!sidebarContent);
-            console.log('- navItemsContainer存在:', !!navItemsContainer);
 
             if (!sidebarContent) {
                 console.error('❌ 找不到sidebarContent元素');
@@ -4287,7 +4649,6 @@
 
             // 只获取sidebarContent内部的section
             const sections = sidebarContent.querySelectorAll('.section');
-            console.log('✅ 找到的section数量:', sections.length);
 
             if (sections.length === 0) {
                 console.warn('没有找到任何section元素');
@@ -4309,8 +4670,6 @@
                     navItem.dataset.sectionId = section.id;
                     navItem.onclick = () => scrollToSection(section, navItem);
                     navItemsContainer.appendChild(navItem);
-
-                    console.log(`添加导航项: ${title.textContent.trim()} (ID: ${section.id})`);
                 } else {
                     console.warn(`Section ${index} 没有找到h3标题`);
                 }
@@ -5025,11 +5384,9 @@
 
                     // 继续加载图片
                     try {
-                        Logger.log('开始处理图片数据...');
                         appState.processor = ImageProcessor.new_from_bytes(uint8Array);
                         const width = appState.processor.get_width();
                         const height = appState.processor.get_height();
-                        Logger.log('图片尺寸:', width, 'x', height);
 
                         // 保存原始处理器用于无级调节
                         appState.originalProcessor = ImageProcessor.new_from_bytes(uint8Array);
@@ -5052,7 +5409,6 @@
                             width,
                             height
                         };
-                        Logger.log('appState.currentImage 已设置:', !!appState.currentImage);
 
                         document.getElementById('emptyState').style.display = 'none';
                         canvas.style.display = 'block';
@@ -5063,9 +5419,10 @@
                         // 清空历史记录，防止用户通过撤销/重做回到之前的图片
                         clearHistory();
 
-                        Logger.log('调用 enableButtons()...');
+                        // 重置缩放和位置
+                        resetZoom();
+
                         enableButtons();
-                        Logger.log('enableButtons() 调用完成');
 
                         // 更新主色调显示
                         updateDominantColors();
@@ -5082,7 +5439,6 @@
                                     width,
                                     height
                                 };
-                                Logger.log('错误恢复：appState.currentImage 已被设置（仅尺寸信息）');
                                 enableButtons();
                             } catch (e) {
                                 console.error('无法恢复 currentImage:', e);
