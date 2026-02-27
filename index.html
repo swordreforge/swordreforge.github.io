@@ -7081,6 +7081,13 @@
             appState.isRectSelectionMode = false;
             document.getElementById('cropOverlay').style.display = 'none';
             document.getElementById('imageCanvas').style.cursor = 'default';
+            
+            // 清理事件监听器：克隆并替换 cropOverlay 元素
+            const cropOverlay = document.getElementById('cropOverlay');
+            if (cropOverlay) {
+                const newCropOverlay = cropOverlay.cloneNode(true);
+                cropOverlay.parentNode.replaceChild(newCropOverlay, cropOverlay);
+            }
         }
 
         // 从矩形选框应用抠图
