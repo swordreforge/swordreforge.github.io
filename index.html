@@ -6889,41 +6889,72 @@
                 } else if (isRectResizing) {
                     const minSize = 20;
 
-                    switch (rectResizeHandle) {
-                        case 'nw':
-                            rectSelectionBox.x = Math.max(0, initialRectBox.x + dx);
-                            rectSelectionBox.y = Math.max(0, initialRectBox.y + dy);
-                            rectSelectionBox.width = Math.max(minSize, initialRectBox.width - dx);
-                            rectSelectionBox.height = Math.max(minSize, initialRectBox.height - dy);
-                            break;
-                        case 'ne':
-                            rectSelectionBox.y = Math.max(0, initialRectBox.y + dy);
-                            rectSelectionBox.width = Math.max(minSize, initialRectBox.width + dx);
-                            rectSelectionBox.height = Math.max(minSize, initialRectBox.height - dy);
-                            break;
-                        case 'se':
-                            rectSelectionBox.width = Math.max(minSize, initialRectBox.width + dx);
-                            rectSelectionBox.height = Math.max(minSize, initialRectBox.height + dy);
-                            break;
-                        case 'sw':
-                            rectSelectionBox.x = Math.max(0, initialRectBox.x + dx);
-                            rectSelectionBox.width = Math.max(minSize, initialRectBox.width - dx);
-                            rectSelectionBox.height = Math.max(minSize, initialRectBox.height + dy);
-                            break;
-                        case 'n':
-                            rectSelectionBox.y = Math.max(0, initialRectBox.y + dy);
-                            rectSelectionBox.height = Math.max(minSize, initialRectBox.height - dy);
-                            break;
-                        case 's':
-                            rectSelectionBox.height = Math.max(minSize, initialRectBox.height + dy);
-                            break;
-                        case 'w':
-                            rectSelectionBox.x = Math.max(0, initialRectBox.x + dx);
-                            rectSelectionBox.width = Math.max(minSize, initialRectBox.width - dx);
-                            break;
-                        case 'e':
-                            rectSelectionBox.width = Math.max(minSize, initialRectBox.width + dx);
-                            break;
+                    if (rectSelectionType === 'circular') {
+                        // 圆形抠图：调整大小时保持正方形，使用最大变化量
+                        let newSize = 0;
+
+                        switch (rectResizeHandle) {
+                            case 'n':
+                            case 's':
+                                // 上下手柄：调整高度，保持宽度=高度
+                                newSize = Math.max(minSize, Math.min(
+                                    initialRectBox.height + (rectResizeHandle === 's' ? dy : -dy),
+                                    Math.min(canvas.width, canvas.height)
+                                ));
+                                rectSelectionBox.y = Math.max(0, Math.min(canvas.height - newSize, initialRectBox.y + (rectResizeHandle === 's' ? dy : 0)));
+                                rectSelectionBox.width = newSize;
+                                rectSelectionBox.height = newSize;
+                                break;
+                            case 'w':
+                            case 'e':
+                                // 左右手柄：调整宽度，保持高度=宽度
+                                newSize = Math.max(minSize, Math.min(
+                                    initialRectBox.width + (rectResizeHandle === 'e' ? dx : -dx),
+                                    Math.min(canvas.width, canvas.height)
+                                ));
+                                rectSelectionBox.x = Math.max(0, Math.min(canvas.width - newSize, initialRectBox.x + (rectResizeHandle === 'e' ? dx : 0)));
+                                rectSelectionBox.width = newSize;
+                                rectSelectionBox.height = newSize;
+                                break;
+                        }
+                    } else {
+                        // 其他抠图类型：正常的矩形调整
+                        switch (rectResizeHandle) {
+                            case 'nw':
+                                rectSelectionBox.x = Math.max(0, initialRectBox.x + dx);
+                                rectSelectionBox.y = Math.max(0, initialRectBox.y + dy);
+                                rectSelectionBox.width = Math.max(minSize, initialRectBox.width - dx);
+                                rectSelectionBox.height = Math.max(minSize, initialRectBox.height - dy);
+                                break;
+                            case 'ne':
+                                rectSelectionBox.y = Math.max(0, initialRectBox.y + dy);
+                                rectSelectionBox.width = Math.max(minSize, initialRectBox.width + dx);
+                                rectSelectionBox.height = Math.max(minSize, initialRectBox.height - dy);
+                                break;
+                            case 'se':
+                                rectSelectionBox.width = Math.max(minSize, initialRectBox.width + dx);
+                                rectSelectionBox.height = Math.max(minSize, initialRectBox.height + dy);
+                                break;
+                            case 'sw':
+                                rectSelectionBox.x = Math.max(0, initialRectBox.x + dx);
+                                rectSelectionBox.width = Math.max(minSize, initialRectBox.width - dx);
+                                rectSelectionBox.height = Math.max(minSize, initialRectBox.height + dy);
+                                break;
+                            case 'n':
+                                rectSelectionBox.y = Math.max(0, initialRectBox.y + dy);
+                                rectSelectionBox.height = Math.max(minSize, initialRectBox.height - dy);
+                                break;
+                            case 's':
+                                rectSelectionBox.height = Math.max(minSize, initialRectBox.height + dy);
+                                break;
+                            case 'w':
+                                rectSelectionBox.x = Math.max(0, initialRectBox.x + dx);
+                                rectSelectionBox.width = Math.max(minSize, initialRectBox.width - dx);
+                                break;
+                            case 'e':
+                                rectSelectionBox.width = Math.max(minSize, initialRectBox.width + dx);
+                                break;
+                        }
                     }
 
                     rectSelectionBox.x = Math.max(0, Math.min(canvas.width - rectSelectionBox.width, rectSelectionBox.x));
