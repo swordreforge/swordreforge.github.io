@@ -1900,12 +1900,12 @@
                     <h3>双边滤波器</h3>
                     <div class="slider-container">
                         <label>空间平滑半径 (1 ~ 20)</label>
-                        <input type="range" id="bilateralSigmaSpatialSlider" min="10" max="200" value="50" oninput="applyAdjustments()" disabled>
+                        <input type="range" id="bilateralSigmaSpatialSlider" min="10" max="200" value="50" oninput="applyBilateralAdjustments()" disabled>
                         <div class="slider-value"><span id="bilateralSigmaSpatialValue">5.0</span></div>
                     </div>
                     <div class="slider-container" style="margin-top: 15px;">
                         <label>边缘敏感度 (10 ~ 150)</label>
-                        <input type="range" id="bilateralSigmaRangeSlider" min="100" max="1500" value="300" oninput="applyAdjustments()" disabled>
+                        <input type="range" id="bilateralSigmaRangeSlider" min="100" max="1500" value="300" oninput="applyBilateralAdjustments()" disabled>
                         <div class="slider-value"><span id="bilateralSigmaRangeValue">30.0</span></div>
                     </div>
                     <div class="checkbox-container" style="margin-top: 15px;">
@@ -5773,6 +5773,43 @@
                 console.error('Detect 135 degree lines error:', error);
             }
             showLoading(false);
+        };
+
+        // 应用双边滤波器调整（带防抖）
+        window.applyBilateralAdjustments = function() {
+            if (!appState.processor) return;
+
+            // 更新显示值
+            const sigmaSpatial = parseFloat(document.getElementById('bilateralSigmaSpatialSlider').value) / 10;
+            const sigmaRange = parseFloat(document.getElementById('bilateralSigmaRangeSlider').value) / 10;
+            const fastMode = document.getElementById('bilateralFastMode').checked;
+
+            document.getElementById('bilateralSigmaSpatialValue').textContent = sigmaSpatial.toFixed(1);
+            document.getElementById('bilateralSigmaRangeValue').textContent = sigmaRange.toFixed(1);
+
+            // 清除之前的防抖定时器
+            if (appState.bilateralAdjustmentTimeout) {
+                timerManager.clearTimeout(appState.bilateralAdjustmentTimeout);
+            }
+
+            // 根据是否快速模式设置不同的防抖延迟
+            const debounceDelay = fastMode ? 300 : 800;
+
+            // 设置防抖定时器
+            appState.bilateralAdjustmentTimeout = timerManager.setTimeout(() => {
+                showLoading(true, '正在应用双边滤波器...');
+                try {
+                    // 保存历史记录
+                    saveToHistory();
+
+                    // 应用双边滤波器
+                    appState.processor.apply_bilateral_filter(sigmaSpatial, sigmaRange, fastMode);
+                    updateCanvas();
+                } catch (error) {
+                    console.error('Bilateral filter error:', error);
+                }
+                showLoading(false);
+            }, debounceDelay);
         };
 
         // 应用无级调节
