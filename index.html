@@ -6654,7 +6654,7 @@
             // 圆形抠图使用以短边为准的正方形选框
             if (type === 'circular') {
                 const minSide = Math.min(width, height);
-                const boxSize = minSide * 0.6; // 使用短边的60%作为选框大小
+                const boxSize = minSide; // 使用短边的完整长度作为选框大小
                 rectSelectionBox = {
                     x: (width - boxSize) / 2,
                     y: (height - boxSize) / 2,
