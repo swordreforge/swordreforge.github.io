@@ -2386,7 +2386,7 @@
 
             <div class="editor-area">
                 <div class="canvas-container" id="canvasContainer">
-                    <div class="empty-state" id="emptyState">
+                    <div class="empty-state" id="emptyState" style="cursor: pointer;">
                         <svg class="icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                             <circle cx="8.5" cy="8.5" r="1.5"></circle>
@@ -3331,7 +3331,12 @@
         window.addEventListener('touchmove', function(e) {
             // 如果在Canvas区域内，阻止默认行为
             const canvasContainer = document.getElementById('canvasContainer');
+            const emptyState = document.getElementById('emptyState');
+            // 如果没有图片且点击的是 emptyState，不阻止默认行为，允许点击触发上传
             if (canvasContainer && canvasContainer.contains(e.target)) {
+                if (!appState.currentImage && e.target.closest('#emptyState')) {
+                    return;
+                }
                 e.preventDefault();
             }
         }, { passive: false });
@@ -3347,7 +3352,12 @@
             // 如果是向下拖动且在页面顶部，阻止默认行为
             if (currentY > startY && window.scrollY === 0) {
                 const canvasContainer = document.getElementById('canvasContainer');
+                const emptyState = document.getElementById('emptyState');
                 if (canvasContainer && canvasContainer.contains(e.target)) {
+                    // 如果没有图片且触摸的是 emptyState，不阻止默认行为
+                    if (!appState.currentImage && e.target.closest('#emptyState')) {
+                        return;
+                    }
                     e.preventDefault();
                 }
             }
@@ -3701,6 +3711,11 @@
 
         // 鼠标按下处理函数
         function handleCanvasMouseDown(e) {
+            // 如果没有图片且点击的是 emptyState，直接返回，不设置平移状态，允许点击事件正常触发
+            if (!appState.currentImage && e.target && e.target.closest('#emptyState')) {
+                return;
+            }
+
             // 中键（button 1）用于拖动平移
             if (e.button === 1) {
                 e.preventDefault();
@@ -4001,8 +4016,8 @@
 
         // 触摸开始处理函数（移动端）
         function handleCanvasTouchStart(e) {
-            // 如果没有图片且点击的是 emptyState 或其子元素，不阻止默认行为，允许点击触发上传
-            if (!appState.currentImage && e.target.closest('#emptyState')) {
+            // 如果没有图片且触摸的是 emptyState，不阻止默认行为，允许 click 事件正常触发
+            if (!appState.currentImage && e.target && e.target.closest('#emptyState')) {
                 return;
             }
 
@@ -4040,8 +4055,8 @@
 
         // 触摸移动处理函数（移动端）
         function handleCanvasTouchMove(e) {
-            // 如果没有图片且触摸的是 emptyState 或其子元素，不阻止默认行为
-            if (!appState.currentImage && e.target.closest('#emptyState')) {
+            // 如果没有图片且触摸的是 emptyState，不阻止默认行为
+            if (!appState.currentImage && e.target && e.target.closest('#emptyState')) {
                 return;
             }
 
@@ -4172,7 +4187,16 @@
 
         // 触摸结束处理函数（移动端）
         function handleCanvasTouchEnd(e) {
-            e.preventDefault();
+            // 如果没有图片且触摸的是 emptyState，不阻止默认行为
+            if (!appState.currentImage && e.target && e.target.closest('#emptyState')) {
+                return;
+            }
+
+            // 只在可取消时阻止默认行为
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+
             handleCanvasMouseUp();
 
             // 停止拖动平移
@@ -4964,7 +4988,10 @@
         // 点击整个编辑区域触发上传（仅在没有图片时）
         editorArea.addEventListener('click', (e) => {
             if (!appState.currentImage && !e.target.closest('.sidebar')) {
-                document.getElementById('fileInput').click();
+                const fileInput = document.getElementById('fileInput');
+                // 清空 value 以允许重复触发文件选择
+                fileInput.value = '';
+                fileInput.click();
             }
         });
 
