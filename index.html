@@ -1556,6 +1556,7 @@
                             <div class="menu-items">
                                 <button class="menu-item" onclick="applyBoxBlur()">盒式模糊</button>
                                 <button class="menu-item" onclick="applyGaussianBlur()">高斯模糊</button>
+                                <button class="menu-item" onclick="enableBackgroundBlurMode()">背景模糊（主体清晰）</button>
                             </div>
                         </div>
                         <div class="menu-section">
@@ -1841,6 +1842,7 @@
                                 <button class="menu-item" onclick="quickRotate(270)">旋转 270°</button>
                                 <button class="menu-item" onclick="flipHorizontal()">水平翻转</button>
                                 <button class="menu-item" onclick="flipVertical()">垂直翻转</button>
+                                <button class="menu-item" onclick="enableStraightenMode()">水平矫正</button>
                                 <button class="menu-item" onclick="resizeImage()">调整尺寸</button>
                             </div>
                         </div>
@@ -1857,7 +1859,13 @@
                         <div class="menu-section">
                             <div class="menu-category">裁剪工具</div>
                             <div class="menu-items">
-                                <button class="menu-item" onclick="cropImage()">裁剪</button>
+                                <button class="menu-item" onclick="cropImage()">自由裁剪</button>
+                                <button class="menu-item" onclick="cropWithRatio('1:1')">1:1 (方形)</button>
+                                <button class="menu-item" onclick="cropWithRatio('4:5')">4:5 (Instagram)</button>
+                                <button class="menu-item" onclick="cropWithRatio('16:9')">16:9 (视频)</button>
+                                <button class="menu-item" onclick="cropWithRatio('9:16')">9:16 (短视频)</button>
+                                <button class="menu-item" onclick="cropWithRatio('3:2')">3:2 (经典)</button>
+                                <button class="menu-item" onclick="cropWithRatio('2:3')">2:3 (竖版)</button>
                             </div>
                         </div>
                     </div>
@@ -2461,6 +2469,25 @@
                             带阴影效果
                         </label>
                     </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: flex; align-items: center; cursor: pointer; color: #e0e0e0; font-size: 0.9em;">
+                            <input type="checkbox" id="strokeCheckbox" style="margin-right: 8px;" disabled onchange="toggleStrokeControls()">
+                            带描边效果
+                        </label>
+                    </div>
+                    <div id="strokeControls" style="display: none; margin-bottom: 10px; padding-left: 20px;">
+                        <div style="margin-bottom: 8px;">
+                            <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: #e0e0e0; font-size: 0.9em;">
+                                <span>描边颜色</span>
+                                <input type="color" id="strokeColorPicker" value="#000000" style="width: 50px; height: 30px; cursor: pointer;" disabled>
+                            </label>
+                        </div>
+                        <div class="slider-container">
+                            <label>描边宽度 (1 ~ 20)</label>
+                            <input type="range" id="strokeWidthSlider" min="1" max="20" value="3" disabled oninput="updateTextBoxPreview()">
+                            <div class="slider-value"><span id="strokeWidthValue">3</span></div>
+                        </div>
+                    </div>
                     <div class="btn-group">
                         <button class="btn" onclick="addTextMode()" id="addTextBtn" disabled>添加文本</button>
                         <button class="btn btn-success" onclick="applyText()" id="applyTextBtn" style="display: none;">确认</button>
@@ -2906,6 +2933,8 @@
                     <canvas id="imageCanvas" style="display: none;" willReadFrequently="true"></canvas>
                     <canvas id="cropOverlay" class="crop-overlay" style="display: none;"></canvas>
                     <div class="crop-controls" id="cropControls" style="display: none;">
+                        <span id="cropRatioLabel" style="color: #e0e0e0; font-size: 0.9em; margin-right: 10px;">比例: 自由</span>
+                        <button class="btn" onclick="toggleCropRatio()" title="切换比例">🔄</button>
                         <button class="btn btn-success" onclick="applyCrop()">✓ 确认裁剪</button>
                         <button class="btn btn-danger" onclick="cancelCrop()">✕ 取消</button>
                     </div>
@@ -3582,9 +3611,20 @@
 
                 this.polygonPoints = [];
                 this.cropBox = { x: 0, y: 0, width: 0, height: 0 };
+                this.cropRatio = null; // 固定比例裁剪的比例，格式为 {width: 1, height: 1} 或 null 表示自由裁剪
+                this.cropRatioOptions = [
+                    { label: '自由', ratio: null },
+                    { label: '1:1', ratio: { width: 1, height: 1 } },
+                    { label: '4:5', ratio: { width: 4, height: 5 } },
+                    { label: '16:9', ratio: { width: 16, height: 9 } },
+                    { label: '9:16', ratio: { width: 9, height: 16 } },
+                    { label: '3:2', ratio: { width: 3, height: 2 } },
+                    { label: '2:3', ratio: { width: 2, height: 3 } }
+                ];
+                this.currentCropRatioIndex = 0;
                 this.watermarkBytes = null;
                 this.blendBytes = null;
-                this.textBox = { x: 0, y: 0, text: '', fontSize: 60, color: '#ffffff', withShadow: false, textWidth: 0 };
+                this.textBox = { x: 0, y: 0, text: '', fontSize: 60, color: '#ffffff', withShadow: false, withStroke: false, strokeColor: '#000000', strokeWidth: 3, textWidth: 0 };
                 this.watermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
                 this.textDragStart = { x: 0, y: 0 };
                 this.initialTextBox = { x: 0, y: 0 };
@@ -3596,6 +3636,16 @@
                 this.isWatermarkDragging = false;
                 this.isWatermarkResizing = false;
                 this.lastBrushPoint = null;
+
+                // 水平矫正模式
+                this.isStraightenMode = false;
+                this.straightenLine = { x1: 0, y1: 0, x2: 0, y2: 0 };
+                this.isStraightenDrawing = false;
+
+                // 背景模糊模式
+                this.isBackgroundBlurMode = false;
+                this.backgroundBlurIntensity = 15;
+                this.backgroundBlurFeather = 10;
 
                 // 定时器 ID
                 this.adjustmentTimeout = null;
@@ -3640,12 +3690,17 @@
                 this.isColorPickerMode = false;
                 this.isFreeSelectMode = false;
                 this.isLassoMode = false;
+                this.isStraightenMode = false;
+                this.isBackgroundBlurMode = false;
+                this.cropRatio = null;
+                this.currentCropRatioIndex = 0;
+                this.isLassoMode = false;
             }
 
             resetTempData() {
                 this.polygonPoints = [];
                 this.cropBox = { x: 0, y: 0, width: 0, height: 0 };
-                this.textBox = { x: 0, y: 0, text: '', fontSize: 60, color: '#ffffff', withShadow: false, textWidth: 0 };
+                this.textBox = { x: 0, y: 0, text: '', fontSize: 60, color: '#ffffff', withShadow: false, withStroke: false, strokeColor: '#000000', strokeWidth: 3, textWidth: 0 };
                 this.watermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
                 this.textDragStart = { x: 0, y: 0 };
                 this.initialTextBox = { x: 0, y: 0 };
@@ -7292,6 +7347,9 @@
             document.getElementById('fontSelect').disabled = !appState.currentImage;
             document.getElementById('textOffsetSlider').disabled = !appState.currentImage;
             document.getElementById('shadowCheckbox').disabled = !appState.currentImage;
+            document.getElementById('strokeCheckbox').disabled = !appState.currentImage;
+            document.getElementById('strokeColorPicker').disabled = !appState.currentImage || !document.getElementById('strokeCheckbox').checked;
+            document.getElementById('strokeWidthSlider').disabled = !appState.currentImage || !document.getElementById('strokeCheckbox').checked;
 
             // 启用水印控件
             document.getElementById('watermarkInput').disabled = !appState.currentImage;
@@ -8690,6 +8748,164 @@
             }
         };
 
+        // 启用背景模糊模式
+        window.enableBackgroundBlurMode = function() {
+            if (!appState.processor) return;
+
+            // 询问用户选择背景模糊的方式
+            const options = [
+                '1. 使用多边形抠图选择主体（保持主体清晰）',
+                '2. 使用圆形抠图选择主体（保持主体清晰）',
+                '3. 使用自动颜色抠图选择主体（保持主体清晰）'
+            ];
+
+            const choice = prompt('请选择背景模糊方式：\n\n' + options.join('\n') + '\n\n请输入选项编号 (1-3):', '1');
+
+            if (!choice) return;
+
+            appState.isBackgroundBlurMode = true;
+
+            // 根据用户选择进入相应的抠图模式
+            switch (choice.trim()) {
+                case '1':
+                    // 使用多边形抠图
+                    alert('请使用多边形抠图工具选择主体区域');
+                    togglePolygonCropMode();
+                    break;
+                case '2':
+                    // 使用圆形抠图
+                    alert('请使用圆形抠图工具选择主体区域');
+                    applyCircularMask();
+                    break;
+                case '3':
+                    // 使用自动颜色抠图
+                    alert('请使用自动颜色抠图工具选择主体区域');
+                    applyAutoCropByColor();
+                    break;
+                default:
+                    alert('无效的选项');
+                    appState.isBackgroundBlurMode = false;
+            }
+        };
+
+        // 应用背景模糊效果
+        window.applyBackgroundBlur = function() {
+            if (!appState.processor || !appState.isBackgroundBlurMode) return;
+
+            const intensity = prompt('请输入模糊强度 (建议 5-20):', '15');
+            if (!intensity || isNaN(intensity)) return;
+
+            const feather = prompt('请输入边缘羽化半径 (建议 5-20):', '10');
+            if (!feather || isNaN(feather)) return;
+
+            showLoading(true);
+            try {
+                saveToHistory();
+
+                // 获取当前图像
+                const canvas = document.getElementById('imageCanvas');
+                const ctx = canvas.getContext('2d');
+                const width = canvas.width;
+                const height = canvas.height;
+
+                // 创建临时画布用于模糊背景
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = width;
+                tempCanvas.height = height;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // 复制原始图像
+                tempCtx.drawImage(canvas, 0, 0);
+
+                // 应用高斯模糊到整个图像
+                const blurredImageData = tempCtx.getImageData(0, 0, width, height);
+                appState.processor.set_image_data(blurredImageData);
+                appState.processor.apply_gaussian_blur(parseInt(intensity));
+
+                // 获取模糊后的图像
+                const blurredCanvas = document.createElement('canvas');
+                blurredCanvas.width = width;
+                blurredCanvas.height = height;
+                appState.processor.get_image_data(blurredCanvas.getContext('2d'));
+
+                // 创建最终图像：主体使用原始图像，背景使用模糊图像
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = width;
+                finalCanvas.height = height;
+                const finalCtx = finalCanvas.getContext('2d');
+
+                // 先绘制模糊背景
+                finalCtx.drawImage(blurredCanvas, 0, 0);
+
+                // 获取蒙版（从当前抠图状态）
+                const maskCanvas = document.createElement('canvas');
+                maskCanvas.width = width;
+                maskCanvas.height = height;
+                const maskCtx = maskCanvas.getContext('2d');
+
+                // 创建蒙版（白色为主体，黑色为背景）
+                maskCtx.fillStyle = 'black';
+                maskCtx.fillRect(0, 0, width, height);
+
+                // 根据当前抠图类型绘制蒙版
+                if (appState.polygonPoints && appState.polygonPoints.length > 0) {
+                    // 多边形蒙版
+                    maskCtx.beginPath();
+                    maskCtx.moveTo(appState.polygonPoints[0].x, appState.polygonPoints[0].y);
+                    for (let i = 1; i < appState.polygonPoints.length; i++) {
+                        maskCtx.lineTo(appState.polygonPoints[i].x, appState.polygonPoints[i].y);
+                    }
+                    maskCtx.closePath();
+                    maskCtx.fillStyle = 'white';
+                    maskCtx.fill();
+                }
+
+                // 应用羽化效果
+                if (parseInt(feather) > 0) {
+                    const featherCanvas = document.createElement('canvas');
+                    featherCanvas.width = width;
+                    featherCanvas.height = height;
+                    const featherCtx = featherCanvas.getContext('2d');
+
+                    featherCtx.filter = `blur(${parseInt(feather)}px)`;
+                    featherCtx.drawImage(maskCanvas, 0, 0);
+
+                    const featherImageData = featherCtx.getImageData(0, 0, width, height);
+                    maskCtx.putImageData(featherImageData, 0, 0);
+                }
+
+                // 使用蒙版将原始图像的主体部分绘制到最终图像上
+                const originalImageData = ctx.getImageData(0, 0, width, height);
+                const blurredImageData2 = blurredCanvas.getContext('2d').getImageData(0, 0, width, height);
+                const maskImageData = maskCtx.getImageData(0, 0, width, height);
+
+                const finalImageData = finalCtx.createImageData(width, height);
+
+                for (let i = 0; i < finalImageData.data.length; i += 4) {
+                    const maskValue = maskImageData.data[i] / 255; // 0-1
+
+                    // 根据蒙版值混合原始图像和模糊图像
+                    finalImageData.data[i] = originalImageData.data[i] * maskValue + blurredImageData2.data[i] * (1 - maskValue);
+                    finalImageData.data[i + 1] = originalImageData.data[i + 1] * maskValue + blurredImageData2.data[i + 1] * (1 - maskValue);
+                    finalImageData.data[i + 2] = originalImageData.data[i + 2] * maskValue + blurredImageData2.data[i + 2] * (1 - maskValue);
+                    finalImageData.data[i + 3] = 255;
+                }
+
+                // 应用最终图像
+                appState.processor.set_image_data(finalImageData);
+                updateCanvas();
+
+                alert('背景模糊效果已应用');
+            } catch (error) {
+                console.error('Background blur error:', error);
+                alert('背景模糊失败: ' + error.message);
+            }
+            showLoading(false);
+
+            // 退出背景模糊模式
+            appState.isBackgroundBlurMode = false;
+        };
+
         // Sobel 水平边缘检测
         window.applySobelHorizontal = function() {
             if (!appState.processor) return;
@@ -9158,6 +9374,208 @@
             showLoading(false);
         };
 
+        // 启用水平矫正模式
+        window.enableStraightenMode = function() {
+            if (!appState.processor) return;
+            appState.isStraightenMode = !appState.isStraightenMode;
+
+            const canvas = document.getElementById('imageCanvas');
+            const cropOverlay = document.getElementById('cropOverlay');
+
+            if (appState.isStraightenMode) {
+                // 显示裁剪覆盖层用于绘制矫正线
+                cropOverlay.style.display = 'block';
+                cropOverlay.width = canvas.width;
+                cropOverlay.height = canvas.height;
+
+                const canvasRect = canvas.getBoundingClientRect();
+                cropOverlay.style.width = canvasRect.width + 'px';
+                cropOverlay.style.height = canvasRect.height + 'px';
+
+                // 清空之前的线
+                appState.straightenLine = { x1: 0, y1: 0, x2: 0, y2: 0 };
+
+                // 设置事件监听
+                setupStraightenEvents();
+
+                // 显示提示
+                alert('请在图像上拖动鼠标绘制一条水平参考线，系统将自动矫正图像角度');
+            } else {
+                // 隐藏覆盖层
+                cropOverlay.style.display = 'none';
+                const ctx = cropOverlay.getContext('2d');
+                ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
+            }
+        };
+
+        // 设置水平矫正事件监听
+        function setupStraightenEvents() {
+            const cropOverlay = document.getElementById('cropOverlay');
+            const canvas = document.getElementById('imageCanvas');
+
+            // 移除旧的事件监听器
+            const newCropOverlay = cropOverlay.cloneNode(true);
+            cropOverlay.parentNode.replaceChild(newCropOverlay, cropOverlay);
+
+            const updatedCropOverlay = document.getElementById('cropOverlay');
+
+            // 鼠标按下
+            updatedCropOverlay.addEventListener('mousedown', (e) => {
+                if (!appState.isStraightenMode) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const canvasCoords = displayToCanvasCoords(mouseX, mouseY, canvas);
+
+                appState.straightenLine.x1 = canvasCoords.x;
+                appState.straightenLine.y1 = canvasCoords.y;
+                appState.straightenLine.x2 = canvasCoords.x;
+                appState.straightenLine.y2 = canvasCoords.y;
+                appState.isStraightenDrawing = true;
+
+                e.preventDefault();
+            });
+
+            // 鼠标移动
+            updatedCropOverlay.addEventListener('mousemove', (e) => {
+                if (!appState.isStraightenMode || !appState.isStraightenDrawing) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const canvasCoords = displayToCanvasCoords(mouseX, mouseY, canvas);
+
+                appState.straightenLine.x2 = canvasCoords.x;
+                appState.straightenLine.y2 = canvasCoords.y;
+
+                drawStraightenLine();
+            });
+
+            // 鼠标释放
+            updatedCropOverlay.addEventListener('mouseup', () => {
+                if (!appState.isStraightenMode || !appState.isStraightenDrawing) return;
+
+                appState.isStraightenDrawing = false;
+
+                // 计算角度并应用矫正
+                applyStraighten();
+            });
+
+            // 鼠标离开
+            updatedCropOverlay.addEventListener('mouseleave', () => {
+                if (appState.isStraightenDrawing) {
+                    appState.isStraightenDrawing = false;
+                    const cropOverlay = document.getElementById('cropOverlay');
+                    const ctx = cropOverlay.getContext('2d');
+                    ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
+                }
+            });
+        }
+
+        // 绘制水平矫正线
+        function drawStraightenLine() {
+            const cropOverlay = document.getElementById('cropOverlay');
+            const ctx = cropOverlay.getContext('2d');
+
+            ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
+
+            // 绘制半透明遮罩
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(0, 0, cropOverlay.width, cropOverlay.height);
+
+            // 绘制水平参考线（红色）
+            ctx.beginPath();
+            ctx.strokeStyle = '#ff4444';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 5]);
+            ctx.moveTo(appState.straightenLine.x1, appState.straightenLine.y1);
+            ctx.lineTo(appState.straightenLine.x2, appState.straightenLine.y2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 绘制起点和终点标记
+            ctx.beginPath();
+            ctx.fillStyle = '#ff4444';
+            ctx.arc(appState.straightenLine.x1, appState.straightenLine.y1, 6, 0, Math.PI * 2);
+            ctx.arc(appState.straightenLine.x2, appState.straightenLine.y2, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 绘制角度提示
+            const angle = calculateStraightenAngle();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '16px Arial';
+            ctx.fillText(`角度: ${angle.toFixed(2)}°`, 20, 30);
+        }
+
+        // 计算矫正角度
+        function calculateStraightenAngle() {
+            const dx = appState.straightenLine.x2 - appState.straightenLine.x1;
+            const dy = appState.straightenLine.y2 - appState.straightenLine.y1;
+
+            // 计算角度（弧度转角度）
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+            return angle;
+        }
+
+        // 应用水平矫正
+        function applyStraighten() {
+            const angle = calculateStraightenAngle();
+
+            // 如果角度很小，忽略
+            if (Math.abs(angle) < 0.5) {
+                alert('角度偏差太小，无需矫正');
+                enableStraightenMode();
+                return;
+            }
+
+            if (confirm(`确认矫正角度 ${angle.toFixed(2)}°?`)) {
+                showLoading(true);
+                try {
+                    saveToHistory();
+
+                    // 获取当前图像
+                    const canvas = document.getElementById('imageCanvas');
+                    const tempCanvas = document.createElement('canvas');
+                    const tempCtx = tempCanvas.getContext('2d');
+
+                    // 设置临时画布大小（旋转后会变大）
+                    const radians = angle * (Math.PI / 180);
+                    const sin = Math.abs(Math.sin(radians));
+                    const cos = Math.abs(Math.cos(radians));
+
+                    const newWidth = canvas.width * cos + canvas.height * sin;
+                    const newHeight = canvas.width * sin + canvas.height * cos;
+
+                    tempCanvas.width = newWidth;
+                    tempCanvas.height = newHeight;
+
+                    // 在中心位置绘制旋转后的图像
+                    tempCtx.translate(newWidth / 2, newHeight / 2);
+                    tempCtx.rotate(-radians);
+                    tempCtx.drawImage(canvas, -canvas.width / 2, -canvas.height / 2);
+
+                    // 将旋转后的图像保存为新图像
+                    const imageData = tempCtx.getImageData(0, 0, newWidth, newHeight);
+                    appState.processor.set_image_data(imageData);
+
+                    updateCanvas();
+
+                    alert(`已矫正角度 ${angle.toFixed(2)}°`);
+                } catch (error) {
+                    console.error('Straighten error:', error);
+                    alert('矫正失败: ' + error.message);
+                }
+                showLoading(false);
+            }
+
+            // 退出矫正模式
+            enableStraightenMode();
+        }
+
         // 彩色噪点函数
         window.applyPinkNoise = function() {
             if (!appState.processor) return;
@@ -9348,7 +9766,168 @@
             window.addEventListener('resize', resizeHandler);
             // 保存 resizeHandler 引用以便在取消裁剪时移除
             window._cropResizeHandler = resizeHandler;
+
+            // 更新比例标签
+            updateCropRatioLabel();
         };
+
+        // 解析比例字符串为比例对象
+        function parseRatioString(ratioStr) {
+            const parts = ratioStr.split(':');
+            if (parts.length === 2) {
+                return {
+                    width: parseInt(parts[0]),
+                    height: parseInt(parts[1])
+                };
+            }
+            return null;
+        }
+
+        // 固定比例裁剪
+        window.cropWithRatio = function(ratioStr) {
+            if (!appState.processor) return;
+            appState.isCropMode = true;
+
+            // 解析比例
+            appState.cropRatio = parseRatioString(ratioStr);
+
+            // 更新当前比例索引
+            appState.currentCropRatioIndex = appState.cropRatioOptions.findIndex(opt => {
+                if (!opt.ratio) return false;
+                return opt.ratio.width === appState.cropRatio.width && opt.ratio.height === appState.cropRatio.height;
+            });
+
+            // 初始化裁剪框
+            const canvas = document.getElementById('imageCanvas');
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // 计算最大可能的裁剪框大小，保持固定比例
+            let cropWidth, cropHeight;
+            const aspectRatio = appState.cropRatio.width / appState.cropRatio.height;
+
+            if (width / height > aspectRatio) {
+                // 图像比比例更宽，以高度为基准
+                cropHeight = height * 0.8;
+                cropWidth = cropHeight * aspectRatio;
+            } else {
+                // 图像比比例更高，以宽度为基准
+                cropWidth = width * 0.8;
+                cropHeight = cropWidth / aspectRatio;
+            }
+
+            appState.cropBox = {
+                x: (width - cropWidth) / 2,
+                y: (height - cropHeight) / 2,
+                width: cropWidth,
+                height: cropHeight
+            };
+
+            // 显示裁剪覆盖层
+            const cropOverlay = document.getElementById('cropOverlay');
+            cropOverlay.style.display = 'block';
+
+            // 设置 canvas 内部尺寸（用于绘制）
+            cropOverlay.width = width;
+            cropOverlay.height = height;
+
+            // 同步 CSS 显示尺寸以匹配 imageCanvas 的显示效果
+            const canvasRect = canvas.getBoundingClientRect();
+            cropOverlay.style.width = canvasRect.width + 'px';
+            cropOverlay.style.height = canvasRect.height + 'px';
+
+            // 显示裁剪控制按钮
+            document.getElementById('cropControls').style.display = 'flex';
+
+            // 绘制裁剪框
+            drawCropOverlay();
+
+            // 添加事件监听
+            setupCropEvents();
+
+            // 添加窗口大小变化监听器
+            const resizeHandler = () => {
+                if (appState.isCropMode) {
+                    const updatedCanvas = document.getElementById('imageCanvas');
+                    const updatedCanvasRect = updatedCanvas.getBoundingClientRect();
+                    const updatedCropOverlay = document.getElementById('cropOverlay');
+                    updatedCropOverlay.style.width = updatedCanvasRect.width + 'px';
+                    updatedCropOverlay.style.height = updatedCanvasRect.height + 'px';
+                }
+            };
+            window.addEventListener('resize', resizeHandler);
+            window._cropResizeHandler = resizeHandler;
+
+            // 更新比例标签
+            updateCropRatioLabel();
+        };
+
+        // 切换裁剪比例
+        window.toggleCropRatio = function() {
+            // 切换到下一个比例
+            appState.currentCropRatioIndex = (appState.currentCropRatioIndex + 1) % appState.cropRatioOptions.length;
+            const nextOption = appState.cropRatioOptions[appState.currentCropRatioIndex];
+            appState.cropRatio = nextOption.ratio;
+
+            // 如果当前不是裁剪模式，进入裁剪模式
+            if (!appState.isCropMode) {
+                if (appState.cropRatio) {
+                    const ratioStr = `${appState.cropRatio.width}:${appState.cropRatio.height}`;
+                    cropWithRatio(ratioStr);
+                } else {
+                    cropImage();
+                }
+            } else {
+                // 更新裁剪框以保持新的比例
+                updateCropBoxToRatio();
+
+                // 更新比例标签
+                updateCropRatioLabel();
+
+                // 重新绘制裁剪框
+                drawCropOverlay();
+            }
+        };
+
+        // 更新裁剪框以保持当前比例
+        function updateCropBoxToRatio() {
+            if (!appState.cropRatio) return;
+
+            const canvas = document.getElementById('imageCanvas');
+            const width = canvas.width;
+            const height = canvas.height;
+            const aspectRatio = appState.cropRatio.width / appState.cropRatio.height;
+
+            const currentCenterX = appState.cropBox.x + appState.cropBox.width / 2;
+            const currentCenterY = appState.cropBox.y + appState.cropBox.height / 2;
+
+            let newWidth, newHeight;
+            if (appState.cropBox.width / appState.cropBox.height > aspectRatio) {
+                newHeight = appState.cropBox.height;
+                newWidth = newHeight * aspectRatio;
+            } else {
+                newWidth = appState.cropBox.width;
+                newHeight = newWidth / aspectRatio;
+            }
+
+            appState.cropBox = {
+                x: currentCenterX - newWidth / 2,
+                y: currentCenterY - newHeight / 2,
+                width: newWidth,
+                height: newHeight
+            };
+
+            // 确保裁剪框在画布内
+            appState.cropBox.x = Math.max(0, Math.min(width - appState.cropBox.width, appState.cropBox.x));
+            appState.cropBox.y = Math.max(0, Math.min(height - appState.cropBox.height, appState.cropBox.y));
+        }
+
+        // 更新比例标签
+        function updateCropRatioLabel() {
+            const label = document.getElementById('cropRatioLabel');
+            const currentOption = appState.cropRatioOptions[appState.currentCropRatioIndex];
+            label.textContent = `比例: ${currentOption.label}`;
+        }
 
         // 将显示坐标转换为 Canvas 实际坐标
         function displayToCanvasCoords(x, y, canvas) {
@@ -9487,30 +10066,97 @@
         function handleResize(dx, dy) {
             const canvas = document.getElementById('imageCanvas');
             const minSize = 20;
-            
-            switch (resizeHandle) {
-                case 'nw':
-                    appState.cropBox.x = Math.max(0, initialCropBox.x + dx);
-                    appState.cropBox.y = Math.max(0, initialCropBox.y + dy);
-                    appState.cropBox.width = Math.max(minSize, initialCropBox.width - dx);
-                    appState.cropBox.height = Math.max(minSize, initialCropBox.height - dy);
-                    break;
-                case 'ne':
-                    appState.cropBox.y = Math.max(0, initialCropBox.y + dy);
-                    appState.cropBox.width = Math.max(minSize, initialCropBox.width + dx);
-                    appState.cropBox.height = Math.max(minSize, initialCropBox.height - dy);
-                    break;
-                case 'sw':
-                    appState.cropBox.x = Math.max(0, initialCropBox.x + dx);
-                    appState.cropBox.width = Math.max(minSize, initialCropBox.width - dx);
-                    appState.cropBox.height = Math.max(minSize, initialCropBox.height + dy);
-                    break;
-                case 'se':
-                    appState.cropBox.width = Math.max(minSize, initialCropBox.width + dx);
-                    appState.cropBox.height = Math.max(minSize, initialCropBox.height + dy);
-                    break;
+
+            if (appState.cropRatio) {
+                // 固定比例模式
+                const aspectRatio = appState.cropRatio.width / appState.cropRatio.height;
+                let newWidth, newHeight;
+
+                switch (resizeHandle) {
+                    case 'se':
+                        // 右下角：使用较大的移动距离来保持比例
+                        const distanceSE = Math.max(Math.abs(dx), Math.abs(dy));
+                        if (Math.abs(dx) > Math.abs(dy)) {
+                            newWidth = Math.max(minSize, initialCropBox.width + dx);
+                            newHeight = newWidth / aspectRatio;
+                        } else {
+                            newHeight = Math.max(minSize, initialCropBox.height + dy);
+                            newWidth = newHeight * aspectRatio;
+                        }
+                        appState.cropBox.width = newWidth;
+                        appState.cropBox.height = newHeight;
+                        break;
+                    case 'sw':
+                        // 左下角
+                        if (Math.abs(dx) > Math.abs(dy)) {
+                            newWidth = Math.max(minSize, initialCropBox.width - dx);
+                            newHeight = newWidth / aspectRatio;
+                            appState.cropBox.x = initialCropBox.x + initialCropBox.width - newWidth;
+                        } else {
+                            newHeight = Math.max(minSize, initialCropBox.height + dy);
+                            newWidth = newHeight * aspectRatio;
+                            appState.cropBox.x = initialCropBox.x + initialCropBox.width - newWidth;
+                        }
+                        appState.cropBox.width = newWidth;
+                        appState.cropBox.height = newHeight;
+                        break;
+                    case 'ne':
+                        // 右上角
+                        if (Math.abs(dx) > Math.abs(dy)) {
+                            newWidth = Math.max(minSize, initialCropBox.width + dx);
+                            newHeight = newWidth / aspectRatio;
+                            appState.cropBox.y = initialCropBox.y + initialCropBox.height - newHeight;
+                        } else {
+                            newHeight = Math.max(minSize, initialCropBox.height - dy);
+                            newWidth = newHeight * aspectRatio;
+                            appState.cropBox.y = initialCropBox.y + initialCropBox.height - newHeight;
+                        }
+                        appState.cropBox.width = newWidth;
+                        appState.cropBox.height = newHeight;
+                        break;
+                    case 'nw':
+                        // 左上角
+                        if (Math.abs(dx) > Math.abs(dy)) {
+                            newWidth = Math.max(minSize, initialCropBox.width - dx);
+                            newHeight = newWidth / aspectRatio;
+                            appState.cropBox.x = initialCropBox.x + initialCropBox.width - newWidth;
+                            appState.cropBox.y = initialCropBox.y + initialCropBox.height - newHeight;
+                        } else {
+                            newHeight = Math.max(minSize, initialCropBox.height - dy);
+                            newWidth = newHeight * aspectRatio;
+                            appState.cropBox.x = initialCropBox.x + initialCropBox.width - newWidth;
+                            appState.cropBox.y = initialCropBox.y + initialCropBox.height - newHeight;
+                        }
+                        appState.cropBox.width = newWidth;
+                        appState.cropBox.height = newHeight;
+                        break;
+                }
+            } else {
+                // 自由裁剪模式
+                switch (resizeHandle) {
+                    case 'nw':
+                        appState.cropBox.x = Math.max(0, initialCropBox.x + dx);
+                        appState.cropBox.y = Math.max(0, initialCropBox.y + dy);
+                        appState.cropBox.width = Math.max(minSize, initialCropBox.width - dx);
+                        appState.cropBox.height = Math.max(minSize, initialCropBox.height - dy);
+                        break;
+                    case 'ne':
+                        appState.cropBox.y = Math.max(0, initialCropBox.y + dy);
+                        appState.cropBox.width = Math.max(minSize, initialCropBox.width + dx);
+                        appState.cropBox.height = Math.max(minSize, initialCropBox.height - dy);
+                        break;
+                    case 'sw':
+                        appState.cropBox.x = Math.max(0, initialCropBox.x + dx);
+                        appState.cropBox.width = Math.max(minSize, initialCropBox.width - dx);
+                        appState.cropBox.height = Math.max(minSize, initialCropBox.height + dy);
+                        break;
+                    case 'se':
+                        appState.cropBox.width = Math.max(minSize, initialCropBox.width + dx);
+                        appState.cropBox.height = Math.max(minSize, initialCropBox.height + dy);
+                        break;
+                }
             }
-            
+
             // 确保裁剪框在画布内
             appState.cropBox.x = Math.max(0, Math.min(canvas.width - appState.cropBox.width, appState.cropBox.x));
             appState.cropBox.y = Math.max(0, Math.min(canvas.height - appState.cropBox.height, appState.cropBox.y));
@@ -9704,6 +10350,12 @@
 
         // 确认抠图预览
         window.confirmMaskPreview = function() {
+            // 如果在背景模糊模式，应用背景模糊效果
+            if (appState.isBackgroundBlurMode) {
+                applyBackgroundBlur();
+                return;
+            }
+
             // 如果在矩形选框模式，先应用抠图
             if (appState.isRectSelectionMode) {
                 // 先保存当前状态（抠图前的状态）
@@ -9748,7 +10400,7 @@
 
             // 使用当前的 appState.processor（已经应用了抠图效果）
             updateCanvas();
-            
+
             // 清理多边形抠图的状态
             if (currentMaskType === 'polygon') {
                 appState.polygonPoints = [];
@@ -9763,7 +10415,7 @@
                 const btn = document.getElementById('polygonCropBtn');
                 if (btn) btn.classList.remove('active');
             }
-            
+
             hideMaskPreviewControls();
             currentMaskType = null;
             maskPreviewImageData = null;
@@ -11391,6 +12043,9 @@
             appState.textBox.fontSize = parseInt(document.getElementById('fontSizeSlider').value);
             appState.textBox.color = document.getElementById('textColorPicker').value;
             appState.textBox.withShadow = document.getElementById('shadowCheckbox').checked;
+            appState.textBox.withStroke = document.getElementById('strokeCheckbox').checked;
+            appState.textBox.strokeColor = document.getElementById('strokeColorPicker').value;
+            appState.textBox.strokeWidth = parseInt(document.getElementById('strokeWidthSlider').value);
 
             // 计算初始位置（居中）
             const canvas = document.getElementById('imageCanvas');
@@ -11521,8 +12176,38 @@
             appState.textBox.color = document.getElementById('textColorPicker').value;
             appState.textBox.textWidth = textWidth;
 
+            // 获取描边设置
+            const withStroke = document.getElementById('strokeCheckbox').checked;
+            const strokeColor = document.getElementById('strokeColorPicker').value;
+            const strokeWidth = parseInt(document.getElementById('strokeWidthSlider').value);
+
             // 更新预览框样式
             textBoxEl.textContent = text;
+
+            // 应用描边效果（使用 text-shadow）
+            if (withStroke) {
+                let shadowValue = '';
+                for (let i = 1; i <= strokeWidth; i++) {
+                    const offsets = [
+                        `${i}px 0`,
+                        `-${i}px 0`,
+                        `0 ${i}px`,
+                        `0 -${i}px`,
+                        `${i}px ${i}px`,
+                        `${i}px -${i}px`,
+                        `-${i}px ${i}px`,
+                        `-${i}px -${i}px`
+                    ];
+                    offsets.forEach(offset => {
+                        shadowValue += `${offset} ${strokeColor}, `;
+                    });
+                }
+                // 移除最后的逗号和空格
+                shadowValue = shadowValue.slice(0, -2);
+                textBoxEl.style.textShadow = shadowValue;
+            } else {
+                textBoxEl.style.textShadow = 'none';
+            }
             // 字体大小需要考虑缩放，但 WASM 和浏览器字体渲染有差异，添加补偿系数
             // 调整补偿系数使预览字体大小匹配实际效果
             const fontRenderRatio = 1.0; // 补偿系数，根据实际效果调整
@@ -11550,6 +12235,31 @@
 
             // 应用垂直偏移预览效果（transform 不影响实际坐标）
             textBoxEl.style.transform = `translateY(${offset / scale.scaleY}px)`;
+
+            // 更新描边宽度显示值
+            const strokeWidth = parseInt(document.getElementById('strokeWidthSlider').value);
+            document.getElementById('strokeWidthValue').textContent = strokeWidth;
+        }
+
+        // 切换描边控件显示
+        window.toggleStrokeControls = function() {
+            const strokeCheckbox = document.getElementById('strokeCheckbox');
+            const strokeControls = document.getElementById('strokeControls');
+            const strokeColorPicker = document.getElementById('strokeColorPicker');
+            const strokeWidthSlider = document.getElementById('strokeWidthSlider');
+
+            if (strokeCheckbox.checked) {
+                strokeControls.style.display = 'block';
+                strokeColorPicker.disabled = false;
+                strokeWidthSlider.disabled = false;
+            } else {
+                strokeControls.style.display = 'none';
+                strokeColorPicker.disabled = true;
+                strokeWidthSlider.disabled = true;
+            }
+
+            // 更新预览
+            updateTextBoxPreview();
         }
 
         // 将 updateTextBoxPreview 暴露到全局作用域
@@ -11679,6 +12389,9 @@ window.applyText = function() {
                 const fontSize = parseInt(document.getElementById('fontSizeSlider').value);
                 const colorHex = document.getElementById('textColorPicker').value;
                 const withShadow = document.getElementById('shadowCheckbox').checked;
+                const withStroke = document.getElementById('strokeCheckbox').checked;
+                const strokeColorHex = document.getElementById('strokeColorPicker').value;
+                const strokeWidth = parseInt(document.getElementById('strokeWidthSlider').value);
                 const fontSelect = document.getElementById('fontSelect').value;
 
                 // 验证参数
@@ -11698,12 +12411,43 @@ window.applyText = function() {
                 const g = parseInt(colorHex.slice(3, 5), 16);
                 const b = parseInt(colorHex.slice(5, 7), 16);
 
+                // 转换描边颜色
+                const strokeR = parseInt(strokeColorHex.slice(1, 3), 16);
+                const strokeG = parseInt(strokeColorHex.slice(3, 5), 16);
+                const strokeB = parseInt(strokeColorHex.slice(5, 7), 16);
+
                 // 使用预览框左上角坐标，Y 坐标加上字体高度（WASM 使用左下角基准）
                 // 偏移量需要与预览框的 transform 方向一致（translateY 向下为正）
                 const drawX = Math.floor(appState.textBox.x + 160); // X方向调整，增加160像素偏移
                 const offset = parseInt(document.getElementById('textOffsetSlider').value);
                 // 预览框的 top 是 appState.textBox.y，调整基线偏移使预览和实际绘制对齐
                 const drawY = Math.floor(appState.textBox.y + fontSize * 0 + offset); // 基线偏移设为0
+
+                // 如果启用了描边，先绘制描边
+                if (withStroke) {
+                    for (let i = 1; i <= strokeWidth; i++) {
+                        // 绘制描边（通过多次偏移绘制实现）
+                        const offsets = [
+                            { dx: i, dy: 0 },
+                            { dx: -i, dy: 0 },
+                            { dx: 0, dy: i },
+                            { dx: 0, dy: -i },
+                            { dx: i, dy: i },
+                            { dx: i, dy: -i },
+                            { dx: -i, dy: i },
+                            { dx: -i, dy: -i }
+                        ];
+
+                        for (const offset of offsets) {
+                            if (fontSelect.startsWith('custom-')) {
+                                const fontName = fontSelect.replace('custom-', '');
+                                appState.processor.draw_text_with_font_name(text, drawX + offset.dx, drawY + offset.dy, fontSize, fontName, withShadow, strokeR, strokeG, strokeB);
+                            } else {
+                                appState.processor.draw_text_with_font_name(text, drawX + offset.dx, drawY + offset.dy, fontSize, 'default', withShadow, strokeR, strokeG, strokeB);
+                            }
+                        }
+                    }
+                }
 
                 // 判断是使用默认字体还是自定义字体
                 if (fontSelect.startsWith('custom-')) {
