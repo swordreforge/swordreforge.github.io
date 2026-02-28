@@ -1124,6 +1124,242 @@
         .watermark-handle.ne { top: -7px; right: -7px; cursor: nesw-resize; }
         .watermark-handle.sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
         .watermark-handle.se { bottom: -7px; right: -7px; cursor: nwse-resize; }
+
+        /* 图层列表样式 */
+        .layer-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            margin: 2px 0;
+            background: #333;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .layer-item:hover {
+            background: #3a3a3a;
+            border-color: #555;
+        }
+
+        .layer-item.active {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .layer-item.selected {
+            background: rgba(255, 193, 7, 0.15);
+            border-color: #ffc107;
+        }
+
+        .layer-item.active.selected {
+            background: rgba(102, 126, 234, 0.25);
+            border-color: #667eea;
+            box-shadow: inset 0 0 0 2px #ffc107;
+        }
+
+        .layer-item.dragging {
+            opacity: 0.5;
+            background: #444;
+        }
+
+        .layer-item.drag-over {
+            border-color: #667eea;
+            border-style: dashed;
+        }
+
+        .layer-visibility {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            background: transparent;
+            border: 1px solid #666;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .layer-visibility:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .layer-visibility.visible::after {
+            content: '✓';
+            color: #4aaa6b;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .layer-visibility.hidden::after {
+            content: '✕';
+            color: #ff6b6b;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .layer-thumb {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            border: 1px solid #444;
+            border-radius: 3px;
+            background: #222;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .layer-thumb .selection-indicator {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            background: #ffc107;
+            border-radius: 50%;
+            border: 2px solid #333;
+            display: none;
+        }
+
+        .layer-item.selected .layer-thumb .selection-indicator {
+            display: block;
+        }
+
+        .layer-thumb canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .layer-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .layer-name {
+            font-size: 0.9em;
+            color: #e0e0e0;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .layer-details {
+            font-size: 0.75em;
+            color: #888;
+            display: flex;
+            gap: 8px;
+        }
+
+        .layer-actions {
+            display: flex;
+            gap: 4px;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+
+        .layer-action-btn {
+            width: 24px;
+            height: 24px;
+            background: transparent;
+            border: 1px solid #555;
+            border-radius: 3px;
+            color: #aaa;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .layer-action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            border-color: #666;
+        }
+
+        .layer-action-btn.delete:hover {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            border-color: #ff6b6b;
+        }
+
+        /* 图层属性面板 */
+        .layer-properties {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .layer-properties h4 {
+            color: #e0e0e0;
+            margin: 0 0 10px 0;
+            font-size: 0.95em;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+        }
+
+        .layer-property-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .layer-property-row label {
+            width: 80px;
+            font-size: 0.85em;
+            color: #aaa;
+            flex-shrink: 0;
+        }
+
+        .layer-property-row input[type="range"] {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .layer-property-row input[type="number"] {
+            width: 60px;
+            padding: 4px 6px;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 0.85em;
+        }
+
+        .layer-property-row select {
+            flex: 1;
+            padding: 4px 6px;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 0.85em;
+        }
+
+        .layer-property-row input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+
+        .layer-property-row .value-display {
+            width: 50px;
+            text-align: right;
+            font-size: 0.85em;
+            color: #888;
+        }
     </style>
 </head>
 <body>
@@ -2376,6 +2612,148 @@
                     </div>
                 </div>
 
+                <div class="section" id="layersSection" style="display: none;">
+                    <h3>图层管理</h3>
+                    <div class="btn-group" style="margin-bottom: 10px;">
+                        <button class="btn btn-success" onclick="addNewLayer()" id="addLayerBtn">+ 新建图层</button>
+                        <button class="btn" onclick="document.getElementById('layerFileInput').click()" id="addLayerFromFileBtn">+ 从文件添加</button>
+                        <button class="btn" onclick="duplicateActiveLayer()" id="duplicateLayerBtn" disabled>复制图层</button>
+                        <button class="btn btn-danger" onclick="deleteActiveLayer()" id="deleteLayerBtn" disabled>删除图层</button>
+                    </div>
+                    <input type="file" id="layerFileInput" accept="image/*" style="display: none;" onchange="addLayerFromFile(event)">
+                    <div class="btn-group" style="margin-bottom: 10px;">
+                        <button class="btn" onclick="mergeDownLayer()" id="mergeDownBtn" disabled>向下合并</button>
+                        <button class="btn" onclick="flattenLayers()" id="flattenBtn" disabled>合并所有</button>
+                    </div>
+                    <div class="btn-group" style="margin-bottom: 10px;">
+                        <button class="btn" onclick="toggleBatchOperations()" id="batchOperationsBtn" style="flex: 1;">批量操作</button>
+                    </div>
+                    <div id="layersList" style="max-height: 300px; overflow-y: auto; border: 1px solid #444; border-radius: 6px; background: #2a2a2a;">
+                        <div style="padding: 20px; color: #888; text-align: center;">暂无图层</div>
+                    </div>
+
+                    <div class="layer-properties" id="layerProperties" style="display: none;">
+                        <h4>图层属性</h4>
+                        <div class="layer-property-row">
+                            <label>不透明度</label>
+                            <input type="range" id="layerOpacitySlider" min="0" max="255" value="255" oninput="updateLayerOpacity(this.value)">
+                            <span class="value-display" id="layerOpacityValue">100%</span>
+                        </div>
+                        <div class="layer-property-row">
+                            <label>混合模式</label>
+                            <select id="layerBlendMode" onchange="updateLayerBlendMode(this.value)">
+                                <option value="0">Normal</option>
+                                <option value="1">Multiply</option>
+                                <option value="2">Screen</option>
+                                <option value="3">Overlay</option>
+                                <option value="4">SoftLight</option>
+                                <option value="5">HardLight</option>
+                                <option value="6">Difference</option>
+                                <option value="7">Exclusion</option>
+                                <option value="8">Lighten</option>
+                                <option value="9">Darken</option>
+                            </select>
+                        </div>
+                        <div class="layer-property-row">
+                            <label>位置 X</label>
+                            <input type="number" id="layerPosX" value="0" onchange="updateLayerPosition()">
+                            <label>位置 Y</label>
+                            <input type="number" id="layerPosY" value="0" onchange="updateLayerPosition()">
+                        </div>
+                        <div class="layer-property-row">
+                            <label>缩放</label>
+                            <input type="range" id="layerScaleSlider" min="10" max="300" value="100" oninput="updateLayerScale(this.value)">
+                            <span class="value-display" id="layerScaleValue">100%</span>
+                        </div>
+                        <div class="layer-property-row">
+                            <label>旋转</label>
+                            <input type="range" id="layerRotationSlider" min="-180" max="180" value="0" oninput="updateLayerRotation(this.value)">
+                            <span class="value-display" id="layerRotationValue">0°</span>
+                        </div>
+                        <div class="layer-property-row">
+                            <label>翻转</label>
+                            <button class="btn" onclick="flipLayerHorizontal()" id="flipHorizontalBtn" style="flex: 1; padding: 6px 12px; font-size: 0.85em;">水平翻转</button>
+                            <button class="btn" onclick="flipLayerVertical()" id="flipVerticalBtn" style="flex: 1; padding: 6px 12px; font-size: 0.85em;">垂直翻转</button>
+                        </div>
+                        <div class="layer-property-row">
+                            <label>明度调整</label>
+                            <input type="range" id="layerLightnessSlider" min="-100" max="100" value="0" oninput="updateLayerLightness(this.value)">
+                            <span class="value-display" id="layerLightnessValue">0</span>
+                            <button class="btn" onclick="clearLayerLightness()" style="flex: 1; padding: 6px 12px; font-size: 0.85em;">重置</button>
+                        </div>
+                        <div class="layer-property-row">
+                            <label>噪点</label>
+                            <input type="range" id="layerNoiseSlider" min="0" max="100" value="0" oninput="updateLayerNoise(this.value)">
+                            <span class="value-display" id="layerNoiseValue">0</span>
+                            <button class="btn" onclick="clearLayerNoise()" style="flex: 1; padding: 6px 12px; font-size: 0.85em;">清除</button>
+                        </div>
+                        <div class="layer-property-row">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="perspectiveEnabled" onchange="toggleLayerPerspective()">
+                                启用透视变换
+                            </label>
+                            <button class="btn" onclick="resetLayerPerspective()" style="flex: 1; padding: 6px 12px; font-size: 0.85em;">重置</button>
+                        </div>
+                        <div class="layer-property-row" id="perspectiveControls" style="display: none;">
+                            <label>左上</label>
+                            <input type="number" id="persTLX" value="0" step="0.01" min="0" max="1" style="width: 50px;">
+                            <input type="number" id="persTLY" value="0" step="0.01" min="0" max="1" style="width: 50px;">
+                        </div>
+                        <div class="layer-property-row" id="perspectiveControls2" style="display: none;">
+                            <label>右上</label>
+                            <input type="number" id="persTRX" value="1" step="0.01" min="0" max="1" style="width: 50px;">
+                            <input type="number" id="persTRY" value="0" step="0.01" min="0" max="1" style="width: 50px;">
+                        </div>
+                        <div class="layer-property-row" id="perspectiveControls3" style="display: none;">
+                            <label>左下</label>
+                            <input type="number" id="persBLX" value="0" step="0.01" min="0" max="1" style="width: 50px;">
+                            <input type="number" id="persBLY" value="1" step="0.01" min="0" max="1" style="width: 50px;">
+                        </div>
+                        <div class="layer-property-row" id="perspectiveControls4" style="display: none;">
+                            <label>右下</label>
+                            <input type="number" id="persBRX" value="1" step="0.01" min="0" max="1" style="width: 50px;">
+                            <input type="number" id="persBRY" value="1" step="0.01" min="0" max="1" style="width: 50px;">
+                            <button class="btn" onclick="applyLayerPerspective()" style="flex: 1; padding: 6px 12px; font-size: 0.85em;">应用</button>
+                        </div>
+                    </div>
+
+                    <div class="layer-properties" id="batchOperations" style="display: none; margin-top: 15px;">
+                        <h4>批量操作</h4>
+                        <div class="layer-property-row">
+                            <label>批量移动 X</label>
+                            <input type="number" id="batchMoveX" value="0" style="width: 60px;">
+                            <label>批量移动 Y</label>
+                            <input type="number" id="batchMoveY" value="0" style="width: 60px;">
+                            <button class="btn" onclick="batchMoveLayers()" style="flex: 1; padding: 6px 12px; font-size: 0.85em;">应用</button>
+                        </div>
+                        <div class="layer-property-row">
+                            <label>批量旋转</label>
+                            <input type="number" id="batchRotation" value="0" style="width: 60px;">
+                            <span style="color: #888; font-size: 0.85em;">度</span>
+                            <button class="btn" onclick="batchRotateLayers()" style="flex: 1; padding: 6px 12px; font-size: 0.85em;">应用</button>
+                        </div>
+                        <div class="layer-property-row">
+                            <label>批量缩放</label>
+                            <input type="number" id="batchScale" value="100" min="10" max="300" style="width: 60px;">
+                            <span style="color: #888; font-size: 0.85em;">%</span>
+                            <button class="btn" onclick="batchScaleLayers()" style="flex: 1; padding: 6px 12px; font-size: 0.85em;">应用</button>
+                        </div>
+                        <div class="layer-property-row">
+                            <button class="btn" onclick="batchCenterLayers()" style="flex: 1; padding: 6px 12px; font-size: 0.85em;">批量居中</button>
+                            <button class="btn" onclick="alignLayersToTopLayer()" style="flex: 1; padding: 6px 12px; font-size: 0.85em;">对齐到顶层</button>
+                        </div>
+                        <div class="layer-property-row" style="margin-top: 10px;">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="selectAllLayers" onchange="toggleAllLayersSelection()">
+                                选择所有图层
+                            </label>
+                        </div>
+                        <div id="selectedLayersInfo" style="margin-top: 8px; color: #888; font-size: 0.85em;">
+                            已选择: 0 个图层
+                        </div>
+                    </div>
+                </div>
+
                 <div class="info-panel" id="infoPanel">
                     <p>尺寸: <span id="imageSize">未加载</span></p>
                     <p>格式: <span id="imageFormat">-</span></p>
@@ -3102,6 +3480,13 @@
                 this.lastPanPoint = { x: 0, y: 0 };
                 this.pinchStartDistance = 0;
                 this.pinchStartZoom = 1;
+
+                // 图层系统状态
+                this.layerStack = null;
+                this.activeLayerId = null;
+                this.isLayerMode = false;
+                this.layerHistoryStack = [];
+                this.layerRedoStack = [];
             }
 
             resetModes() {
@@ -3370,7 +3755,7 @@
                 const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
 
                 // 从 photon_wasm.js 导入初始化函数和所有导出
-                const { default: initWasm, ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint, wasm_register_font, wasm_is_font_registered, wasm_get_registered_fonts, wasm_unregister_font, wasm_clear_fonts, initThreadPool } = await import('./pkg/photon_wasm.js?v=27');
+                const { default: initWasm, ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint, Layer, LayerStack, wasm_register_font, wasm_is_font_registered, wasm_get_registered_fonts, wasm_unregister_font, wasm_clear_fonts, initThreadPool } = await import('./pkg/photon_wasm.js?v=28');
 
                 // 调用初始化函数来加载 WASM 模块
                 await initWasm();
@@ -3403,6 +3788,8 @@
                     BrushConfig,
                     BrushStroke,
                     StrokePoint,
+                    Layer,
+                    LayerStack,
                     // 字体注册函数
                     wasm_register_font,
                     wasm_is_font_registered,
@@ -3418,7 +3805,7 @@
 
         // 加载 WASM 模块并初始化
         const {
-            ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint,
+            ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint, Layer, LayerStack,
             wasm_register_font, wasm_is_font_registered, wasm_get_registered_fonts, wasm_unregister_font, wasm_clear_fonts
         } = await loadWasmModule();
 
@@ -3428,6 +3815,8 @@
         window.BrushConfig = BrushConfig;
         window.BrushStroke = BrushStroke;
         window.StrokePoint = StrokePoint;
+        window.Layer = Layer;
+        window.LayerStack = LayerStack;
 
         // 字体注册函数导出到全局
         window.wasm_register_font = wasm_register_font;
@@ -3438,6 +3827,922 @@
 
         // 从 IndexedDB 恢复持久化的字体
         restoreFontsFromDB();
+
+        // ==================== 图层管理功能 ====================
+
+        // 初始化图层系统
+        function initLayerSystem(width, height) {
+            if (!appState.layerStack) {
+                appState.layerStack = new LayerStack(width, height);
+                appState.layerStack.set_background_color(255, 255, 255, 255);
+                initIncrementalRendering();
+                document.getElementById('layersSection').style.display = 'block';
+                updateLayersList();
+                Logger.log('图层系统已初始化');
+            }
+        }
+
+        // 销毁图层系统
+        function destroyLayerSystem() {
+            if (appState.layerStack) {
+                appState.layerStack.clear_all();
+                appState.layerStack = null;
+                appState.activeLayerId = null;
+                appState.layerHistoryStack = [];
+                appState.layerRedoStack = [];
+                document.getElementById('layersSection').style.display = 'none';
+                Logger.log('图层系统已销毁');
+            }
+        }
+
+        // 新建图层
+        window.addNewLayer = function() {
+            if (!appState.layerStack) return;
+
+            const layerId = appState.layerStack.add_layer(`图层 ${appState.layerStack.layer_count + 1}`);
+            appState.activeLayerId = layerId;
+            saveLayerHistory();
+            updateLayersList();
+            updateLayerButtons();
+            Logger.log(`已创建新图层: ID ${layerId}`);
+        };
+
+        // 从文件添加图层
+        window.addLayerFromFile = async function(event) {
+            if (!appState.layerStack) return;
+
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                showLoading(true);
+
+                // 读取文件并解压图像
+                const arrayBuffer = await file.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+
+                // 创建临时 ImageProcessor 来处理图像
+                const tempProcessor = ImageProcessor.new_from_bytes(uint8Array);
+                const originalWidth = tempProcessor.get_width();
+                const originalHeight = tempProcessor.get_height();
+
+                // 获取 LayerStack 的画布尺寸
+                const canvasWidth = appState.layerStack.canvas_width;
+                const canvasHeight = appState.layerStack.canvas_height;
+
+                // 必须将图片缩放到画布尺寸
+                // 计算缩放比例（保持宽高比，居中显示）
+                const scaleX = canvasWidth / originalWidth;
+                const scaleY = canvasHeight / originalHeight;
+                const scale = Math.min(scaleX, scaleY);
+
+                // 计算缩放后的尺寸
+                const resizedWidth = Math.round(originalWidth * scale);
+                const resizedHeight = Math.round(originalHeight * scale);
+
+                // 缩放图片
+                tempProcessor.resize(resizedWidth, resizedHeight);
+
+                // 创建一个新的临时图像，将缩放后的图片放在画布中央，背景透明
+                const tempPixels = tempProcessor.get_raw_pixels();
+
+                // 创建与画布尺寸相同的像素数组（全透明）
+                const canvasPixels = new Uint8Array(canvasWidth * canvasHeight * 4).fill(0);
+
+                // 计算居中位置
+                const offsetX = Math.floor((canvasWidth - resizedWidth) / 2);
+                const offsetY = Math.floor((canvasHeight - resizedHeight) / 2);
+
+                // 将缩放后的图片复制到画布中央
+                for (let y = 0; y < resizedHeight; y++) {
+                    for (let x = 0; x < resizedWidth; x++) {
+                        const srcIndex = (y * resizedWidth + x) * 4;
+                        const dstX = offsetX + x;
+                        const dstY = offsetY + y;
+                        const dstIndex = (dstY * canvasWidth + dstX) * 4;
+
+                        if (dstX >= 0 && dstX < canvasWidth && dstY >= 0 && dstY < canvasHeight) {
+                            canvasPixels[dstIndex] = tempPixels[srcIndex];         // R
+                            canvasPixels[dstIndex + 1] = tempPixels[srcIndex + 1]; // G
+                            canvasPixels[dstIndex + 2] = tempPixels[srcIndex + 2]; // B
+                            canvasPixels[dstIndex + 3] = tempPixels[srcIndex + 3]; // A
+                        }
+                    }
+                }
+
+                // 创建新图层（使用画布尺寸的像素数据）
+                const layerId = appState.layerStack.add_layer_from_pixels(canvasPixels, file.name);
+
+                // 重置图层变换（因为图片已经居中，不需要额外的位置偏移）
+                const layer = appState.layerStack.get_layer(layerId);
+                if (layer) {
+                    layer.positionX = 0;
+                    layer.positionY = 0;
+                    layer.scaleX = 1.0;
+                    layer.scaleY = 1.0;
+                    layer.rotation = 0;
+                }
+
+                appState.activeLayerId = layerId;
+                saveLayerHistory();
+                updateLayersList();
+                updateLayerButtons();
+                renderLayersToCanvas();
+
+                Logger.log(`已从文件添加图层: ${file.name} (原始: ${originalWidth}x${originalHeight}, 缩放后: ${resizedWidth}x${resizedHeight}, ID: ${layerId})`);
+
+                // 清空文件输入，允许重复选择同一文件
+                document.getElementById('layerFileInput').value = '';
+            } catch (error) {
+                console.error('从文件添加图层失败:', error);
+                console.error('错误详情:', error.stack);
+                alert('添加图层失败，请确保文件是有效的图像');
+            } finally {
+                showLoading(false);
+            }
+        };
+
+        // 复制活动图层
+        window.duplicateActiveLayer = function() {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const newLayerId = appState.layerStack.duplicate_layer(appState.activeLayerId);
+            if (newLayerId !== undefined) {
+                appState.activeLayerId = newLayerId;
+                saveLayerHistory();
+                updateLayersList();
+                updateLayerButtons();
+                Logger.log(`已复制图层: ID ${newLayerId}`);
+            }
+        };
+
+        // 删除活动图层
+        window.deleteActiveLayer = function() {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            if (appState.layerStack.layer_count <= 1) {
+                alert('至少需要保留一个图层');
+                return;
+            }
+
+            if (confirm('确定要删除当前图层吗？')) {
+                appState.layerStack.remove_layer(appState.activeLayerId);
+                appState.activeLayerId = null;
+
+                // 选择新的活动图层
+                const layerIds = appState.layerStack.get_layer_ids();
+                if (layerIds.length > 0) {
+                    appState.activeLayerId = layerIds[layerIds.length - 1];
+                }
+
+                saveLayerHistory();
+                updateLayersList();
+                updateLayerButtons();
+                renderLayersToCanvas();
+                Logger.log('已删除图层');
+            }
+        };
+
+        // 向下合并图层
+        window.mergeDownLayer = function() {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const layerIds = appState.layerStack.get_layer_ids();
+            const activeIndex = layerIds.indexOf(appState.activeLayerId);
+
+            if (activeIndex <= 0) {
+                alert('没有可以合并的下方图层');
+                return;
+            }
+
+            if (appState.layerStack.merge_down(activeIndex)) {
+                appState.activeLayerId = layerIds[activeIndex - 1];
+                saveLayerHistory();
+                updateLayersList();
+                updateLayerButtons();
+                renderLayersToCanvas();
+                Logger.log('已向下合并图层');
+            }
+        };
+
+        // 合并所有可见图层
+        window.flattenLayers = function() {
+            if (!appState.layerStack) return;
+
+            if (confirm('确定要合并所有可见图层吗？此操作无法撤销。')) {
+                if (appState.layerStack.flatten()) {
+                    const layerIds = appState.layerStack.get_layer_ids();
+                    appState.activeLayerId = layerIds[layerIds.length - 1];
+                    updateLayersList();
+                    updateLayerButtons();
+                    renderLayersToCanvas();
+                    Logger.log('已合并所有图层');
+                }
+            }
+        };
+
+        // 设置活动图层
+        function setActiveLayer(layerId) {
+            appState.activeLayerId = layerId;
+            updateLayersList();
+            updateLayerButtons();
+        };
+
+        // 切换图层可见性
+        function toggleLayerVisibility(layerId) {
+            if (!appState.layerStack) return;
+
+            const layer = appState.layerStack.get_layer(layerId);
+            if (layer) {
+                layer.visible = !layer.visible;
+                updateLayersList();
+                renderLayersToCanvas();
+            }
+        };
+
+        // 更新图层列表 UI
+        function updateLayersList() {
+            if (!appState.layerStack) return;
+
+            const layersList = document.getElementById('layersList');
+            const layerIds = appState.layerStack.get_layer_ids();
+            const layerNames = appState.layerStack.get_layer_names();
+            const layerVis = appState.layerStack.get_layer_visibility();
+            const layerOpacities = appState.layerStack.get_layer_opacities();
+
+            if (layerIds.length === 0) {
+                layersList.innerHTML = '<div style="padding: 20px; color: #888; text-align: center;">暂无图层</div>';
+                return;
+            }
+
+            layersList.innerHTML = '';
+
+            // 从上到下显示（最后一个图层在最上层）
+            for (let i = layerIds.length - 1; i >= 0; i--) {
+                const layerId = layerIds[i];
+                const layerName = layerNames[i];
+                const isVisible = layerVis[i] === 1;
+                const opacity = layerOpacities[i];
+                const isSelected = appState.selectedLayerIds.has(layerId);
+
+                const layerItem = document.createElement('div');
+                layerItem.className = `layer-item ${layerId === appState.activeLayerId ? 'active' : ''} ${isSelected ? 'selected' : ''}`;
+                layerItem.dataset.layerId = layerId;
+                layerItem.draggable = true;
+
+                layerItem.innerHTML = `
+                    <div class="layer-visibility ${isVisible ? 'visible' : 'hidden'}"></div>
+                    <div class="layer-thumb">
+                        <canvas id="layerThumb-${layerId}" width="40" height="40"></canvas>
+                        <div class="selection-indicator"></div>
+                    </div>
+                    <div class="layer-info">
+                        <div class="layer-name">${layerName}</div>
+                        <div class="layer-details">
+                            <span>不透明度: ${Math.round(opacity / 255 * 100)}%</span>
+                        </div>
+                    </div>
+                    <div class="layer-actions">
+                        <button class="layer-action-btn" onclick="event.stopPropagation(); moveLayerUp(${layerId})" title="上移">↑</button>
+                        <button class="layer-action-btn" onclick="event.stopPropagation(); moveLayerDown(${layerId})" title="下移">↓</button>
+                    </div>
+                `;
+
+                // 点击选择图层（支持Ctrl/Shift多选）
+                layerItem.addEventListener('click', (e) => {
+                    if (e.ctrlKey || e.shiftKey) {
+                        toggleLayerSelection(layerId, e);
+                    } else {
+                        setActiveLayer(layerId);
+                        appState.selectedLayerIds.clear();
+                        appState.selectedLayerIds.add(layerId);
+                        updateLayersList();
+                        updateSelectedLayersInfo();
+                    }
+                });
+
+                // 点击可见性按钮
+                layerItem.querySelector('.layer-visibility').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleLayerVisibility(layerId);
+                });
+
+                // 拖拽排序
+                layerItem.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', layerId);
+                    layerItem.classList.add('dragging');
+                });
+
+                layerItem.addEventListener('dragend', () => {
+                    layerItem.classList.remove('dragging');
+                    document.querySelectorAll('.layer-item').forEach(item => {
+                        item.classList.remove('drag-over');
+                    });
+                });
+
+                layerItem.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    const targetId = parseInt(e.currentTarget.dataset.layerId);
+                    if (targetId !== layerId) {
+                        e.currentTarget.classList.add('drag-over');
+                    }
+                });
+
+                layerItem.addEventListener('dragleave', (e) => {
+                    e.currentTarget.classList.remove('drag-over');
+                });
+
+                layerItem.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('drag-over');
+                    const sourceId = parseInt(e.dataTransfer.getData('text/plain'));
+                    const targetId = parseInt(e.currentTarget.dataset.layerId);
+
+                    if (sourceId !== targetId) {
+                        moveLayerTo(sourceId, targetId);
+                    }
+                });
+
+                layersList.appendChild(layerItem);
+
+                // 异步生成缩略图
+                setTimeout(() => generateLayerThumbnail(layerId), 0);
+            }
+        }
+
+        // 生成图层缩略图
+        function generateLayerThumbnail(layerId) {
+            if (!appState.layerStack) return;
+
+            const layer = appState.layerStack.get_layer(layerId);
+            if (!layer) return;
+
+            const thumbCanvas = document.getElementById(`layerThumb-${layerId}`);
+            if (!thumbCanvas) return;
+
+            const ctx = thumbCanvas.getContext('2d');
+            const pixels = layer.get_pixels();
+
+            // 创建临时图像数据
+            const imageData = new ImageData(new Uint8ClampedArray(pixels), layer.width, layer.height);
+
+            // 绘制缩略图
+            ctx.clearRect(0, 0, 40, 40);
+
+            // 使用 Promise 正确处理 ImageBitmap
+            createImageBitmap(imageData).then(bitmap => {
+                ctx.clearRect(0, 0, 40, 40);
+                ctx.drawImage(bitmap, 0, 0, 40, 40);
+            }).catch(error => {
+                console.error('生成图层缩略图失败:', error);
+            });
+        }
+
+        // 上移图层
+        window.moveLayerUp = function(layerId) {
+            if (!appState.layerStack) return;
+
+            const layerIds = appState.layerStack.get_layer_ids();
+            const currentIndex = layerIds.indexOf(layerId);
+
+            if (currentIndex < layerIds.length - 1) {
+                appState.layerStack.move_layer(currentIndex, currentIndex + 1);
+                saveLayerHistory();
+                updateLayersList();
+                renderLayersToCanvas();
+            }
+        };
+
+        // 下移图层
+        window.moveLayerDown = function(layerId) {
+            if (!appState.layerStack) return;
+
+            const layerIds = appState.layerStack.get_layer_ids();
+            const currentIndex = layerIds.indexOf(layerId);
+
+            if (currentIndex > 0) {
+                appState.layerStack.move_layer(currentIndex, currentIndex - 1);
+                saveLayerHistory();
+                updateLayersList();
+                renderLayersToCanvas();
+            }
+        };
+
+        // 移动图层到指定位置
+        function moveLayerTo(sourceId, targetId) {
+            if (!appState.layerStack) return;
+
+            const layerIds = appState.layerStack.get_layer_ids();
+            const sourceIndex = layerIds.indexOf(sourceId);
+            const targetIndex = layerIds.indexOf(targetId);
+
+            if (sourceIndex !== -1 && targetIndex !== -1 && sourceIndex !== targetIndex) {
+                appState.layerStack.move_layer(sourceIndex, targetIndex);
+                saveLayerHistory();
+                updateLayersList();
+                renderLayersToCanvas();
+            }
+        }
+
+        // 更新图层按钮状态
+        function updateLayerButtons() {
+            const hasLayerStack = !!appState.layerStack;
+            const hasActiveLayer = !!appState.activeLayerId;
+            const hasMultipleLayers = hasLayerStack && appState.layerStack.layer_count > 1;
+            const canMergeDown = hasActiveLayer && hasLayerStack && appState.layerStack.get_layer_ids().indexOf(appState.activeLayerId) > 0;
+
+            document.getElementById('addLayerBtn').disabled = !hasLayerStack;
+            document.getElementById('addLayerFromFileBtn').disabled = !hasLayerStack;
+            document.getElementById('duplicateLayerBtn').disabled = !hasActiveLayer;
+            document.getElementById('deleteLayerBtn').disabled = !hasActiveLayer || !hasMultipleLayers;
+            document.getElementById('mergeDownBtn').disabled = !canMergeDown;
+            document.getElementById('flattenBtn').disabled = !hasMultipleLayers;
+
+            // 更新属性面板显示
+            const propertiesPanel = document.getElementById('layerProperties');
+            if (hasActiveLayer && hasLayerStack) {
+                propertiesPanel.style.display = 'block';
+                updateLayerPropertiesPanel();
+            } else {
+                propertiesPanel.style.display = 'none';
+            }
+        }
+
+        // 更新图层属性面板
+        function updateLayerPropertiesPanel() {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const layer = appState.layerStack.get_layer(appState.activeLayerId);
+            if (!layer) return;
+
+            document.getElementById('layerOpacitySlider').value = layer.opacity;
+            document.getElementById('layerOpacityValue').textContent = Math.round(layer.opacity / 255 * 100) + '%';
+            document.getElementById('layerBlendMode').value = layer.blend_mode;
+            document.getElementById('layerPosX').value = Math.round(layer.positionX);
+            document.getElementById('layerPosY').value = Math.round(layer.positionY);
+            document.getElementById('layerScaleSlider').value = layer.scaleX * 100;
+            document.getElementById('layerScaleValue').textContent = Math.round(layer.scaleX * 100) + '%';
+            document.getElementById('layerRotationSlider').value = layer.rotation;
+            document.getElementById('layerRotationValue').textContent = Math.round(layer.rotation) + '°';
+
+            // 重置明度和噪点滑块（这些值无法直接读取，所以重置为默认值）
+            document.getElementById('layerLightnessSlider').value = 0;
+            document.getElementById('layerLightnessValue').textContent = '0';
+            document.getElementById('layerNoiseSlider').value = 0;
+            document.getElementById('layerNoiseValue').textContent = '0';
+        }
+
+        // 更新图层不透明度
+        window.updateLayerOpacity = function(value) {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const opacity = parseInt(value);
+            appState.layerStack.set_layer_opacity(appState.activeLayerId, opacity);
+            document.getElementById('layerOpacityValue').textContent = Math.round(opacity / 255 * 100) + '%';
+            renderLayersToCanvas();
+        };
+
+        // 更新图层混合模式
+        window.updateLayerBlendMode = function(value) {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            appState.layerStack.set_layer_blend_mode(appState.activeLayerId, parseInt(value));
+            renderLayersToCanvas();
+        };
+
+        // 更新图层位置
+        window.updateLayerPosition = function() {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const x = parseFloat(document.getElementById('layerPosX').value);
+            const y = parseFloat(document.getElementById('layerPosY').value);
+            appState.layerStack.set_layer_position(appState.activeLayerId, x, y);
+            renderLayersToCanvas();
+        };
+
+        // 更新图层缩放
+        window.updateLayerScale = function(value) {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const scale = parseFloat(value) / 100;
+            appState.layerStack.set_layer_scale(appState.activeLayerId, scale, scale);
+            document.getElementById('layerScaleValue').textContent = Math.round(value) + '%';
+            renderLayersToCanvas();
+        };
+
+        // 更新图层旋转
+        window.updateLayerRotation = function(value) {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            appState.layerStack.set_layer_rotation(appState.activeLayerId, parseFloat(value));
+            document.getElementById('layerRotationValue').textContent = Math.round(value) + '°';
+            renderLayersToCanvas();
+        };
+
+        // 保存图层历史
+        function saveLayerHistory() {
+            if (!appState.layerStack) return;
+
+            // 简化版本：只保存图层数量和顺序
+            const layerIds = appState.layerStack.get_layer_ids().slice();
+            const layerNames = appState.layerStack.get_layer_names().slice();
+
+            appState.layerHistoryStack.push({
+                layerIds,
+                layerNames
+            });
+
+            if (appState.layerHistoryStack.length > 20) {
+                appState.layerHistoryStack.shift();
+            }
+
+            appState.layerRedoStack = [];
+        }
+
+        // 渲染图层到画布
+        function renderLayersToCanvas() {
+            if (!appState.layerStack) return;
+
+            const composited = appState.layerStack.render_composite();
+            // 使用 get_raw_pixels() 获取 RGBA 像素数据，而不是 get_bytes() 返回的压缩数据
+            const pixels = composited.get_raw_pixels();
+
+            const canvas = document.getElementById('imageCanvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+            const imageData = new ImageData(new Uint8ClampedArray(pixels), composited.get_width(), composited.get_height());
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        // ==================== 新增高级图层功能 ====================
+
+        // 图层选择管理
+        appState.selectedLayerIds = new Set();
+
+        // 切换图层选择状态
+        function toggleLayerSelection(layerId, event) {
+            if (!appState.layerStack) return;
+
+            if (event && event.ctrlKey) {
+                // Ctrl+点击：多选
+                if (appState.selectedLayerIds.has(layerId)) {
+                    appState.selectedLayerIds.delete(layerId);
+                } else {
+                    appState.selectedLayerIds.add(layerId);
+                }
+            } else if (event && event.shiftKey) {
+                // Shift+点击：范围选择
+                const layerIds = appState.layerStack.get_layer_ids();
+                const activeIndex = layerIds.indexOf(appState.activeLayerId);
+                const targetIndex = layerIds.indexOf(layerId);
+                const start = Math.min(activeIndex, targetIndex);
+                const end = Math.max(activeIndex, targetIndex);
+
+                appState.selectedLayerIds.clear();
+                for (let i = start; i <= end; i++) {
+                    appState.selectedLayerIds.add(layerIds[i]);
+                }
+            } else {
+                // 单击：单选
+                appState.selectedLayerIds.clear();
+                appState.selectedLayerIds.add(layerId);
+            }
+
+            updateLayersList();
+            updateSelectedLayersInfo();
+        }
+
+        // 全选/取消全选图层
+        window.toggleAllLayersSelection = function() {
+            if (!appState.layerStack) return;
+
+            const checkbox = document.getElementById('selectAllLayers');
+            if (checkbox.checked) {
+                const layerIds = appState.layerStack.get_layer_ids();
+                layerIds.forEach(id => appState.selectedLayerIds.add(id));
+            } else {
+                appState.selectedLayerIds.clear();
+            }
+
+            updateLayersList();
+            updateSelectedLayersInfo();
+        };
+
+        // 更新已选择图层信息显示
+        function updateSelectedLayersInfo() {
+            const info = document.getElementById('selectedLayersInfo');
+            if (info) {
+                info.textContent = `已选择: ${appState.selectedLayerIds.size} 个图层`;
+            }
+        }
+
+        // 水平翻转图层
+        window.flipLayerHorizontal = function() {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const layer = appState.layerStack.get_layer(appState.activeLayerId);
+            if (layer) {
+                layer.flipHorizontal = !layer.flipHorizontal;
+                saveLayerHistory();
+                renderLayersToCanvas();
+                Logger.log(`图层 ${layer.name} 水平翻转: ${layer.flipHorizontal}`);
+            }
+        };
+
+        // 垂直翻转图层
+        window.flipLayerVertical = function() {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const layer = appState.layerStack.get_layer(appState.activeLayerId);
+            if (layer) {
+                layer.flipVertical = !layer.flipVertical;
+                saveLayerHistory();
+                renderLayersToCanvas();
+                Logger.log(`图层 ${layer.name} 垂直翻转: ${layer.flipVertical}`);
+            }
+        };
+
+        // 更新图层明度
+        window.updateLayerLightness = function(value) {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const layer = appState.layerStack.get_layer(appState.activeLayerId);
+            if (layer) {
+                const lightness = parseInt(value);
+                layer.adjust_lightness(lightness, 0); // 0 = HSL color space
+                document.getElementById('layerLightnessValue').textContent = lightness;
+                renderLayersToCanvas();
+            }
+        };
+
+        // 清除图层明度调整
+        window.clearLayerLightness = function() {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const layer = appState.layerStack.get_layer(appState.activeLayerId);
+            if (layer) {
+                layer.clear_lightness();
+                document.getElementById('layerLightnessSlider').value = 0;
+                document.getElementById('layerLightnessValue').textContent = '0';
+                saveLayerHistory();
+                renderLayersToCanvas();
+                Logger.log(`图层 ${layer.name} 明度调整已清除`);
+            }
+        };
+
+        // 更新图层噪点
+        window.updateLayerNoise = function(value) {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const layer = appState.layerStack.get_layer(appState.activeLayerId);
+            if (layer) {
+                const strength = parseInt(value);
+                if (strength > 0) {
+                    layer.apply_noise(strength);
+                } else {
+                    layer.clear_noise();
+                }
+                document.getElementById('layerNoiseValue').textContent = strength;
+                renderLayersToCanvas();
+            }
+        };
+
+        // 清除图层噪点
+        window.clearLayerNoise = function() {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const layer = appState.layerStack.get_layer(appState.activeLayerId);
+            if (layer) {
+                layer.clear_noise();
+                document.getElementById('layerNoiseSlider').value = 0;
+                document.getElementById('layerNoiseValue').textContent = '0';
+                saveLayerHistory();
+                renderLayersToCanvas();
+                Logger.log(`图层 ${layer.name} 噪点效果已清除`);
+            }
+        };
+
+        // 切换批量操作面板
+        window.toggleBatchOperations = function() {
+            const panel = document.getElementById('batchOperations');
+            const btn = document.getElementById('batchOperationsBtn');
+            if (panel.style.display === 'none' || !panel.style.display) {
+                panel.style.display = 'block';
+                btn.classList.add('active');
+            } else {
+                panel.style.display = 'none';
+                btn.classList.remove('active');
+            }
+        };
+
+        // 批量移动图层
+        window.batchMoveLayers = function() {
+            if (!appState.layerStack || appState.selectedLayerIds.size === 0) {
+                Logger.log('请先选择要操作的图层');
+                return;
+            }
+
+            const deltaX = parseFloat(document.getElementById('batchMoveX').value) || 0;
+            const deltaY = parseFloat(document.getElementById('batchMoveY').value) || 0;
+
+            if (deltaX === 0 && deltaY === 0) {
+                Logger.log('请输入有效的移动距离');
+                return;
+            }
+
+            const layerIds = new Uint32Array(Array.from(appState.selectedLayerIds));
+            const count = appState.layerStack.batch_move_layers(layerIds, deltaX, deltaY);
+
+            saveLayerHistory();
+            renderLayersToCanvas();
+            Logger.log(`已批量移动 ${count} 个图层 (ΔX: ${deltaX}, ΔY: ${deltaY})`);
+        };
+
+        // 批量旋转图层
+        window.batchRotateLayers = function() {
+            if (!appState.layerStack || appState.selectedLayerIds.size === 0) {
+                Logger.log('请先选择要操作的图层');
+                return;
+            }
+
+            const degrees = parseFloat(document.getElementById('batchRotation').value) || 0;
+
+            const layerIds = new Uint32Array(Array.from(appState.selectedLayerIds));
+            const count = appState.layerStack.batch_set_rotation(layerIds, degrees);
+
+            saveLayerHistory();
+            renderLayersToCanvas();
+            Logger.log(`已批量旋转 ${count} 个图层 (${degrees}°)`);
+        };
+
+        // 批量缩放图层
+        window.batchScaleLayers = function() {
+            if (!appState.layerStack || appState.selectedLayerIds.size === 0) {
+                Logger.log('请先选择要操作的图层');
+                return;
+            }
+
+            const scale = (parseFloat(document.getElementById('batchScale').value) || 100) / 100;
+
+            const layerIds = new Uint32Array(Array.from(appState.selectedLayerIds));
+            const count = appState.layerStack.batch_set_scale_uniform(layerIds, scale);
+
+            saveLayerHistory();
+            renderLayersToCanvas();
+            Logger.log(`已批量缩放 ${count} 个图层 (${Math.round(scale * 100)}%)`);
+        };
+
+        // 批量居中图层
+        window.batchCenterLayers = function() {
+            if (!appState.layerStack || appState.selectedLayerIds.size === 0) {
+                Logger.log('请先选择要操作的图层');
+                return;
+            }
+
+            const layerIds = new Uint32Array(Array.from(appState.selectedLayerIds));
+            const count = appState.layerStack.batch_center_layers(layerIds);
+
+            saveLayerHistory();
+            renderLayersToCanvas();
+            Logger.log(`已批量居中 ${count} 个图层`);
+        };
+
+        // 对齐所有图层到顶层
+        window.alignLayersToTopLayer = function() {
+            if (!appState.layerStack || appState.selectedLayerIds.size === 0) {
+                Logger.log('请先选择要操作的图层');
+                return;
+            }
+
+            const layerIds = appState.layerStack.get_layer_ids();
+            if (layerIds.length < 2) {
+                Logger.log('至少需要两个图层才能进行对齐');
+                return;
+            }
+
+            const topLayerId = layerIds[layerIds.length - 1];
+            const targetIds = new Uint32Array(Array.from(appState.selectedLayerIds).filter(id => id !== topLayerId));
+
+            if (targetIds.length === 0) {
+                Logger.log('请选择除顶层图层外的其他图层');
+                return;
+            }
+
+            const success = appState.layerStack.align_layers_to_layer(targetIds, topLayerId);
+
+            if (success) {
+                saveLayerHistory();
+                renderLayersToCanvas();
+                Logger.log(`已将 ${targetIds.length} 个图层对齐到顶层图层`);
+            } else {
+                Logger.log('对齐失败');
+            }
+        };
+
+        // ==================== 透视变换功能 ====================
+
+        // 切换图层透视变换
+        window.toggleLayerPerspective = function() {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const layer = appState.layerStack.get_layer(appState.activeLayerId);
+            if (!layer) return;
+
+            const enabled = document.getElementById('perspectiveEnabled').checked;
+            layer.perspectiveEnabled = enabled;
+
+            const controls = [
+                'perspectiveControls',
+                'perspectiveControls2',
+                'perspectiveControls3',
+                'perspectiveControls4'
+            ];
+
+            controls.forEach(id => {
+                document.getElementById(id).style.display = enabled ? 'flex' : 'none';
+            });
+
+            if (enabled) {
+                // 加载当前的透视点
+                const points = layer.get_perspective_points();
+                if (points && points.length === 8) {
+                    document.getElementById('persTLX').value = points[0].toFixed(2);
+                    document.getElementById('persTLY').value = points[1].toFixed(2);
+                    document.getElementById('persTRX').value = points[2].toFixed(2);
+                    document.getElementById('persTRY').value = points[3].toFixed(2);
+                    document.getElementById('persBLX').value = points[4].toFixed(2);
+                    document.getElementById('persBLY').value = points[5].toFixed(2);
+                    document.getElementById('persBRX').value = points[6].toFixed(2);
+                    document.getElementById('persBRY').value = points[7].toFixed(2);
+                }
+            }
+
+            saveLayerHistory();
+            renderLayersToCanvas();
+            Logger.log(`图层 ${layer.name} 透视变换: ${enabled ? '启用' : '禁用'}`);
+        };
+
+        // 应用图层透视变换
+        window.applyLayerPerspective = function() {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const layer = appState.layerStack.get_layer(appState.activeLayerId);
+            if (!layer) return;
+
+            const tlX = parseFloat(document.getElementById('persTLX').value) || 0;
+            const tlY = parseFloat(document.getElementById('persTLY').value) || 0;
+            const trX = parseFloat(document.getElementById('persTRX').value) || 1;
+            const trY = parseFloat(document.getElementById('persTRY').value) || 0;
+            const blX = parseFloat(document.getElementById('persBLX').value) || 0;
+            const blY = parseFloat(document.getElementById('persBLY').value) || 1;
+            const brX = parseFloat(document.getElementById('persBRX').value) || 1;
+            const brY = parseFloat(document.getElementById('persBRY').value) || 1;
+
+            layer.set_perspective_points(tlX, tlY, trX, trY, blX, blY, brX, brY);
+
+            saveLayerHistory();
+            renderLayersToCanvas();
+            Logger.log(`图层 ${layer.name} 透视变换已应用`);
+        };
+
+        // 重置图层透视变换
+        window.resetLayerPerspective = function() {
+            if (!appState.layerStack || !appState.activeLayerId) return;
+
+            const layer = appState.layerStack.get_layer(appState.activeLayerId);
+            if (!layer) return;
+
+            layer.reset_perspective();
+            layer.perspectiveEnabled = false;
+            document.getElementById('perspectiveEnabled').checked = false;
+
+            const controls = [
+                'perspectiveControls',
+                'perspectiveControls2',
+                'perspectiveControls3',
+                'perspectiveControls4'
+            ];
+
+            controls.forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+
+            saveLayerHistory();
+            renderLayersToCanvas();
+            Logger.log(`图层 ${layer.name} 透视变换已重置`);
+        };
+
+        // ==================== 增量渲染优化 ====================
+
+        // 初始化时启用增量渲染
+        function initIncrementalRendering() {
+            if (appState.layerStack) {
+                appState.layerStack.set_incremental_rendering(true);
+                Logger.log('增量渲染已启用');
+            }
+        }
+
+        // ==================== 图层管理功能结束 ====================
 
         // 保存当前状态到历史记录
         function saveToHistory() {
@@ -4438,7 +5743,7 @@
                 updateColorDisplay(r, g, b, hex);
 
                 // 显示取色点标记
-                showColorPickerMarker(x, y, hex);
+                showColorPickerMarker(imageX, imageY, hex);
 
                 Logger.log(`取色成功: RGB(${r}, ${g}, ${b}) - ${hex}`);
             } else {
@@ -5493,6 +6798,14 @@
 
                         // 更新主色调显示
                         updateDominantColors();
+
+                        // 初始化图层系统，将当前图像作为背景图层
+                        // 注意：使用解压后的像素数据（pixels），而不是原始压缩数据（uint8Array）
+                        initLayerSystem(width, height);
+                        const bgLayerId = appState.layerStack.add_layer_from_pixels(pixels, '背景');
+                        appState.activeLayerId = bgLayerId;
+                        updateLayersList();
+                        updateLayerButtons();
                     } catch (error) {
                         console.error('Failed to load image:', error);
                         console.error('错误详情:', error.stack);
@@ -8225,6 +9538,9 @@
             appState.clearProcessor();
             appState.clearImageData();
             appState.clearCanvas();
+
+            // 销毁图层系统
+            destroyLayerSystem();
 
             // 重置文件输入框，确保可以重复选择同一文件
             document.getElementById('fileInput').value = '';
