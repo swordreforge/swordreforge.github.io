@@ -10203,9 +10203,183 @@
             showLoading(false);
         }
 
-        // 多边形抠图模式相关变量
+        // ==================== 辅助算法：曲线简化和多边形校验 ====================
 
-        // 切换多边形抠图模式
+        // Douglas-Peucker 曲线简化算法
+        // 将密集的点集简化为保持形状的关键点
+        // points: 点数组，每个点为 {x, y}
+        // tolerance: 简化容差，越大简化程度越高
+        function simplifyPolygon(points, tolerance) {
+            if (points.length <= 2) return points;
+
+            // 找到距离首尾连线最远的点
+            let maxDistance = 0;
+            let maxIndex = 0;
+            const start = points[0];
+            const end = points[points.length - 1];
+
+            for (let i = 1; i < points.length - 1; i++) {
+                const distance = perpendicularDistance(points[i], start, end);
+                if (distance > maxDistance) {
+                    maxDistance = distance;
+                    maxIndex = i;
+                }
+            }
+
+            // 如果最大距离大于容差，递归简化
+            if (maxDistance > tolerance) {
+                const leftPart = simplifyPolygon(points.slice(0, maxIndex + 1), tolerance);
+                const rightPart = simplifyPolygon(points.slice(maxIndex), tolerance);
+                // 合并结果，去除重复点
+                return leftPart.slice(0, -1).concat(rightPart);
+            } else {
+                // 返回首尾点
+                return [start, end];
+            }
+        }
+
+        // 计算点到线段的垂直距离
+        function perpendicularDistance(point, lineStart, lineEnd) {
+            const dx = lineEnd.x - lineStart.x;
+            const dy = lineEnd.y - lineStart.y;
+
+            // 如果线段长度为0，返回点到点的距离
+            if (dx === 0 && dy === 0) {
+                return Math.sqrt(Math.pow(point.x - lineStart.x, 2) + Math.pow(point.y - lineStart.y, 2));
+            }
+
+            // 计算点到直线的垂直距离
+            const numerator = Math.abs(dy * point.x - dx * point.y + lineEnd.x * lineStart.y - lineEnd.y * lineStart.x);
+            const denominator = Math.sqrt(dx * dx + dy * dy);
+            return numerator / denominator;
+        }
+
+        // 检测多边形自交
+        // 如果检测到自交，返回 true
+        function hasSelfIntersection(points) {
+            if (points.length < 4) return false;
+
+            const n = points.length;
+
+            // 检查每条边是否与其他边相交（除了相邻边）
+            for (let i = 0; i < n; i++) {
+                const p1 = points[i];
+                const p2 = points[(i + 1) % n];
+
+                for (let j = i + 2; j < n; j++) {
+                    // 跳过相邻边
+                    if (j === i + 1 || (j === 0 && i === n - 1)) continue;
+
+                    const p3 = points[j];
+                    const p4 = points[(j + 1) % n];
+
+                    if (doLinesIntersect(p1, p2, p3, p4)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        // 检测两条线段是否相交
+        function doLinesIntersect(p1, p2, p3, p4) {
+            // 检查端点重合（共享端点不算自交）
+            const epsilon = 0.1; // 浮点精度容差
+            if (arePointsEqual(p1, p3, epsilon) || arePointsEqual(p1, p4, epsilon) ||
+                arePointsEqual(p2, p3, epsilon) || arePointsEqual(p2, p4, epsilon)) {
+                return false;
+            }
+
+            const ccw1 = ccw(p1, p2, p3);
+            const ccw2 = ccw(p1, p2, p4);
+            const ccw3 = ccw(p3, p4, p1);
+            const ccw4 = ccw(p3, p4, p2);
+
+            // 如果两条线段的端点在对方的两侧，则相交
+            if ((ccw1 * ccw2 < 0) && (ccw3 * ccw4 < 0)) {
+                return true;
+            }
+
+            // 检查共线情况（但排除端点重合的情况）
+            if (ccw1 === 0 && isOnSegment(p1, p2, p3) && !arePointsEqual(p1, p3, epsilon) && !arePointsEqual(p2, p3, epsilon)) return true;
+            if (ccw2 === 0 && isOnSegment(p1, p2, p4) && !arePointsEqual(p1, p4, epsilon) && !arePointsEqual(p2, p4, epsilon)) return true;
+            if (ccw3 === 0 && isOnSegment(p3, p4, p1) && !arePointsEqual(p3, p1, epsilon) && !arePointsEqual(p4, p1, epsilon)) return true;
+            if (ccw4 === 0 && isOnSegment(p3, p4, p2) && !arePointsEqual(p3, p2, epsilon) && !arePointsEqual(p4, p2, epsilon)) return true;
+
+            return false;
+        }
+
+        // 判断两点是否相等（考虑浮点精度）
+        function arePointsEqual(a, b, epsilon) {
+            return Math.abs(a.x - b.x) < epsilon && Math.abs(a.y - b.y) < epsilon;
+        }
+
+        // 计算三个点的叉积（判断方向）
+        function ccw(a, b, c) {
+            return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+        }
+
+        // 判断点 c 是否在线段 ab 上
+        function isOnSegment(a, b, c) {
+            return Math.min(a.x, b.x) <= c.x && c.x <= Math.max(a.x, b.x) &&
+                   Math.min(a.y, b.y) <= c.y && c.y <= Math.max(a.y, b.y);
+        }
+
+        // 确保多边形顶点顺序一致（顺时针或逆时针）
+        // 返回统一为逆时针顺序的多边形
+        function normalizePolygonOrder(points) {
+            if (points.length < 3) return points;
+
+            // 计算有符号面积（使用鞋带公式）
+            let area = 0;
+            const n = points.length;
+
+            for (let i = 0; i < n; i++) {
+                const j = (i + 1) % n;
+                area += points[i].x * points[j].y;
+                area -= points[j].x * points[i].y;
+            }
+
+            area /= 2;
+
+            // 如果面积为正，顺序为逆时针；如果为负，需要反转
+            if (area > 0) {
+                return points;
+            } else {
+                return [...points].reverse();
+            }
+        }
+
+        // 自适应简化容差计算
+        // 根据多边形大小自动选择合适的容差
+        function calculateAdaptiveTolerance(points, imageWidth) {
+            // 计算多边形的边界框
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            points.forEach(p => {
+                minX = Math.min(minX, p.x);
+                minY = Math.min(minY, p.y);
+                maxX = Math.max(maxX, p.x);
+                maxY = Math.max(maxY, p.y);
+            });
+
+            const width = maxX - minX;
+            const height = maxY - minY;
+
+            // 容差为图像宽度的 1/500，但至少为 2 像素
+            const tolerance = Math.max(2, imageWidth / 500);
+
+            return tolerance;
+        }
+
+        // ==================== 多边形抠图（套索模式）====================
+
+        // 多边形抠图模式相关变量
+        let polygonLassoPoints = [];  // 原始密集路径点
+        let polygonLassoDrawing = false;  // 是否正在绘制
+        let polygonLastSamplePoint = null;  // 上一次采样的点
+
+        // 切换多边形抠图模式（套索绘制）
         window.togglePolygonCropMode = function() {
             if (!appState.processor) return;
 
@@ -10223,6 +10397,9 @@
             if (appState.isPolygonCropMode) {
                 btn.classList.add('active');
                 appState.polygonPoints = [];
+                polygonLassoPoints = [];
+                polygonLassoDrawing = false;
+                polygonLastSamplePoint = null;
                 canvas.style.cursor = 'crosshair';
 
                 // 显示 cropOverlay 用于绘制预览
@@ -10233,10 +10410,13 @@
                 cropOverlay.style.width = canvasRect.width + 'px';
                 cropOverlay.style.height = canvasRect.height + 'px';
 
-                alert('多边形抠图模式已启用\n\n点击画布添加顶点\n添加第3个点后自动预览抠图效果\n点击"确认抠图"应用，点击"取消"放弃');
+                alert('多边形抠图模式已启用（套索绘制）\n\n按住鼠标拖动绘制自由曲线\n松开鼠标后自动简化为多边形\n点击"确认抠图"应用，点击"取消"放弃');
             } else {
                 btn.classList.remove('active');
                 appState.polygonPoints = [];
+                polygonLassoPoints = [];
+                polygonLassoDrawing = false;
+                polygonLastSamplePoint = null;
                 canvas.style.cursor = 'default';
 
                 // 隐藏 cropOverlay 并清空
@@ -10248,36 +10428,25 @@
             }
         };
         
-        // 画布点击事件（用于多边形抠图）
+        // 画布鼠标事件（用于多边形套索抠图）
         const canvasElement = document.getElementById('imageCanvas');
         const cropOverlayElement = document.getElementById('cropOverlay');
 
-        // 定义多边形抠图点击处理函数
-        function handlePolygonClick(e) {
+        // 定义多边形套索鼠标按下处理函数
+        function handlePolygonMouseDown(e) {
             if (!appState.isPolygonCropMode || !appState.processor) return;
+            if (e.button !== 0) return; // 只响应左键
 
-            // 如果在预览模式下，点击会继续添加点
-            if (isMaskPreviewMode && currentMaskType === 'polygon') {
-                // 添加新点
-                const canvas = document.getElementById('imageCanvas');
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
+            e.preventDefault();
 
-                const x = (e.clientX - rect.left) * scaleX;
-                const y = (e.clientY - rect.top) * scaleY;
+            // 清空之前的数据
+            polygonLassoPoints = [];
+            polygonLassoDrawing = true;
+            polygonLastSamplePoint = null;
+            appState.polygonPoints = [];
 
-                appState.polygonPoints.push({ x, y });
-
-                // 重新绘制多边形预览（在原图上）
-                updateCanvas();
-                drawPolygonPreview();
-                return;
-            }
-
+            // 获取起始点
             const canvas = document.getElementById('imageCanvas');
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
@@ -10285,41 +10454,199 @@
             const x = (e.clientX - rect.left) * scaleX;
             const y = (e.clientY - rect.top) * scaleY;
 
-            appState.polygonPoints.push({ x, y });
+            polygonLassoPoints.push({ x, y });
+            polygonLastSamplePoint = { x, y };
 
-            // 绘制预览
-            updateCanvas();
+            drawPolygonLassoPreview();
+        }
+
+        // 定义多边形套索鼠标移动处理函数
+        function handlePolygonMouseMove(e) {
+            if (!appState.isPolygonCropMode || !polygonLassoDrawing || !appState.processor) return;
+
+            e.preventDefault();
+
+            const canvas = document.getElementById('imageCanvas');
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+
+            // 距离采样：只有与上一个采样点的距离超过阈值才记录
+            const minSampleDistance = 5; // 最小采样距离（像素）
+            if (polygonLastSamplePoint) {
+                const distance = Math.sqrt(
+                    Math.pow(x - polygonLastSamplePoint.x, 2) +
+                    Math.pow(y - polygonLastSamplePoint.y, 2)
+                );
+
+                if (distance < minSampleDistance) {
+                    return; // 距离太近，跳过
+                }
+            }
+
+            polygonLassoPoints.push({ x, y });
+            polygonLastSamplePoint = { x, y };
+
+            drawPolygonLassoPreview();
+
+            // 检查是否闭合（起点和终点距离小于20px）
+            if (polygonLassoPoints.length >= 10) {
+                const firstPoint = polygonLassoPoints[0];
+                const lastPoint = polygonLassoPoints[polygonLassoPoints.length - 1];
+                const distance = Math.sqrt(
+                    Math.pow(lastPoint.x - firstPoint.x, 2) +
+                    Math.pow(lastPoint.y - firstPoint.y, 2)
+                );
+
+                if (distance < 20) {
+                    // 自动闭合
+                    finishPolygonLasso();
+                }
+            }
+        }
+
+        // 定义多边形套索鼠标松开处理函数
+        function handlePolygonMouseUp(e) {
+            if (!appState.isPolygonCropMode || !polygonLassoDrawing) return;
+
+            e.preventDefault();
+
+            finishPolygonLasso();
+        }
+
+        // 完成套索绘制
+        function finishPolygonLasso() {
+            if (!polygonLassoDrawing || polygonLassoPoints.length < 3) {
+                polygonLassoDrawing = false;
+                polygonLassoPoints = [];
+                return;
+            }
+
+            polygonLassoDrawing = false;
+
+            // 简化路径
+            const imageWidth = appState.processor.get_width();
+            const tolerance = calculateAdaptiveTolerance(polygonLassoPoints, imageWidth);
+            const simplifiedPoints = simplifyPolygon(polygonLassoPoints, tolerance);
+
+            // 规范化顶点顺序
+            appState.polygonPoints = normalizePolygonOrder(simplifiedPoints);
+
+            // 检测自交
+            if (hasSelfIntersection(appState.polygonPoints)) {
+                alert('检测到自交多边形，请重新绘制。\n提示：绘制简单的封闭曲线，避免交叉。');
+                appState.polygonPoints = [];
+                polygonLassoPoints = [];
+                clearPolygonOverlay();
+                return;
+            }
+
+            // 确保至少有3个点
+            if (appState.polygonPoints.length < 3) {
+                alert('多边形至少需要3个顶点');
+                appState.polygonPoints = [];
+                polygonLassoPoints = [];
+                clearPolygonOverlay();
+                return;
+            }
+
+            // 进入预览模式
             drawPolygonPreview();
+            enterPolygonPreviewMode();
 
-            // 当添加第3个点时，进入预览模式（显示确认/取消框，但不应用抠图）
-            if (appState.polygonPoints.length === 3) {
-                enterPolygonPreviewMode();
-            }
+            Logger.log(`套索绘制完成：采集了 ${polygonLassoPoints.length} 个点，简化为 ${appState.polygonPoints.length} 个顶点`);
         }
 
-        // 定义右键点击处理函数
+        // 清除多边形覆盖层
+        function clearPolygonOverlay() {
+            const cropOverlay = document.getElementById('cropOverlay');
+            const ctx = cropOverlay.getContext('2d');
+            ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
+        }
+
+        // 绘制套索预览（原始密集路径）
+        function drawPolygonLassoPreview() {
+            const cropOverlay = document.getElementById('cropOverlay');
+            const ctx = cropOverlay.getContext('2d', { willReadFrequently: true });
+
+            ctx.clearRect(0, 0, cropOverlay.width, cropOverlay.height);
+
+            if (polygonLassoPoints.length === 0) return;
+
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            ctx.beginPath();
+            ctx.moveTo(polygonLassoPoints[0].x, polygonLassoPoints[0].y);
+
+            for (let i = 1; i < polygonLassoPoints.length; i++) {
+                ctx.lineTo(polygonLassoPoints[i].x, polygonLassoPoints[i].y);
+            }
+
+            ctx.stroke();
+
+            // 绘制起点标记
+            ctx.fillStyle = '#fff';
+            ctx.strokeStyle = '#667eea';
+            ctx.beginPath();
+            ctx.arc(polygonLassoPoints[0].x, polygonLassoPoints[0].y, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // 绘制终点标记
+            const lastPoint = polygonLassoPoints[polygonLassoPoints.length - 1];
+            ctx.beginPath();
+            ctx.arc(lastPoint.x, lastPoint.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        // 定义右键点击处理函数（取消绘制）
         function handlePolygonContextMenu(e) {
-            if (appState.isPolygonCropMode && appState.polygonPoints.length >= 3) {
+            if (appState.isPolygonCropMode && polygonLassoDrawing) {
                 e.preventDefault();
-                enterPolygonMaskPreview();
+                polygonLassoDrawing = false;
+                polygonLassoPoints = [];
+                appState.polygonPoints = [];
+                clearPolygonOverlay();
+                Logger.log('已取消套索绘制');
             }
         }
 
-        // 定义双击处理函数
+        // 定义双击处理函数（结束绘制）
         function handlePolygonDoubleClick(e) {
-            if (appState.isPolygonCropMode && appState.polygonPoints.length >= 3) {
+            if (appState.isPolygonCropMode && polygonLassoDrawing) {
                 e.preventDefault();
-                enterPolygonMaskPreview();
+                finishPolygonLasso();
             }
         }
 
         // 在 imageCanvas 上添加事件监听器
-        canvasElement.addEventListener('click', handlePolygonClick);
+        canvasElement.addEventListener('mousedown', handlePolygonMouseDown);
+        canvasElement.addEventListener('mousemove', handlePolygonMouseMove);
+        canvasElement.addEventListener('mouseup', handlePolygonMouseUp);
+        canvasElement.addEventListener('mouseleave', function(e) {
+            if (polygonLassoDrawing) {
+                handlePolygonMouseUp(e);
+            }
+        });
         canvasElement.addEventListener('contextmenu', handlePolygonContextMenu);
         canvasElement.addEventListener('dblclick', handlePolygonDoubleClick);
 
         // 在 cropOverlay 上也添加事件监听器（当多边形抠图模式时）
-        cropOverlayElement.addEventListener('click', handlePolygonClick);
+        cropOverlayElement.addEventListener('mousedown', handlePolygonMouseDown);
+        cropOverlayElement.addEventListener('mousemove', handlePolygonMouseMove);
+        cropOverlayElement.addEventListener('mouseup', handlePolygonMouseUp);
+        cropOverlayElement.addEventListener('mouseleave', function(e) {
+            if (polygonLassoDrawing) {
+                handlePolygonMouseUp(e);
+            }
+        });
         cropOverlayElement.addEventListener('contextmenu', handlePolygonContextMenu);
         cropOverlayElement.addEventListener('dblclick', handlePolygonDoubleClick);
         
@@ -10376,7 +10703,7 @@
             currentMaskType = 'polygon';
             isMaskPreviewMode = true;
 
-            alert('预览模式下，您可以继续添加顶点调整选区\n点击"确认抠图"应用，点击"取消"放弃');
+            alert('套索绘制已完成\n简化后：' + appState.polygonPoints.length + ' 个顶点\n点击"确认抠图"应用，点击"取消"放弃\n如需重新绘制，请点击"取消"后重新开始');
         }
 
         // 进入多边形抠图预览模式（应用抠图效果）
