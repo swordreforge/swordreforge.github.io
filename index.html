@@ -12141,6 +12141,23 @@
                 appState.initialTextBox = { x: appState.textBox.x, y: appState.textBox.y };
                 e.preventDefault();
                 e.stopPropagation();
+
+                // 在文档级别添加mousemove和mouseup事件监听器
+                const textDragHandler = (e) => {
+                    if (!appState.isTextDragging) return;
+                    handleCanvasMouseMove(e);
+                };
+
+                const textDragEndHandler = () => {
+                    if (!appState.isTextDragging) return;
+                    appState.isTextDragging = false;
+                    textBoxEl.classList.remove('dragging');
+                    document.removeEventListener('mousemove', textDragHandler);
+                    document.removeEventListener('mouseup', textDragEndHandler);
+                };
+
+                document.addEventListener('mousemove', textDragHandler);
+                document.addEventListener('mouseup', textDragEndHandler);
             });
         }
 
