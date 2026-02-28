@@ -1125,6 +1125,28 @@
         .watermark-handle.sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
         .watermark-handle.se { bottom: -7px; right: -7px; cursor: nwse-resize; }
 
+        /* 文本框缩放手柄 */
+        .text-handle {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border: 2px solid #333;
+            pointer-events: auto;
+            z-index: 10;
+            display: none;
+        }
+
+        .text-box:hover .text-handle,
+        .text-box.dragging .text-handle {
+            display: block;
+        }
+
+        .text-handle.nw { top: -7px; left: -7px; cursor: nwse-resize; }
+        .text-handle.ne { top: -7px; right: -7px; cursor: nesw-resize; }
+        .text-handle.sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
+        .text-handle.se { bottom: -7px; right: -7px; cursor: nwse-resize; }
+
         /* 自由框选样式 */
         .free-select-overlay {
             position: absolute;
@@ -2942,7 +2964,13 @@
                         <button class="btn btn-success" onclick="confirmMaskPreview()">✓ 确认抠图</button>
                         <button class="btn btn-danger" onclick="cancelMaskPreview()">✕ 取消</button>
                     </div>
-                    <div id="textBox" class="text-box" style="display: none;"></div>
+                    <div id="textBox" class="text-box" style="display: none;">
+                    <span id="textBoxContent"></span>
+                    <div class="text-handle nw"></div>
+                    <div class="text-handle ne"></div>
+                    <div class="text-handle sw"></div>
+                    <div class="text-handle se"></div>
+                </div>
                     <div id="watermarkPreview" class="watermark-preview" style="display: none;">
                         <img id="watermarkPreviewImg" src="" alt="水印预览">
                         <div class="watermark-handle nw"></div>
@@ -3628,6 +3656,9 @@
                 this.watermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
                 this.textDragStart = { x: 0, y: 0 };
                 this.initialTextBox = { x: 0, y: 0 };
+                this.isTextResizing = false;
+                this.textResizeHandle = null;
+                this.initialTextFontSize = 0;
                 this.watermarkDragStart = { x: 0, y: 0 };
                 this.watermarkResizeHandle = null;
                 this.initialWatermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
@@ -3705,6 +3736,9 @@
                 this.textDragStart = { x: 0, y: 0 };
                 this.initialTextBox = { x: 0, y: 0 };
                 this.watermarkDragStart = { x: 0, y: 0 };
+                this.isTextResizing = false;
+                this.textResizeHandle = null;
+                this.initialTextFontSize = 0;
                 this.watermarkResizeHandle = null;
                 this.initialWatermarkPreview = { x: 0, y: 0, width: 0, height: 0 };
                 this.isBrushDrawing = false;
@@ -6531,6 +6565,66 @@
                 textBoxEl.style.top = (canvasOffsetY + newY / scale.scaleY) + 'px';
             }
 
+            // 文本框缩放
+            if (appState.isTextMode && appState.isTextResizing) {
+                const textBoxEl = document.getElementById('textBox');
+                const dx = mouseOrigX - appState.textDragStart.x;
+                const dy = mouseOrigY - appState.textDragStart.y;
+                const minFontSize = 10;
+                const maxFontSize = 500;
+
+                let newFontSize = appState.initialTextFontSize;
+
+                // 根据不同的手柄调整字体大小
+                switch (appState.textResizeHandle) {
+                    case 'se':
+                        // 右下角：根据X和Y的较大变化调整
+                        const deltaSE = Math.max(Math.abs(dx), Math.abs(dy));
+                        if (dx > 0 || dy > 0) {
+                            newFontSize = Math.min(maxFontSize, appState.initialTextFontSize + deltaSE * 0.5);
+                        } else {
+                            newFontSize = Math.max(minFontSize, appState.initialTextFontSize - deltaSE * 0.5);
+                        }
+                        break;
+                    case 'sw':
+                        // 左下角：根据X和Y的较大变化调整
+                        const deltaSW = Math.max(Math.abs(dx), Math.abs(dy));
+                        if (dx < 0 || dy > 0) {
+                            newFontSize = Math.min(maxFontSize, appState.initialTextFontSize + deltaSW * 0.5);
+                        } else {
+                            newFontSize = Math.max(minFontSize, appState.initialTextFontSize - deltaSW * 0.5);
+                        }
+                        break;
+                    case 'ne':
+                        // 右上角：根据X和Y的较大变化调整
+                        const deltaNE = Math.max(Math.abs(dx), Math.abs(dy));
+                        if (dx > 0 || dy < 0) {
+                            newFontSize = Math.min(maxFontSize, appState.initialTextFontSize + deltaNE * 0.5);
+                        } else {
+                            newFontSize = Math.max(minFontSize, appState.initialTextFontSize - deltaNE * 0.5);
+                        }
+                        break;
+                    case 'nw':
+                        // 左上角：根据X和Y的较大变化调整
+                        const deltaNW = Math.max(Math.abs(dx), Math.abs(dy));
+                        if (dx < 0 || dy < 0) {
+                            newFontSize = Math.min(maxFontSize, appState.initialTextFontSize + deltaNW * 0.5);
+                        } else {
+                            newFontSize = Math.max(minFontSize, appState.initialTextFontSize - deltaNW * 0.5);
+                        }
+                        break;
+                }
+
+                appState.textBox.fontSize = Math.round(newFontSize);
+
+                // 更新字体大小滑块和显示值
+                document.getElementById('fontSizeSlider').value = appState.textBox.fontSize;
+                document.getElementById('fontSizeValue').textContent = appState.textBox.fontSize;
+
+                // 更新预览
+                updateTextBoxPreview();
+            }
+
             // 自由框选模式：更新选区框
             if (appState.isFreeSelectMode && appState.isFreeSelectDrawing) {
                 const canvasContainer = document.getElementById('canvasContainer');
@@ -6642,6 +6736,8 @@
 
             // 文本拖动结束
             appState.isTextDragging = false;
+            appState.isTextResizing = false;
+            appState.textResizeHandle = null;
             const textBoxEl = document.getElementById('textBox');
             if (textBoxEl) textBoxEl.classList.remove('dragging');
             
@@ -12105,7 +12201,10 @@
             textBoxEl.style.letterSpacing = '-1.5px'; // 调整字间距，WASM 字体字间距更窄
             // 设置字体（使用完整的字体栈）
             textBoxEl.style.fontFamily = fontName;
-            textBoxEl.textContent = text;
+
+            // 设置文本内容到内部span元素
+            const textContentEl = document.getElementById('textBoxContent');
+            textContentEl.textContent = text;
 
             // 更新按钮显示
             document.getElementById('addTextBtn').style.display = 'none';
@@ -12120,10 +12219,11 @@
         function setupTextBoxEvents() {
             const textBoxEl = document.getElementById('textBox');
             const canvasContainer = document.getElementById('canvasContainer');
+            const handles = textBoxEl.querySelectorAll('.text-handle');
 
-            // 鼠标按下
+            // 文本框拖动
             textBoxEl.addEventListener('mousedown', (e) => {
-                if (!appState.isTextMode) return;
+                if (!appState.isTextMode || e.target.classList.contains('text-handle')) return;
 
                 appState.isTextDragging = true;
                 textBoxEl.classList.add('dragging');
@@ -12158,6 +12258,49 @@
 
                 document.addEventListener('mousemove', textDragHandler);
                 document.addEventListener('mouseup', textDragEndHandler);
+            });
+
+            // 缩放手柄事件
+            handles.forEach(handle => {
+                handle.addEventListener('mousedown', (e) => {
+                    if (!appState.isTextMode) return;
+
+                    appState.isTextResizing = true;
+                    appState.textResizeHandle = handle.classList.contains('nw') ? 'nw' :
+                                                   handle.classList.contains('ne') ? 'ne' :
+                                                   handle.classList.contains('sw') ? 'sw' : 'se';
+
+                    const rect = canvasContainer.getBoundingClientRect();
+                    const scale = getCanvasScale();
+                    const mouseOrigX = (e.clientX - rect.left) * scale.scaleX;
+                    const mouseOrigY = (e.clientY - rect.top) * scale.scaleY;
+
+                    appState.textDragStart = {
+                        x: mouseOrigX,
+                        y: mouseOrigY
+                    };
+
+                    appState.initialTextFontSize = appState.textBox.fontSize;
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // 在文档级别添加mousemove和mouseup事件监听器
+                    const textResizeHandler = (e) => {
+                        if (!appState.isTextResizing) return;
+                        handleCanvasMouseMove(e);
+                    };
+
+                    const textResizeEndHandler = () => {
+                        if (!appState.isTextResizing) return;
+                        appState.isTextResizing = false;
+                        appState.textResizeHandle = null;
+                        document.removeEventListener('mousemove', textResizeHandler);
+                        document.removeEventListener('mouseup', textResizeEndHandler);
+                    };
+
+                    document.addEventListener('mousemove', textResizeHandler);
+                    document.addEventListener('mouseup', textResizeEndHandler);
+                });
             });
         }
 
@@ -12202,7 +12345,8 @@
             const strokeWidth = parseInt(document.getElementById('strokeWidthSlider').value);
 
             // 更新预览框样式
-            textBoxEl.textContent = text;
+            const textContentEl = document.getElementById('textBoxContent');
+            textContentEl.textContent = text;
 
             // 应用描边效果（使用 text-shadow）
             if (withStroke) {
