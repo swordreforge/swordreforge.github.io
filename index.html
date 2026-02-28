@@ -6516,12 +6516,15 @@
 
                 appState.textBox.x = newX;
                 appState.textBox.y = newY;
-                
+
                 // 获取画布在容器中的实际位置（考虑 flex 布局的居中偏移）
                 const canvasRect = canvas.getBoundingClientRect();
                 const containerRect = canvasContainer.getBoundingClientRect();
                 const canvasOffsetX = canvasRect.left - containerRect.left;
                 const canvasOffsetY = canvasRect.top - containerRect.top;
+
+                // 获取画布缩放比例
+                const scale = getCanvasScale();
 
                 // 更新预览框 CSS 位置，并加上画布在容器中的偏移
                 textBoxEl.style.left = (canvasOffsetX + newX / scale.scaleX) + 'px';
