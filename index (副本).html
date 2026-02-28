@@ -2681,7 +2681,7 @@
                 </div>
 
                 <div class="section" id="layersSection" style="display: none;">
-                    <h3>图层管理 <span style="font-size: 0.7em; color: #ff9800; margin-left: 8px;">⚠️ 实验性功能</span></h3>
+                    <h3>图层管理</h3>
                     <div class="btn-group" style="margin-bottom: 10px;">
                         <button class="btn btn-success" onclick="addNewLayer()" id="addLayerBtn">+ 新建图层</button>
                         <button class="btn" onclick="document.getElementById('layerFileInput').click()" id="addLayerFromFileBtn">+ 从文件添加</button>
@@ -3947,8 +3947,6 @@
             saveLayerHistory();
             updateLayersList();
             updateLayerButtons();
-            renderLayersToCanvas();
-            saveToHistory();
             Logger.log(`已创建新图层: ID ${layerId}`);
         };
 
@@ -4033,7 +4031,6 @@
                 updateLayersList();
                 updateLayerButtons();
                 renderLayersToCanvas();
-                saveToHistory();
 
                 Logger.log(`已从文件添加图层: ${file.name} (原始: ${originalWidth}x${originalHeight}, 缩放后: ${resizedWidth}x${resizedHeight}, ID: ${layerId})`);
 
@@ -4058,8 +4055,6 @@
                 saveLayerHistory();
                 updateLayersList();
                 updateLayerButtons();
-                renderLayersToCanvas();
-                saveToHistory();
                 Logger.log(`已复制图层: ID ${newLayerId}`);
             }
         };
@@ -4087,7 +4082,6 @@
                 updateLayersList();
                 updateLayerButtons();
                 renderLayersToCanvas();
-                saveToHistory();
                 Logger.log('已删除图层');
             }
         };
@@ -4104,36 +4098,32 @@
                 return;
             }
 
-            const belowLayerId = layerIds[activeIndex - 1];
-
             if (appState.layerStack.merge_down(activeIndex)) {
-                appState.activeLayerId = belowLayerId;
-
+                appState.activeLayerId = layerIds[activeIndex - 1];
                 saveLayerHistory();
                 updateLayersList();
                 updateLayerButtons();
                 renderLayersToCanvas();
-                saveToHistory();
                 Logger.log('已向下合并图层');
             }
         };
 
         // 合并所有可见图层
         window.flattenLayers = function() {
-        		    if (!appState.layerStack) return;
-        
-        		    if (confirm('确定要合并所有可见图层吗？此操作无法撤销。')) {
-        		        if (appState.layerStack.flatten()) {
-        		            const newLayerIds = appState.layerStack.get_layer_ids();
-        		            appState.activeLayerId = newLayerIds[newLayerIds.length - 1];
-        
-        		            updateLayersList();
-        		            updateLayerButtons();
-        		            renderLayersToCanvas();
-        		            Logger.log('已合并所有图层');
-        		        }
-        		    }
-        		};
+            if (!appState.layerStack) return;
+
+            if (confirm('确定要合并所有可见图层吗？此操作无法撤销。')) {
+                if (appState.layerStack.flatten()) {
+                    const layerIds = appState.layerStack.get_layer_ids();
+                    appState.activeLayerId = layerIds[layerIds.length - 1];
+                    updateLayersList();
+                    updateLayerButtons();
+                    renderLayersToCanvas();
+                    Logger.log('已合并所有图层');
+                }
+            }
+        };
+
         // 设置活动图层
         function setActiveLayer(layerId) {
             appState.activeLayerId = layerId;
@@ -4303,7 +4293,6 @@
                 saveLayerHistory();
                 updateLayersList();
                 renderLayersToCanvas();
-                saveToHistory();
             }
         };
 
@@ -4319,7 +4308,6 @@
                 saveLayerHistory();
                 updateLayersList();
                 renderLayersToCanvas();
-                saveToHistory();
             }
         };
 
@@ -4336,7 +4324,6 @@
                 saveLayerHistory();
                 updateLayersList();
                 renderLayersToCanvas();
-                saveToHistory();
             }
         }
 
@@ -4439,36 +4426,13 @@
         function saveLayerHistory() {
             if (!appState.layerStack) return;
 
-            // 保存每个图层的完整状态
-            const layerIds = appState.layerStack.get_layer_ids();
-            const layerStates = [];
-
-            for (const layerId of layerIds) {
-                const layer = appState.layerStack.get_layer(layerId);
-                if (layer) {
-                    layerStates.push({
-                        id: layer.id,
-                        name: layer.name,
-                        pixels: layer.get_pixels(),
-                        positionX: layer.positionX,
-                        positionY: layer.positionY,
-                        scaleX: layer.scaleX,
-                        scaleY: layer.scaleY,
-                        rotation: layer.rotation,
-                        opacity: layer.opacity,
-                        visible: layer.visible,
-                        blendMode: layer.blend_mode,
-                        flipHorizontal: layer.flipHorizontal,
-                        flipVertical: layer.flipVertical,
-                        locked: layer.locked
-                    });
-                }
-            }
+            // 简化版本：只保存图层数量和顺序
+            const layerIds = appState.layerStack.get_layer_ids().slice();
+            const layerNames = appState.layerStack.get_layer_names().slice();
 
             appState.layerHistoryStack.push({
-                layerStates,
-                activeLayerId: appState.activeLayerId,
-                selectedLayerIds: new Set(appState.selectedLayerIds)
+                layerIds,
+                layerNames
             });
 
             if (appState.layerHistoryStack.length > 20) {
@@ -4477,146 +4441,6 @@
 
             appState.layerRedoStack = [];
         }
-
-        // 图层撤销
-        window.undoLayer = function() {
-            if (!appState.layerStack || appState.layerHistoryStack.length === 0) return;
-
-            // 保存当前状态到 redo 栈
-            const currentLayerIds = appState.layerStack.get_layer_ids();
-            const currentLayerStates = [];
-
-            for (const layerId of currentLayerIds) {
-                const layer = appState.layerStack.get_layer(layerId);
-                if (layer) {
-                    currentLayerStates.push({
-                        id: layer.id,
-                        name: layer.name,
-                        pixels: layer.get_pixels(),
-                        positionX: layer.positionX,
-                        positionY: layer.positionY,
-                        scaleX: layer.scaleX,
-                        scaleY: layer.scaleY,
-                        rotation: layer.rotation,
-                        opacity: layer.opacity,
-                        visible: layer.visible,
-                        blendMode: layer.blend_mode,
-                        flipHorizontal: layer.flipHorizontal,
-                        flipVertical: layer.flipVertical,
-                        locked: layer.locked
-                    });
-                }
-            }
-
-            appState.layerRedoStack.push({
-                layerStates: currentLayerStates,
-                activeLayerId: appState.activeLayerId,
-                selectedLayerIds: new Set(appState.selectedLayerIds)
-            });
-
-            // 恢复上一个状态
-            const state = appState.layerHistoryStack.pop();
-
-            // 清空当前所有图层
-            appState.layerStack.clear_all();
-
-            // 重建图层
-            for (const layerState of state.layerStates) {
-                const newLayerId = appState.layerStack.add_layer_from_pixels(layerState.pixels, layerState.name);
-                const layer = appState.layerStack.get_layer(newLayerId);
-                if (layer) {
-                    layer.positionX = layerState.positionX;
-                    layer.positionY = layerState.positionY;
-                    layer.scaleX = layerState.scaleX;
-                    layer.scaleY = layerState.scaleY;
-                    layer.rotation = layerState.rotation;
-                    layer.opacity = layerState.opacity;
-                    layer.visible = layerState.visible;
-                    layer.blend_mode = layerState.blendMode;
-                    layer.flipHorizontal = layerState.flipHorizontal;
-                    layer.flipVertical = layerState.flipVertical;
-                    layer.locked = layerState.locked;
-                }
-            }
-
-            appState.activeLayerId = state.activeLayerId;
-            appState.selectedLayerIds = new Set(state.selectedLayerIds);
-
-            updateLayersList();
-            updateLayerButtons();
-            renderLayersToCanvas();
-            Logger.log('已撤销图层操作');
-        };
-
-        // 图层重做
-        window.redoLayer = function() {
-            if (!appState.layerStack || appState.layerRedoStack.length === 0) return;
-
-            // 保存当前状态到 undo 栈
-            const currentLayerIds = appState.layerStack.get_layer_ids();
-            const currentLayerStates = [];
-
-            for (const layerId of currentLayerIds) {
-                const layer = appState.layerStack.get_layer(layerId);
-                if (layer) {
-                    currentLayerStates.push({
-                        id: layer.id,
-                        name: layer.name,
-                        pixels: layer.get_pixels(),
-                        positionX: layer.positionX,
-                        positionY: layer.positionY,
-                        scaleX: layer.scaleX,
-                        scaleY: layer.scaleY,
-                        rotation: layer.rotation,
-                        opacity: layer.opacity,
-                        visible: layer.visible,
-                        blendMode: layer.blend_mode,
-                        flipHorizontal: layer.flipHorizontal,
-                        flipVertical: layer.flipVertical,
-                        locked: layer.locked
-                    });
-                }
-            }
-
-            appState.layerHistoryStack.push({
-                layerStates: currentLayerStates,
-                activeLayerId: appState.activeLayerId,
-                selectedLayerIds: new Set(appState.selectedLayerIds)
-            });
-
-            // 恢复 redo 栈中的状态
-            const state = appState.layerRedoStack.pop();
-
-            // 清空当前所有图层
-            appState.layerStack.clear_all();
-
-            // 重建图层
-            for (const layerState of state.layerStates) {
-                const newLayerId = appState.layerStack.add_layer_from_pixels(layerState.pixels, layerState.name);
-                const layer = appState.layerStack.get_layer(newLayerId);
-                if (layer) {
-                    layer.positionX = layerState.positionX;
-                    layer.positionY = layerState.positionY;
-                    layer.scaleX = layerState.scaleX;
-                    layer.scaleY = layerState.scaleY;
-                    layer.rotation = layerState.rotation;
-                    layer.opacity = layerState.opacity;
-                    layer.visible = layerState.visible;
-                    layer.blend_mode = layerState.blendMode;
-                    layer.flipHorizontal = layerState.flipHorizontal;
-                    layer.flipVertical = layerState.flipVertical;
-                    layer.locked = layerState.locked;
-                }
-            }
-
-            appState.activeLayerId = state.activeLayerId;
-            appState.selectedLayerIds = new Set(state.selectedLayerIds);
-
-            updateLayersList();
-            updateLayerButtons();
-            renderLayersToCanvas();
-            Logger.log('已重做图层操作');
-        };
 
         // 渲染图层到画布
         function renderLayersToCanvas() {
@@ -4631,9 +4455,6 @@
 
             const imageData = new ImageData(new Uint8ClampedArray(pixels), composited.get_width(), composited.get_height());
             ctx.putImageData(imageData, 0, 0);
-
-            // 保持当前的缩放和平移状态
-            updateCanvasTransform();
         }
 
         // ==================== 新增高级图层功能 ====================
@@ -4707,7 +4528,6 @@
                 layer.flipHorizontal = !layer.flipHorizontal;
                 saveLayerHistory();
                 renderLayersToCanvas();
-                saveToHistory();
                 Logger.log(`图层 ${layer.name} 水平翻转: ${layer.flipHorizontal}`);
             }
         };
@@ -4721,7 +4541,6 @@
                 layer.flipVertical = !layer.flipVertical;
                 saveLayerHistory();
                 renderLayersToCanvas();
-                saveToHistory();
                 Logger.log(`图层 ${layer.name} 垂直翻转: ${layer.flipVertical}`);
             }
         };
@@ -4836,7 +4655,6 @@
 
             saveLayerHistory();
             renderLayersToCanvas();
-            saveToHistory();
             Logger.log(`已批量旋转 ${count} 个图层 (${degrees}°)`);
         };
 
@@ -4854,7 +4672,6 @@
 
             saveLayerHistory();
             renderLayersToCanvas();
-            saveToHistory();
             Logger.log(`已批量缩放 ${count} 个图层 (${Math.round(scale * 100)}%)`);
         };
 
@@ -4870,7 +4687,6 @@
 
             saveLayerHistory();
             renderLayersToCanvas();
-            saveToHistory();
             Logger.log(`已批量居中 ${count} 个图层`);
         };
 
@@ -4900,7 +4716,6 @@
             if (success) {
                 saveLayerHistory();
                 renderLayersToCanvas();
-                saveToHistory();
                 Logger.log(`已将 ${targetIds.length} 个图层对齐到顶层图层`);
             } else {
                 Logger.log('对齐失败');
@@ -5800,12 +5615,8 @@
                 Logger.log('请绘制更大的选区');
                 return;
             }
-
-            // lassoPoints 中的点已经是画布原始像素坐标，直接使用
-            const canvasX = minX;
-            const canvasY = minY;
-            const canvasW = selectWidth;
-            const canvasH = selectHeight;
+            const canvasW = selectWidth * (canvas.width / canvasRect.width);
+            const canvasH = selectHeight * (canvas.height / canvasRect.height);
 
             // 识别选区内的图层
             const layerIds = appState.layerStack.get_layer_ids();
@@ -5904,13 +5715,6 @@
 
         // 撤销
         window.undo = async function() {
-            // 如果图层系统存在且有历史记录，优先撤销图层操作
-            if (appState.layerStack && appState.layerHistoryStack.length > 0) {
-                undoLayer();
-                return;
-            }
-
-            // 否则使用原有的图像撤销逻辑
             if (appState.historyStack.length === 0) return;
 
             const currentBytes = appState.processor.get_bytes();
@@ -5931,13 +5735,6 @@
 
         // 重做
         window.redo = async function() {
-            // 如果图层系统存在且有重做历史，优先重做图层操作
-            if (appState.layerStack && appState.layerRedoStack.length > 0) {
-                redoLayer();
-                return;
-            }
-
-            // 否则使用原有的图像重做逻辑
             if (appState.redoStack.length === 0) return;
 
             const currentBytes = appState.processor.get_bytes();
