@@ -2187,6 +2187,66 @@
                 </div>
 
                 <div class="section">
+                    <h3>常用参数</h3>
+                    <div class="slider-container">
+                        <label>色温调节 (-100 ~ 100)</label>
+                        <input type="range" id="temperatureSlider" min="-100" max="100" value="0" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="temperatureValue">0</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>高光压制 (-100 ~ 100)</label>
+                        <input type="range" id="highlightsSlider" min="-100" max="100" value="0" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="highlightsValue">0</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>阴影提亮 (-100 ~ 100)</label>
+                        <input type="range" id="shadowsSlider" min="-100" max="100" value="0" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="shadowsValue">0</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>暗角强度 (0 ~ 100)</label>
+                        <input type="range" id="vignetteIntensitySlider" min="0" max="100" value="0" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="vignetteIntensityValue">0</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>暗角范围 (0 ~ 100)</label>
+                        <input type="range" id="vignetteRadiusSlider" min="0" max="100" value="50" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="vignetteRadiusValue">50</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>色阶黑点 (0 ~ 255)</label>
+                        <input type="range" id="levelsBlackSlider" min="0" max="255" value="0" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="levelsBlackValue">0</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>色阶白点 (0 ~ 255)</label>
+                        <input type="range" id="levelsWhiteSlider" min="0" max="255" value="255" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="levelsWhiteValue">255</span></div>
+                    </div>
+                    <div class="slider-container">
+                        <label>色阶灰点 (0 ~ 255)</label>
+                        <input type="range" id="levelsGraySlider" min="0" max="255" value="128" oninput="applyAdjustments()" disabled>
+                        <div class="slider-value"><span id="levelsGrayValue">128</span></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>RGB曲线调节</h3>
+                    <div class="curve-controls">
+                        <label>红色曲线控制点 (格式: x1,y1,x2,y2,...)</label>
+                        <input type="text" id="redCurveInput" placeholder="例如: 0,0,128,128,255,255" value="0,0,255,255" oninput="applyAdjustments()" disabled style="width: 100%; padding: 8px; background: #444; color: #e0e0e0; border: 1px solid #555; border-radius: 6px; margin-bottom: 8px;">
+                    </div>
+                    <div class="curve-controls">
+                        <label>绿色曲线控制点 (格式: x1,y1,x2,y2,...)</label>
+                        <input type="text" id="greenCurveInput" placeholder="例如: 0,0,128,128,255,255" value="0,0,255,255" oninput="applyAdjustments()" disabled style="width: 100%; padding: 8px; background: #444; color: #e0e0e0; border: 1px solid #555; border-radius: 6px; margin-bottom: 8px;">
+                    </div>
+                    <div class="curve-controls">
+                        <label>蓝色曲线控制点 (格式: x1,y1,x2,y2,...)</label>
+                        <input type="text" id="blueCurveInput" placeholder="例如: 0,0,128,128,255,255" value="0,0,255,255" oninput="applyAdjustments()" disabled style="width: 100%; padding: 8px; background: #444; color: #e0e0e0; border: 1px solid #555; border-radius: 6px; margin-bottom: 8px;">
+                    </div>
+                </div>
+
+                <div class="section">
                     <h3>明度与伽马</h3>
                     <div class="slider-container">
                         <label>明度 (0 ~ 200)</label>
@@ -7262,6 +7322,11 @@
             document.getElementById('refineEdgesBtn').disabled = !appState.currentImage;
             document.getElementById('smartCropBtn').disabled = !appState.currentImage;
 
+            // 启用RGB曲线输入框
+            document.getElementById('redCurveInput').disabled = !appState.currentImage;
+            document.getElementById('greenCurveInput').disabled = !appState.currentImage;
+            document.getElementById('blueCurveInput').disabled = !appState.currentImage;
+
             // 启用笔刷控件
             document.getElementById('sidebarBrushColor').disabled = !appState.currentImage;
             document.getElementById('sidebarBrushWidth').disabled = !appState.currentImage;
@@ -8867,6 +8932,21 @@
             const greenChannelOffset = parseInt(document.getElementById('greenChannelSlider').value);
             const blueChannelOffset = parseInt(document.getElementById('blueChannelSlider').value);
 
+            // 获取常用参数滑块值
+            const temperature = parseInt(document.getElementById('temperatureSlider').value);
+            const highlights = parseInt(document.getElementById('highlightsSlider').value);
+            const shadows = parseInt(document.getElementById('shadowsSlider').value);
+            const vignetteIntensity = parseFloat(document.getElementById('vignetteIntensitySlider').value) / 100;
+            const vignetteRadius = parseFloat(document.getElementById('vignetteRadiusSlider').value) / 100;
+            const levelsBlack = parseInt(document.getElementById('levelsBlackSlider').value);
+            const levelsWhite = parseInt(document.getElementById('levelsWhiteSlider').value);
+            const levelsGray = parseInt(document.getElementById('levelsGraySlider').value);
+
+            // 获取RGB曲线输入
+            const redCurveInput = document.getElementById('redCurveInput').value;
+            const greenCurveInput = document.getElementById('greenCurveInput').value;
+            const blueCurveInput = document.getElementById('blueCurveInput').value;
+
             // 使用批量更新管理器更新显示值
             domUpdateManager.schedule('brightnessValue', brightness);
             domUpdateManager.schedule('contrastValue', contrast);
@@ -8884,6 +8964,16 @@
             domUpdateManager.schedule('redChannelValue', redChannelOffset);
             domUpdateManager.schedule('greenChannelValue', greenChannelOffset);
             domUpdateManager.schedule('blueChannelValue', blueChannelOffset);
+
+            // 更新常用参数显示值
+            domUpdateManager.schedule('temperatureValue', temperature);
+            domUpdateManager.schedule('highlightsValue', highlights);
+            domUpdateManager.schedule('shadowsValue', shadows);
+            domUpdateManager.schedule('vignetteIntensityValue', (vignetteIntensity * 100).toFixed(0));
+            domUpdateManager.schedule('vignetteRadiusValue', (vignetteRadius * 100).toFixed(0));
+            domUpdateManager.schedule('levelsBlackValue', levelsBlack);
+            domUpdateManager.schedule('levelsWhiteValue', levelsWhite);
+            domUpdateManager.schedule('levelsGrayValue', levelsGray);
 
             // 应用调整
             try {
@@ -8961,6 +9051,53 @@
                     }
                     if (blueChannelOffset !== 0) {
                         appState.processor.offset_blue(Math.abs(blueChannelOffset));
+                    }
+
+                    // 应用色温调节 (-100 到 100)
+                    if (temperature !== 0) {
+                        appState.processor.adjust_temperature(temperature);
+                    }
+
+                    // 应用高光压制 (-100 到 100)
+                    if (highlights !== 0) {
+                        appState.processor.adjust_highlights(highlights);
+                    }
+
+                    // 应用阴影提亮 (-100 到 100)
+                    if (shadows !== 0) {
+                        appState.processor.adjust_shadows(shadows);
+                    }
+
+                    // 应用暗角效果
+                    if (vignetteIntensity > 0) {
+                        appState.processor.apply_vignette(vignetteIntensity, vignetteRadius);
+                    }
+
+                    // 应用色阶调节
+                    if (levelsBlack !== 0 || levelsWhite !== 255 || levelsGray !== 128) {
+                        appState.processor.adjust_levels(levelsBlack, levelsWhite, levelsGray, 0, 255);
+                    }
+
+                    // 应用RGB曲线调节
+                    const parseCurvePoints = (input) => {
+                        if (!input.trim()) return [];
+                        const values = input.split(',').map(v => parseInt(v.trim()));
+                        if (values.length % 2 !== 0) return [];
+                        const points = [];
+                        for (let i = 0; i < values.length; i += 2) {
+                            if (values[i] >= 0 && values[i] <= 255 && values[i + 1] >= 0 && values[i + 1] <= 255) {
+                                points.push(values[i], values[i + 1]);
+                            }
+                        }
+                        return new Uint8Array(points);
+                    };
+
+                    const rCurve = parseCurvePoints(redCurveInput);
+                    const gCurve = parseCurvePoints(greenCurveInput);
+                    const bCurve = parseCurvePoints(blueCurveInput);
+
+                    if (rCurve.length > 0 && gCurve.length > 0 && bCurve.length > 0) {
+                        appState.processor.apply_rgb_curve(rCurve, gCurve, bCurve);
                     }
                 }
                 
