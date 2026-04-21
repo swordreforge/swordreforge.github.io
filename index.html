@@ -24,71 +24,10 @@
             overscroll-behavior: none;
         }
 
-        /* 应用标题栏 */
-        .app-title-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 32px;
-            background: linear-gradient(to bottom, #3a3a3a 0%, #2d2d2d 100%);
-            border-bottom: 1px solid #1a1a1a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1002;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        }
-
-        .app-title {
-            font-size: 0.9em;
-            font-weight: 500;
-            color: #c5c5c5;
-            margin: 0;
-            letter-spacing: 0.3px;
-            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-        }
-
-        /* 窗口控制按钮区域 */
-        .window-controls {
-            position: absolute;
-            left: 12px;
-            display: flex;
-            gap: 8px;
-        }
-
-        .window-btn {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .window-btn.close {
-            background: #ff5f57;
-            border: 1px solid #e0443e;
-        }
-
-        .window-btn.minimize {
-            background: #febc2e;
-            border: 1px solid #d89e24;
-        }
-
-        .window-btn.maximize {
-            background: #28c840;
-            border: 1px solid #1aab29;
-        }
-
-        .window-btn:hover {
-            filter: brightness(1.1);
-        }
-
         /* 顶部工具栏 */
         .top-toolbar {
             position: fixed;
-            top: 32px;
+            top: 0;
             left: 0;
             right: 0;
             height: 52px;
@@ -247,6 +186,16 @@
             background: rgba(102, 126, 234, 0.25);
         }
 
+        .menu-item:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .menu-item:disabled:hover {
+            background: transparent;
+            color: #c0c0c0;
+        }
+
         .toolbar-right {
             display: flex;
             align-items: center;
@@ -255,7 +204,7 @@
         }
 
         /* 工具栏响应式：窄屏隐藏文字 */
-        @media (max-width: 1200px) {
+        @media (max-width: 1500px) {
             .tool-btn span:not(.dropdown-arrow) {
                 display: none;
             }
@@ -263,6 +212,7 @@
             .tool-btn {
                 padding: 8px 10px;
                 gap: 4px;
+                min-width: 0;
             }
 
             .dropdown-arrow {
@@ -315,6 +265,11 @@
             /* 只对工具栏按钮应用固定宽度 */
             .toolbar-btn.btn-success {
                 width: 36px;
+            }
+
+            /* 确保工具按钮组有合适的间距 */
+            .tool-buttons {
+                gap: 2px;
             }
         }
 
@@ -371,8 +326,10 @@
 
         /* 极窄屏隐藏部分工具 */
         @media (max-width: 768px) {
+            /* 不再隐藏整个工具栏，只隐藏文字 */
             .toolbar-left {
-                display: none;
+                display: flex;
+                gap: 1px;
             }
 
             .toolbar-divider {
@@ -381,16 +338,44 @@
 
             .tool-btn {
                 padding: 6px 8px;
+                min-width: 0;
+            }
+
+            .tool-btn span:not(.dropdown-arrow) {
+                display: none;
+            }
+
+            /* 隐藏下拉箭头 */
+            .tool-btn .dropdown-arrow {
+                display: none;
             }
 
             .tool-btn svg {
-                width: 16px;
-                height: 16px;
+                width: 18px;
+                height: 18px;
             }
 
-            .dropdown-arrow {
-                width: 10px;
-                height: 10px;
+            /* 确保工具按钮在窄屏也能显示 */
+            .tool-dropdown {
+                min-width: 0;
+            }
+
+            /* 缩小工具按钮之间的间距 */
+            .tool-buttons {
+                gap: 1px;
+            }
+
+            /* 侧边栏与边框0px对齐 */
+            .sidebar {
+                margin-left: 0;
+                padding: 15px;
+            }
+
+            /* 侧边栏切换按钮调整 */
+            .sidebar-toggle {
+                left: 0;
+                padding: 10px 6px;
+                font-size: 16px;
             }
         }
 
@@ -499,11 +484,17 @@
             transform: none;
         }
 
+        .toolbar-btn.active {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
         .main-content {
             display: flex;
             flex: 1;
-            height: calc(100vh - 84px);
-            margin-top: 84px;
+            height: calc(100vh - 52px);
+            margin-top: 52px;
             overflow: hidden;
         }
 
@@ -527,49 +518,22 @@
             background: #555;
         }
 
-        /* 悬浮导航按钮 */
-        .quick-nav-toggle {
-            position: fixed;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 16px 10px;
-            cursor: pointer;
-            z-index: 1000;
-            border-radius: 8px 0 0 8px;
-            font-size: 20px;
-            transition: all 0.3s ease;
-            box-shadow: -2px 0 8px rgba(102, 126, 234, 0.4);
-        }
-
-        .quick-nav-toggle:hover {
-            background: #5568d3;
-            box-shadow: -4px 0 12px rgba(102, 126, 234, 0.6);
-        }
-
-        .quick-nav-toggle.active {
-            background: #5568d3;
-        }
-
         /* 导航面板 */
         .quick-nav-panel {
             position: fixed;
-            right: -320px;
-            top: 50%;
-            transform: translateY(-50%);
+            right: 20px;
+            top: 70px;
             width: 300px;
             max-height: 70vh;
             background: #2a2a2a;
             border: 1px solid #444;
-            border-radius: 8px 0 0 8px;
-            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             z-index: 999;
             overflow-y: auto;
             opacity: 0;
             visibility: hidden;
+            transform: translateY(-10px);
             transition: all 0.3s ease;
             scrollbar-width: thin;
             scrollbar-color: #555 #2a2a2a;
@@ -589,9 +553,9 @@
         }
 
         .quick-nav-panel.active {
-            right: 0;
             opacity: 1;
             visibility: visible;
+            transform: translateY(0);
         }
 
         .quick-nav-header {
@@ -675,25 +639,11 @@
 
         /* 移动端优化 */
         @media (max-width: 768px) {
-            .quick-nav-toggle {
-                right: 8px;
-                top: 100px;
-                padding: 12px 10px;
-                font-size: 16px;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5);
-            }
-
             .quick-nav-panel {
-                right: -260px;
+                right: 8px;
                 width: 260px;
                 max-height: 55vh;
-                top: 140px;
-                transform: none;
-            }
-
-            .quick-nav-panel.active {
-                right: 8px;
+                top: 60px;
             }
 
             .quick-nav-item {
@@ -712,22 +662,11 @@
 
         /* 超小屏幕优化 */
         @media (max-width: 480px) {
-            .quick-nav-toggle {
-                right: 4px;
-                top: 90px;
-                padding: 10px 8px;
-                font-size: 14px;
-            }
-
             .quick-nav-panel {
-                right: -240px;
+                right: 4px;
                 width: 240px;
                 max-height: 50vh;
-                top: 130px;
-            }
-
-            .quick-nav-panel.active {
-                right: 4px;
+                top: 60px;
             }
 
             .quick-nav-item {
@@ -790,6 +729,36 @@
             font-size: 1.1em;
             border-bottom: 2px solid #555;
             padding-bottom: 5px;
+        }
+
+        /* Section聚焦样式 */
+        .section.focused {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .section.focused h3 {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        /* 聚焦脉冲动画 */
+        @keyframes focusPulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.02);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .upload-area {
@@ -1460,37 +1429,26 @@
         </div>
     </div>
 
-    <!-- 应用标题栏 -->
-    <div class="app-title-bar">
-        <div class="window-controls">
-            <button class="window-btn close" title="关闭"></button>
-            <button class="window-btn minimize" title="最小化"></button>
-            <button class="window-btn maximize" title="最大化"></button>
-        </div>
-        <h1 class="app-title">WebAssembly 图像处理器</h1>
-    </div>
-
     <!-- 顶部工具栏 -->
     <div class="top-toolbar">
         <div class="toolbar-left">
             <!-- 专业工具按钮组 -->
             <div class="tool-buttons">
-                <!-- 新建画布工具 -->
-                <div class="tool-dropdown" id="newCanvasDropdown">
-                    <button class="tool-btn" onclick="toggleDropdown('newCanvasDropdown')">
+                <!-- 📁 文件菜单 -->
+                <div class="tool-dropdown" id="fileDropdown">
+                    <button class="tool-btn" onclick="toggleDropdown('fileDropdown')">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="12" y1="8" x2="12" y2="16"></line>
-                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                            <polyline points="13 2 13 9 20 9"></polyline>
                         </svg>
-                        <span>新建</span>
+                        <span>文件</span>
                         <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                     </button>
                     <div class="dropdown-menu">
                         <div class="menu-section">
-                            <div class="menu-category">画布尺寸</div>
+                            <div class="menu-category">新建画布</div>
                             <div class="menu-items">
                                 <div style="grid-column: span 2; padding: 8px;">
                                     <label style="color: #e0e0e0; font-size: 0.85em;">宽度 (px):</label>
@@ -1512,352 +1470,32 @@
                                 <button class="menu-item" onclick="createNewCanvas(500, 500)">500×500</button>
                             </div>
                         </div>
+                        <div class="menu-section">
+                            <div class="menu-category">格式转换</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="downloadImage('png')">导出 PNG</button>
+                                <button class="menu-item" onclick="downloadImage('jpeg')">导出 JPEG</button>
+                                <button class="menu-item" onclick="downloadImage('webp')">导出 WebP</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 滤镜工具 -->
-                <div class="tool-dropdown" id="filterDropdown">
-                    <button class="tool-btn" onclick="toggleDropdown('filterDropdown')">
+                <!-- 🎨 基础编辑 -->
+                <div class="tool-dropdown" id="basicEditDropdown">
+                    <button class="tool-btn" onclick="toggleDropdown('basicEditDropdown')">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <circle cx="12" cy="12" r="4"></circle>
-                            <line x1="12" y1="2" x2="12" y2="4"></line>
-                            <line x1="12" y1="20" x2="12" y2="22"></line>
-                            <line x1="2" y1="12" x2="4" y2="12"></line>
-                            <line x1="20" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                         </svg>
-                        <span>滤镜</span>
+                        <span>基础编辑</span>
                         <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                     </button>
                     <div class="dropdown-menu">
                         <div class="menu-section">
-                            <div class="menu-category">基础滤镜</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyFilter('grayscale')">灰度</button>
-                                <button class="menu-item" onclick="applyFilter('sepia')">复古</button>
-                                <button class="menu-item" onclick="applyFilter('invert')">反色</button>
-                                <button class="menu-item" onclick="applyThreshold()">二值化</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">色调滤镜</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyPresetFilter('oceanic')">海洋</button>
-                                <button class="menu-item" onclick="applyPresetFilter('islands')">岛屿</button>
-                                <button class="menu-item" onclick="applyPresetFilter('marine')">深海</button>
-                                <button class="menu-item" onclick="applyPresetFilter('seagreen')">海绿</button>
-                                <button class="menu-item" onclick="applyPresetFilter('flagblue')">皇家蓝</button>
-                                <button class="menu-item" onclick="applyPresetFilter('diamante')">钻石</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">复古滤镜</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyPresetFilter('lofi')">复古风</button>
-                                <button class="menu-item" onclick="applyPresetFilter('vintage')">怀旧</button>
-                                <button class="menu-item" onclick="applyPresetFilter('dramatic')">戏剧</button>
-                                <button class="menu-item" onclick="applyPresetFilter('pastel_pink')">粉红</button>
-                                <button class="menu-item" onclick="applyPresetFilter('cali')">加州</button>
-                                <button class="menu-item" onclick="applyPresetFilter('firenze')">佛罗伦萨</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">特效滤镜</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyLix()">霓虹黄</button>
-                                <button class="menu-item" onclick="applyNeue()">霓虹蓝</button>
-                                <button class="menu-item" onclick="applyRyo()">霓虹洋红</button>
-                                <button class="menu-item" onclick="applyIncBrightness()">增加亮度</button>
-                                <button class="menu-item" onclick="applyGradient()">渐变叠加</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">模糊效果</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyBoxBlur()">盒式模糊</button>
-                                <button class="menu-item" onclick="applyGaussianBlur()">高斯模糊</button>
-                                <button class="menu-item" onclick="enableBackgroundBlurMode()">背景模糊（主体清晰）</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">特殊效果</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyPixelate()">像素化</button>
-                                <button class="menu-item" onclick="applyHalftone()">半色调</button>
-                                <button class="menu-item" onclick="applySolarize()">曝光</button>
-                                <button class="menu-item" onclick="applyOil()">油画</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 线条工具 -->
-                <div class="tool-dropdown" id="lineDropdown">
-                    <button class="tool-btn" onclick="toggleDropdown('lineDropdown')">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 20 L20 4"></path>
-                            <path d="M4 4 L20 20"></path>
-                        </svg>
-                        <span>线条</span>
-                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="dropdown-menu">
-                        <div class="menu-section">
-                            <div class="menu-category">边缘检测</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applySobelHorizontal()">Sobel 水平</button>
-                                <button class="menu-item" onclick="applySobelVertical()">Sobel 垂直</button>
-                                <button class="menu-item" onclick="applySobelGlobal()">Sobel 全局</button>
-                                <button class="menu-item" onclick="applyPrewittHorizontal()">Prewitt 水平</button>
-                                <button class="menu-item" onclick="applyEdgeDetection()">基础边缘</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">线条检测</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyDetectHorizontalLines()">水平线</button>
-                                <button class="menu-item" onclick="applyDetectVerticalLines()">垂直线</button>
-                                <button class="menu-item" onclick="applyDetect45DegLines()">45度线</button>
-                                <button class="menu-item" onclick="applyDetect135DegLines()">135度线</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">卷积效果</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyLaplace()">Laplace</button>
-                                <button class="menu-item" onclick="applyEmboss()">浮雕</button>
-                                <button class="menu-item" onclick="applyIdentity()">身份</button>
-                                <button class="menu-item" onclick="applyEdgeOne()">边缘1</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 色彩工具 -->
-                <div class="tool-dropdown" id="colorDropdown">
-                    <button class="tool-btn" onclick="toggleDropdown('colorDropdown')">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <circle cx="8" cy="8" r="3"></circle>
-                            <circle cx="16" cy="16" r="3"></circle>
-                        </svg>
-                        <span>色彩</span>
-                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="dropdown-menu">
-                        <div class="menu-section">
-                            <div class="menu-category">单色效果</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyGrayscaleShades()">灰度着色</button>
-                                <button class="menu-item" onclick="applyGrayscaleHumanCorrected()">人类感知</button>
-                                <button class="menu-item" onclick="applyBGrayscale()">蓝色灰度</button>
-                                <button class="menu-item" onclick="applyDesaturate()">去饱和</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">单色调滤镜</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyPresetFilter('rosetint')">玫瑰</button>
-                                <button class="menu-item" onclick="applyPresetFilter('mauve')">紫罗兰</button>
-                                <button class="menu-item" onclick="applyPresetFilter('duotone_violette')">紫双色</button>
-                                <button class="menu-item" onclick="applyPresetFilter('duotone_horizon')">地平线</button>
-                                <button class="menu-item" onclick="applyPresetFilter('duotone_lilac')">丁香</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">通道调整</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="alterRedChannel(50)">红+50</button>
-                                <button class="menu-item" onclick="alterRedChannel(-50)">红-50</button>
-                                <button class="menu-item" onclick="alterGreenChannel(50)">绿+50</button>
-                                <button class="menu-item" onclick="alterGreenChannel(-50)">绿-50</button>
-                                <button class="menu-item" onclick="alterBlueChannel(50)">蓝+50</button>
-                                <button class="menu-item" onclick="alterBlueChannel(-50)">蓝-50</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">色彩校正</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyNormalize()">归一化</button>
-                                <button class="menu-item" onclick="applyColorize()">着色</button>
-                                <button class="menu-item" onclick="applyTint()">色调</button>
-                                <button class="menu-item" onclick="applyPrimary()">主色</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">条纹效果</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyHorizontalStrips()">水平条纹</button>
-                                <button class="menu-item" onclick="applyVerticalStrips()">垂直条纹</button>
-                                <button class="menu-item" onclick="applyColorHorizontalStrips()">彩色水平</button>
-                                <button class="menu-item" onclick="applyColorVerticalStrips()">彩色垂直</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 光线工具 -->
-                <div class="tool-dropdown" id="lightDropdown">
-                    <button class="tool-btn" onclick="toggleDropdown('lightDropdown')">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="5"></circle>
-                            <line x1="12" y1="1" x2="12" y2="3"></line>
-                            <line x1="12" y1="21" x2="12" y2="23"></line>
-                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                            <line x1="1" y1="12" x2="3" y2="12"></line>
-                            <line x1="21" y1="12" x2="23" y2="12"></line>
-                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                        </svg>
-                        <span>光线</span>
-                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="dropdown-menu">
-                        <div class="menu-section">
-                            <div class="menu-category">亮度调节</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="quickAdjust('brightness', 30)">亮度 +30</button>
-                                <button class="menu-item" onclick="quickAdjust('brightness', -30)">亮度 -30</button>
-                                <button class="menu-item" onclick="quickAdjust('contrast', 20)">对比度 +20</button>
-                                <button class="menu-item" onclick="quickAdjust('contrast', -20)">对比度 -20</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">色彩空间</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="quickAdjust('saturation', 30)">饱和度 +30</button>
-                                <button class="menu-item" onclick="quickAdjust('saturation', -30)">饱和度 -30</button>
-                                <button class="menu-item" onclick="quickAdjust('hue', 45)">色相 +45°</button>
-                                <button class="menu-item" onclick="quickAdjust('hue', -45)">色相 -45°</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">明度与伽马</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="quickAdjust('lightness', 20)">明度 +20%</button>
-                                <button class="menu-item" onclick="quickAdjust('lightness', -20)">明度 -20%</button>
-                                <button class="menu-item" onclick="quickAdjust('gamma', 0.2)">伽马 +0.2</button>
-                                <button class="menu-item" onclick="quickAdjust('gamma', -0.2)">伽马 -0.2</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">高级效果</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="quickAdjust('sharpen', 1)">锐化 +1</button>
-                                <button class="menu-item" onclick="quickAdjust('noiseReduction', 1)">降噪 +1</button>
-                                <button class="menu-item" onclick="quickAdjust('noise', 1)">噪点 +1</button>
-                                <button class="menu-item" onclick="applyFrostedGlass()">毛玻璃</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 像素工具 -->
-                <div class="tool-dropdown" id="pixelDropdown">
-                    <button class="tool-btn" onclick="toggleDropdown('pixelDropdown')">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="14" width="7" height="7"></rect>
-                            <rect x="3" y="14" width="7" height="7"></rect>
-                        </svg>
-                        <span>像素</span>
-                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="dropdown-menu">
-                        <div class="menu-section">
-                            <div class="menu-category">通道调整</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="alterRedChannel(50)">红+50</button>
-                                <button class="menu-item" onclick="alterRedChannel(-50)">红-50</button>
-                                <button class="menu-item" onclick="alterGreenChannel(50)">绿+50</button>
-                                <button class="menu-item" onclick="alterGreenChannel(-50)">绿-50</button>
-                                <button class="menu-item" onclick="alterBlueChannel(50)">蓝+50</button>
-                                <button class="menu-item" onclick="alterBlueChannel(-50)">蓝-50</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">噪点效果</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyPinkNoise()">粉色噪点</button>
-                                <button class="menu-item" onclick="applyColorNoise(0.1, 0.1, 0.6)">蓝色噪点</button>
-                                <button class="menu-item" onclick="applyColorNoise(0.1, 0.6, 0.1)">绿色噪点</button>
-                                <button class="menu-item" onclick="applyColorNoise(0.6, 0.1, 0.1)">红色噪点</button>
-                                <button class="menu-item" onclick="applyColorNoise(0.6, 0.6, 0.1)">黄色噪点</button>
-                                <button class="menu-item" onclick="applyColorNoise(0.6, 0.1, 0.6)">紫色噪点</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">图像处理</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="quickAdjust('noise', 1)">添加噪点 +1</button>
-                                <button class="menu-item" onclick="quickAdjust('noiseReduction', 1)">降噪 +1</button>
-                                <button class="menu-item" onclick="quickAdjust('sharpen', 1)">锐化 +1</button>
-                                <button class="menu-item" onclick="applyPixelate()">像素化</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 条纹工具 -->
-                <div class="tool-dropdown" id="stripeDropdown">
-                    <button class="tool-btn" onclick="toggleDropdown('stripeDropdown')">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="2" y1="4" x2="22" y2="4"></line>
-                            <line x1="2" y1="10" x2="22" y2="10"></line>
-                            <line x1="2" y1="16" x2="22" y2="16"></line>
-                        </svg>
-                        <span>条纹</span>
-                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="dropdown-menu">
-                        <div class="menu-section">
-                            <div class="menu-category">基础条纹</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyHorizontalStrips()">水平条纹</button>
-                                <button class="menu-item" onclick="applyVerticalStrips()">垂直条纹</button>
-                            </div>
-                        </div>
-                        <div class="menu-section">
-                            <div class="menu-category">彩色条纹</div>
-                            <div class="menu-items">
-                                <button class="menu-item" onclick="applyColorHorizontalStrips()">彩色水平</button>
-                                <button class="menu-item" onclick="applyColorVerticalStrips()">彩色垂直</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 变换工具 -->
-                <div class="tool-dropdown" id="transformDropdown">
-                    <button class="tool-btn" onclick="toggleDropdown('transformDropdown')">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                            <path d="M3 3v5h5"></path>
-                            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
-                            <path d="M16 21h5v-5"></path>
-                        </svg>
-                        <span>变换</span>
-                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="dropdown-menu">
-                        <div class="menu-section">
-                            <div class="menu-category">旋转操作</div>
+                            <div class="menu-category">变换操作</div>
                             <div class="menu-items">
                                 <button class="menu-item" onclick="rotateImage()">旋转 90°</button>
                                 <button class="menu-item" onclick="quickRotate(180)">旋转 180°</button>
@@ -1890,24 +1528,8 @@
                                 <button class="menu-item" onclick="cropWithRatio('2:3')">2:3 (竖版)</button>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- 笔刷工具 -->
-                <div class="tool-dropdown" id="brushDropdown">
-                    <button class="tool-btn" onclick="toggleDropdown('brushDropdown')">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 20a6 6 0 0 1-12 0V10a6 6 0 0 1 12 0v10z"></path>
-                            <path d="M6 6l12 12"></path>
-                        </svg>
-                        <span>笔刷</span>
-                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="dropdown-menu">
                         <div class="menu-section">
-                            <div class="menu-category">笔刷设置</div>
+                            <div class="menu-category">笔刷工具</div>
                             <div class="menu-items">
                                 <div class="menu-item-control">
                                     <label>颜色</label>
@@ -1933,92 +1555,467 @@
                                 <button class="menu-item" onclick="clearBrushStrokes()">清除所有笔刷</button>
                             </div>
                         </div>
+                        <div class="menu-section">
+                            <div class="menu-category">水印与文本</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="showSidebarWithFocus('水印功能'); document.getElementById('watermarkUpload').click();">上传水印</button>
+                                <button class="menu-item" onclick="addTextMode()">添加文本</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">多图混合</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="showSidebarWithFocus('多图混合'); document.getElementById('blendImageUpload').click();">上传混合图</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🌈 色彩调整 -->
+                <div class="tool-dropdown" id="colorAdjustDropdown">
+                    <button class="tool-btn" onclick="toggleDropdown('colorAdjustDropdown')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="8" cy="8" r="3"></circle>
+                            <circle cx="16" cy="16" r="3"></circle>
+                        </svg>
+                        <span>色彩调整</span>
+                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div class="menu-section">
+                            <div class="menu-category">精细调节（侧边栏）</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="showSidebarWithFocus('无级调节')">亮度/对比度/饱和度/色相</button>
+                                <button class="menu-item" onclick="showSidebarWithFocus('常用参数')">色温/高光/阴影/暗角</button>
+                                <button class="menu-item" onclick="showSidebarWithFocus('明度与伽马')">明度/伽马</button>
+                                <button class="menu-item" onclick="showSidebarWithFocus('RGB曲线调节')">RGB曲线</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">快捷调节</div>
+                            <div class="menu-items" style="grid-template-columns: 1fr;">
+                                <button class="menu-item" onclick="quickAdjust('brightness', 30)">亮度 +30</button>
+                                <button class="menu-item" onclick="quickAdjust('brightness', -30)">亮度 -30</button>
+                                <button class="menu-item" onclick="quickAdjust('contrast', 20)">对比度 +20</button>
+                                <button class="menu-item" onclick="quickAdjust('contrast', -20)">对比度 -20</button>
+                                <button class="menu-item" onclick="quickAdjust('saturation', 30)">饱和度 +30</button>
+                                <button class="menu-item" onclick="quickAdjust('saturation', -30)">饱和度 -30</button>
+                                <button class="menu-item" onclick="quickAdjust('hue', 45)">色相 +45°</button>
+                                <button class="menu-item" onclick="quickAdjust('hue', -45)">色相 -45°</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">基础滤镜</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyFilter('grayscale')">灰度</button>
+                                <button class="menu-item" onclick="applyFilter('sepia')">复古</button>
+                                <button class="menu-item" onclick="applyFilter('invert')">反色</button>
+                                <button class="menu-item" onclick="applyThreshold()">二值化</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">色调滤镜</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyPresetFilter('oceanic')">海洋</button>
+                                <button class="menu-item" onclick="applyPresetFilter('islands')">岛屿</button>
+                                <button class="menu-item" onclick="applyPresetFilter('marine')">深海</button>
+                                <button class="menu-item" onclick="applyPresetFilter('seagreen')">海绿</button>
+                                <button class="menu-item" onclick="applyPresetFilter('flagblue')">皇家蓝</button>
+                                <button class="menu-item" onclick="applyPresetFilter('diamante')">钻石</button>
+                                <button class="menu-item" onclick="applyPresetFilter('liquid')">液态</button>
+                                <button class="menu-item" onclick="applyPresetFilter('bluechrome')">蓝铬</button>
+                                <button class="menu-item" onclick="applyPresetFilter('perfume')">香水</button>
+                                <button class="menu-item" onclick="applyPresetFilter('serenity')">宁静</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">复古滤镜</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyPresetFilter('lofi')">复古风</button>
+                                <button class="menu-item" onclick="applyPresetFilter('vintage')">怀旧</button>
+                                <button class="menu-item" onclick="applyPresetFilter('dramatic')">戏剧</button>
+                                <button class="menu-item" onclick="applyPresetFilter('pastel_pink')">粉红</button>
+                                <button class="menu-item" onclick="applyPresetFilter('cali')">加州</button>
+                                <button class="menu-item" onclick="applyPresetFilter('firenze')">佛罗伦萨</button>
+                                <button class="menu-item" onclick="applyPresetFilter('obsidian')">黑曜</button>
+                                <button class="menu-item" onclick="applyPresetFilter('golden')">金色</button>
+                                <button class="menu-item" onclick="applyPresetFilter('broadcast')">广播</button>
+                                <button class="menu-item" onclick="applyPresetFilter('twenties')">二十年代</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">单色调滤镜</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyPresetFilter('rosetint')">玫瑰</button>
+                                <button class="menu-item" onclick="applyPresetFilter('mauve')">紫罗兰</button>
+                                <button class="menu-item" onclick="applyPresetFilter('duotone_violette')">紫双色</button>
+                                <button class="menu-item" onclick="applyPresetFilter('duotone_horizon')">地平线</button>
+                                <button class="menu-item" onclick="applyPresetFilter('duotone_lilac')">丁香</button>
+                                <button class="menu-item" onclick="applyPresetFilter('ochre')">赭石</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">通道调整</div>
+                            <div class="menu-items" style="grid-template-columns: 1fr;">
+                                <button class="menu-item" onclick="showSidebarWithFocus('通道调整')">精细调节（侧边栏）</button>
+                                <button class="menu-item" onclick="alterRedChannel(50)">红+50</button>
+                                <button class="menu-item" onclick="alterRedChannel(-50)">红-50</button>
+                                <button class="menu-item" onclick="alterGreenChannel(50)">绿+50</button>
+                                <button class="menu-item" onclick="alterGreenChannel(-50)">绿-50</button>
+                                <button class="menu-item" onclick="alterBlueChannel(50)">蓝+50</button>
+                                <button class="menu-item" onclick="alterBlueChannel(-50)">蓝-50</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">色彩校正</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyNormalize()">归一化</button>
+                                <button class="menu-item" onclick="applyColorize()">着色</button>
+                                <button class="menu-item" onclick="applyTint()">色调</button>
+                                <button class="menu-item" onclick="applyPrimary()">主色</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">单色效果</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyGrayscaleShades()">灰度着色</button>
+                                <button class="menu-item" onclick="applyGrayscaleHumanCorrected()">人类感知</button>
+                                <button class="menu-item" onclick="applyBGrayscale()">蓝色灰度</button>
+                                <button class="menu-item" onclick="applyDesaturate()">去饱和</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 💡 光线与效果 -->
+                <div class="tool-dropdown" id="lightEffectDropdown">
+                    <button class="tool-btn" onclick="toggleDropdown('lightEffectDropdown')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <span>光线与效果</span>
+                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div class="menu-section">
+                            <div class="menu-category">精细调节（侧边栏）</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="showSidebarWithFocus('常用参数')">色温/高光/阴影/暗角</button>
+                                <button class="menu-item" onclick="showSidebarWithFocus('明度与伽马')">明度/伽马</button>
+                                <button class="menu-item" onclick="showSidebarWithFocus('锐化')">锐化</button>
+                                <button class="menu-item" onclick="showSidebarWithFocus('降噪')">降噪</button>
+                                <button class="menu-item" onclick="showSidebarWithFocus('双边滤波器')">双边滤波器</button>
+                                <button class="menu-item" onclick="showSidebarWithFocus('噪点')">噪点</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">快捷调节</div>
+                            <div class="menu-items" style="grid-template-columns: 1fr;">
+                                <button class="menu-item" onclick="quickAdjust('temperature', 10)">色温 +10</button>
+                                <button class="menu-item" onclick="quickAdjust('temperature', -10)">色温 -10</button>
+                                <button class="menu-item" onclick="quickAdjust('highlights', 10)">高光 +10</button>
+                                <button class="menu-item" onclick="quickAdjust('highlights', -10)">高光 -10</button>
+                                <button class="menu-item" onclick="quickAdjust('shadows', 10)">阴影 +10</button>
+                                <button class="menu-item" onclick="quickAdjust('shadows', -10)">阴影 -10</button>
+                                <button class="menu-item" onclick="quickAdjust('vignette', 10)">暗角强度 +10</button>
+                                <button class="menu-item" onclick="quickAdjust('vignette', -10)">暗角强度 -10</button>
+                                <button class="menu-item" onclick="quickAdjust('lightness', 20)">明度 +20%</button>
+                                <button class="menu-item" onclick="quickAdjust('lightness', -20)">明度 -20%</button>
+                                <button class="menu-item" onclick="quickAdjust('gamma', 0.2)">伽马 +0.2</button>
+                                <button class="menu-item" onclick="quickAdjust('gamma', -0.2)">伽马 -0.2</button>
+                                <button class="menu-item" onclick="quickAdjust('sharpen', 1)">锐化 +1</button>
+                                <button class="menu-item" onclick="quickAdjust('noiseReduction', 1)">降噪 +1</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">噪点预设</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyPinkNoise()">粉色噪点</button>
+                                <button class="menu-item" onclick="applyColorNoise(0.1, 0.1, 0.6)">蓝色噪点</button>
+                                <button class="menu-item" onclick="applyColorNoise(0.1, 0.6, 0.1)">绿色噪点</button>
+                                <button class="menu-item" onclick="applyColorNoise(0.6, 0.1, 0.1)">红色噪点</button>
+                                <button class="menu-item" onclick="applyColorNoise(0.6, 0.6, 0.1)">黄色噪点</button>
+                                <button class="menu-item" onclick="applyColorNoise(0.6, 0.1, 0.6)">紫色噪点</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">特效滤镜</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyLix()">霓虹黄</button>
+                                <button class="menu-item" onclick="applyNeue()">霓虹蓝</button>
+                                <button class="menu-item" onclick="applyRyo()">霓虹洋红</button>
+                                <button class="menu-item" onclick="applyIncBrightness()">增加亮度</button>
+                                <button class="menu-item" onclick="applyGradient()">渐变叠加</button>
+                                <button class="menu-item" onclick="applyFrostedGlass()">毛玻璃</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🔲 特殊效果 -->
+                <div class="tool-dropdown" id="specialEffectDropdown">
+                    <button class="tool-btn" onclick="toggleDropdown('specialEffectDropdown')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        <span>特殊效果</span>
+                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div class="menu-section">
+                            <div class="menu-category">模糊效果</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyBoxBlur()">盒式模糊</button>
+                                <button class="menu-item" onclick="applyGaussianBlur()">高斯模糊</button>
+                                <button class="menu-item" onclick="enableBackgroundBlurMode()">背景模糊（主体清晰）</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">边缘检测</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applySobelHorizontal()">Sobel 水平</button>
+                                <button class="menu-item" onclick="applySobelVertical()">Sobel 垂直</button>
+                                <button class="menu-item" onclick="applySobelGlobal()">Sobel 全局</button>
+                                <button class="menu-item" onclick="applyPrewittHorizontal()">Prewitt 水平</button>
+                                <button class="menu-item" onclick="applyEdgeDetection()">基础边缘</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">线条检测</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyDetectHorizontalLines()">水平线</button>
+                                <button class="menu-item" onclick="applyDetectVerticalLines()">垂直线</button>
+                                <button class="menu-item" onclick="applyDetect45DegLines()">45度线</button>
+                                <button class="menu-item" onclick="applyDetect135DegLines()">135度线</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">卷积效果</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyLaplace()">Laplace</button>
+                                <button class="menu-item" onclick="applyEmboss()">浮雕</button>
+                                <button class="menu-item" onclick="applyIdentity()">身份</button>
+                                <button class="menu-item" onclick="applyEdgeOne()">边缘1</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">像素化效果</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyPixelate()">像素化</button>
+                                <button class="menu-item" onclick="applyHalftone()">半色调</button>
+                                <button class="menu-item" onclick="applySolarize()">曝光</button>
+                                <button class="menu-item" onclick="applyOil()">油画</button>
+                                <button class="menu-item" onclick="applyDither()">抖动</button>
+                                <button class="menu-item" onclick="applyDuotone()">双色</button>
+                                <button class="menu-item" onclick="applyPrimary()">主色</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">条纹效果</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="applyHorizontalStrips()">水平条纹</button>
+                                <button class="menu-item" onclick="applyVerticalStrips()">垂直条纹</button>
+                                <button class="menu-item" onclick="applyColorHorizontalStrips()">彩色水平</button>
+                                <button class="menu-item" onclick="applyColorVerticalStrips()">彩色垂直</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🖊️ 图层管理 -->
+                <div class="tool-dropdown" id="layerDropdown">
+                    <button class="tool-btn" onclick="toggleDropdown('layerDropdown')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <polyline points="2 17 12 22 22 17"></polyline>
+                            <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg>
+                        <span>图层管理</span>
+                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div class="menu-section">
+                            <div class="menu-category">图层操作</div>
+                            <div class="menu-items" style="grid-template-columns: 1fr;">
+                                <button class="menu-item" onclick="showSidebarWithFocus('图层管理'); addNewLayer();">新建图层</button>
+                                <button class="menu-item" onclick="showSidebarWithFocus('图层管理'); duplicateActiveLayer();">复制图层</button>
+                                <button class="menu-item" onclick="showSidebarWithFocus('图层管理'); deleteActiveLayer();">删除图层</button>
+                                <button class="menu-item" onclick="showSidebarWithFocus('图层管理'); mergeDownLayer();">向下合并</button>
+                                <button class="menu-item" onclick="showSidebarWithFocus('图层管理'); flattenLayers();">合并所有图层</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">图层属性</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="showSidebarWithFocus('图层管理'); showLayerProperties();">图层属性</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">选择工具</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="showSidebarWithFocus('图层管理'); toggleLassoMode();">套索选择</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🔧 辅助工具 -->
+                <div class="tool-dropdown" id="auxToolsDropdown">
+                    <button class="tool-btn" onclick="toggleDropdown('auxToolsDropdown')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                        <span>辅助工具</span>
+                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div class="menu-section">
+                            <div class="menu-category">网格/参考线</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="showSidebarWithFocus('网格/参考线'); toggleGrid();">网格设置</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">取色器</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="showSidebarWithFocus('取色器'); enableColorPickerMode();">启用取色器</button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">字体管理</div>
+                            <div class="menu-items">
+                                <button class="menu-item" onclick="showSidebarWithFocus('字体管理'); showFontManager();">字体管理器</button>
+                                <button class="menu-item" onclick="showSidebarWithFocus('字体管理'); showFontUpload();">上传字体</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ⚙️ 操作 -->
+                <div class="tool-dropdown" id="operationsDropdown">
+                    <button class="tool-btn" onclick="toggleDropdown('operationsDropdown')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                        </svg>
+                        <span>操作</span>
+                        <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div class="menu-section">
+                            <div class="menu-category">编辑</div>
+                            <div class="menu-items" style="grid-template-columns: 1fr;">
+                                <button class="menu-item" onclick="undo()" id="dropdownUndoBtn" disabled title="撤销 (Ctrl+Z)">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;">
+                                        <path d="M3 7v6h6"></path>
+                                        <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+                                    </svg>
+                                    撤销
+                                </button>
+                                <button class="menu-item" onclick="redo()" id="dropdownRedoBtn" disabled title="重做 (Ctrl+Y)">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;">
+                                        <path d="M21 7v6h-6"></path>
+                                        <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"></path>
+                                    </svg>
+                                    重做
+                                </button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">重置</div>
+                            <div class="menu-items" style="grid-template-columns: 1fr;">
+                                <button class="menu-item" onclick="resetImage()" id="dropdownResetBtn" disabled title="重置图片">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;">
+                                        <path d="M2.5 2v6h6M21.5 22v-6h-6"></path>
+                                        <path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.3"></path>
+                                    </svg>
+                                    重置
+                                </button>
+                                <button class="menu-item" onclick="clearImage()" id="dropdownClearBtn" disabled title="清除图片">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                    清除
+                                </button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">缩放</div>
+                            <div class="menu-items" style="grid-template-columns: 1fr;">
+                                <button class="menu-item" onclick="zoomOut()" title="缩小">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="8" y1="11" x2="14" y2="11"></line>
+                                    </svg>
+                                    缩小
+                                </button>
+                                <button class="menu-item" onclick="resetZoom()" title="重置缩放">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <circle cx="11" cy="11" r="3"></circle>
+                                    </svg>
+                                    重置
+                                </button>
+                                <button class="menu-item" onclick="zoomIn()" title="放大">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="11" y1="8" x2="11" y2="14"></line>
+                                        <line x1="8" y1="11" x2="14" y2="11"></line>
+                                    </svg>
+                                    放大
+                                </button>
+                                <button class="menu-item" onclick="fitToScreen()" title="适应屏幕">
+                                    适应屏幕
+                                </button>
+                            </div>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-category">侧边栏</div>
+                            <div class="menu-items" style="grid-template-columns: 1fr;">
+                                <button class="menu-item" onclick="toggleSidebarLock()" id="dropdownLockBtn" title="锁定/解锁侧边栏">
+                                    <svg id="dropdownLockIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                    <span id="dropdownLockText">锁定侧边栏</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="toolbar-right">
             <div class="toolbar-actions">
-                <button class="toolbar-action-btn" onclick="undo()" id="toolbarUndoBtn" disabled title="撤销 (Ctrl+Z)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 7v6h6"></path>
-                        <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
-                    </svg>
-                </button>
-                <button class="toolbar-action-btn" onclick="redo()" id="toolbarRedoBtn" disabled title="重做 (Ctrl+Y)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 7v6h-6"></path>
-                        <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"></path>
-                    </svg>
-                </button>
-                <div class="toolbar-divider"></div>
-                <button class="toolbar-action-btn" onclick="resetImage()" id="toolbarResetBtn" disabled title="重置图片">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M2.5 2v6h6M21.5 22v-6h-6"></path>
-                        <path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.3"></path>
-                    </svg>
-                </button>
-                <button class="toolbar-action-btn" onclick="clearImage()" id="toolbarClearBtn" disabled title="清除图片">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                </button>
-                <div class="toolbar-divider"></div>
-                <button class="toolbar-action-btn" onclick="zoomOut()" title="缩小">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="8" y1="11" x2="14" y2="11"></line>
-                    </svg>
-                </button>
-                <button class="toolbar-action-btn" onclick="resetZoom()" title="重置缩放">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <circle cx="11" cy="11" r="3"></circle>
-                    </svg>
-                </button>
-                <button class="toolbar-action-btn" onclick="zoomIn()" title="放大">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="11" y1="8" x2="11" y2="14"></line>
-                        <line x1="8" y1="11" x2="14" y2="11"></line>
-                    </svg>
-                </button>
-                <button class="toolbar-action-btn" onclick="fitToScreen()" title="适应屏幕">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
-                        <path d="M21 8V5a2 2 0 0 0-2-2h-3"></path>
-                        <path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
-                        <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
-                    </svg>
-                </button>
             </div>
-            <div class="toolbar-divider"></div>
-            <select id="formatSelect" class="toolbar-select" onchange="updateDownloadFormat()">
-                <option value="png">PNG</option>
-                <option value="jpeg">JPEG</option>
-                <option value="webp">WebP</option>
-            </select>
-            <button class="toolbar-btn btn-success" onclick="downloadImage()" id="downloadBtn" disabled>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                <span>下载</span>
-            </button>
         </div>
     </div>
 
     <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
 
-    <!-- 悬浮快速导航 -->
-    <button class="quick-nav-toggle" id="quickNavToggle" onclick="toggleQuickNav()" title="快速导航">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-    </button>
+    <!-- 快速导航面板 -->
     <div class="quick-nav-panel" id="quickNavPanel">
         <div class="quick-nav-header">
             <h4>快速导航</h4>
@@ -2748,6 +2745,32 @@
                     </div>
                 </div>
 
+                <div class="section" data-section="ai-enhance">
+                    <h3>AI 图像增强 <span style="font-size: 0.7em; color: #ff9800; margin-left: 8px;">⚠️ ncnn</span></h3>
+                    <div id="ncnnStatus" style="padding: 6px 10px; background: #333; border-radius: 6px; font-size: 0.85em; color: #888; margin-bottom: 8px;">
+                        ⏳ AI模块加载中...
+                    </div>
+                    <div class="slider-container">
+                        <label>锐化强度 (0.0 ~ 2.0)</label>
+                        <input type="range" id="ncnnSharpenStrength" min="0" max="20" value="10" oninput="updateNcnnSharpenValue()" disabled>
+                        <div class="slider-value"><span id="ncnnSharpenValue">1.0</span></div>
+                    </div>
+                    <div class="btn-group" style="margin-top: 8px;">
+                        <button class="btn btn-success" onclick="applyNcnnSharpen()" id="ncnnSharpenBtn" disabled>🔍 AI 锐化</button>
+                    </div>
+                    <div class="slider-container" style="margin-top: 12px;">
+                        <label>去噪核大小 (3/5/7)</label>
+                        <input type="range" id="ncnnDenoiseKernel" min="3" max="7" step="2" value="3" oninput="updateNcnnDenoiseValue()" disabled>
+                        <div class="slider-value"><span id="ncnnDenoiseValue">3</span></div>
+                    </div>
+                    <div class="btn-group" style="margin-top: 8px;">
+                        <button class="btn btn-success" onclick="applyNcnnDenoise()" id="ncnnDenoiseBtn" disabled>🎯 AI 去噪</button>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 0.8em; color: #999;">
+                        💡 简单算法无需AI模型，速度较快
+                    </div>
+                </div>
+
                 <div class="section">
                     <h3>网格/参考线</h3>
                     <div class="slider-container">
@@ -2816,7 +2839,14 @@
                         <button class="btn" onclick="redo()" disabled id="redoBtn">↪ 重做</button>
                         <button class="btn" onclick="resetImage()" disabled>重置</button>
                         <button class="btn btn-danger" onclick="clearImage()" disabled>清空图像</button>
-                        <button class="btn btn-danger" onclick="downloadImage()" disabled>下载</button>
+                        <button class="btn" onclick="zoomOut()" disabled>缩小</button>
+                        <button class="btn" onclick="resetZoom()" disabled>重置缩放</button>
+                        <button class="btn" onclick="zoomIn()" disabled>放大</button>
+                        <button class="btn" onclick="fitToScreen()" disabled>适应屏幕</button>
+                    </div>
+                    <!-- 下载按钮单独一列 -->
+                    <div class="btn-group" style="margin-top: 8px;">
+                        <button class="btn btn-success" onclick="downloadImage()" disabled id="downloadBtn" style="width: 100%; font-weight: bold;">下载图片</button>
                     </div>
                 </div>
 
@@ -3990,7 +4020,7 @@
             const canvasContainer = document.getElementById('canvasContainer');
             const emptyState = document.getElementById('emptyState');
             // 如果没有图片且点击的是 emptyState，不阻止默认行为，允许点击触发上传
-            if (canvasContainer && canvasContainer.contains(e.target)) {
+            if (canvasContainer && e.target && canvasContainer.contains(e.target)) {
                 if (!appState.currentImage && e.target.closest('#emptyState')) {
                     return;
                 }
@@ -4010,7 +4040,7 @@
             if (currentY > startY && window.scrollY === 0) {
                 const canvasContainer = document.getElementById('canvasContainer');
                 const emptyState = document.getElementById('emptyState');
-                if (canvasContainer && canvasContainer.contains(e.target)) {
+                if (canvasContainer && e.target && canvasContainer.contains(e.target)) {
                     // 如果没有图片且触摸的是 emptyState，不阻止默认行为
                     if (!appState.currentImage && e.target.closest('#emptyState')) {
                         return;
@@ -4020,6 +4050,43 @@
             }
         }, { passive: false });
 
+        // 侧边栏触摸事件处理：上滑时显示工具栏
+        let sidebarTouchStartY = 0;
+        const sidebar = document.getElementById('sidebar');
+
+        if (sidebar) {
+            sidebar.addEventListener('touchstart', function(e) {
+                sidebarTouchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            sidebar.addEventListener('touchmove', function(e) {
+                const currentY = e.touches[0].clientY;
+                const deltaY = sidebarTouchStartY - currentY;
+
+                // 检测上滑手势（deltaY > 0 表示向上滑动）
+                if (deltaY > 50) { // 上滑超过50像素触发
+                    const topToolbar = document.querySelector('.top-toolbar');
+                    if (topToolbar && topToolbar.style.display === 'none') {
+                        topToolbar.style.display = 'flex';
+                        // 添加淡入动画效果
+                        topToolbar.style.animation = 'fadeIn 0.3s ease';
+                    }
+                    // 重置起始位置，避免连续触发
+                    sidebarTouchStartY = currentY;
+                }
+            }, { passive: true });
+        }
+
+        // 添加淡入动画的CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+
         // 加载 WASM 模块并初始化
         async function loadWasmModule() {
             try {
@@ -4028,6 +4095,50 @@
 
                 // 从 photon_wasm.js 导入初始化函数和所有导出
                 const { default: initWasm, ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint, Layer, LayerStack, wasm_register_font, wasm_is_font_registered, wasm_get_registered_fonts, wasm_unregister_font, wasm_clear_fonts, initThreadPool } = await import('./pkg/photon_wasm.js?v=28');
+
+// 加载 ncnn AI 增强模块
+                let ncnnModule = null;
+                try {
+                    const ncnnStatusEl = document.getElementById('ncnnStatus');
+                    ncnnStatusEl.textContent = '⏳ AI模块加载中...';
+                    ncnnStatusEl.style.color = '#ff9800';
+
+                    const ncnnScript = document.createElement('script');
+                    ncnnScript.src = './pkg/ncnn_enhance.js';
+                    const scriptLoaded = new Promise((resolve, reject) => {
+                        ncnnScript.onload = resolve;
+                        ncnnScript.onerror = () => reject(new Error('ncnn_enhance.js 脚本加载失败'));
+                    });
+                    document.head.appendChild(ncnnScript);
+                    await scriptLoaded;
+
+                    if (typeof NcnnEnhance === 'function') {
+                        ncnnStatusEl.textContent = '⏳ AI模块初始化中...';
+                        ncnnModule = await NcnnEnhance();
+                        if (ncnnModule && typeof ncnnModule.sharpen_image_simple === 'function') {
+                            ncnnStatusEl.textContent = '✅ AI模块已就绪';
+                            ncnnStatusEl.style.color = '#4caf50';
+                            Logger.info('NCNN AI 增强模块加载成功');
+                        } else {
+                            ncnnModule = null;
+                            ncnnStatusEl.textContent = '⚠️ AI模块功能不完整';
+                            ncnnStatusEl.style.color = '#ff9800';
+                        }
+                    } else {
+                        Logger.warn('NCNN AI 增强模块未找到或格式不正确, NcnnEnhance=' + typeof NcnnEnhance);
+                        ncnnStatusEl.textContent = '⚠️ AI模块不可用';
+                        ncnnStatusEl.style.color = '#ff9800';
+                    }
+                } catch (ncnnError) {
+                    Logger.warn('NCNN AI 增强模块加载失败:', ncnnError.message);
+                    const ncnnStatusEl = document.getElementById('ncnnStatus');
+                    if (ncnnStatusEl) {
+                        ncnnStatusEl.textContent = '❌ AI模块加载失败: ' + ncnnError.message.substring(0, 60);
+                        ncnnStatusEl.style.color = '#f44336';
+                    }
+                    ncnnModule = null;
+                }
+                window.ncnnModule = ncnnModule;
 
                 // 调用初始化函数来加载 WASM 模块
                 await initWasm();
@@ -4067,7 +4178,9 @@
                     wasm_is_font_registered,
                     wasm_get_registered_fonts,
                     wasm_unregister_font,
-                    wasm_clear_fonts
+                    wasm_clear_fonts,
+                    // ncnn AI 增强模块
+                    ncnnModule,
                 };
             } catch (error) {
                 console.error('Failed to load WASM module:', error);
@@ -4078,7 +4191,8 @@
         // 加载 WASM 模块并初始化
         const {
             ImageProcessor, BrushType, BlendMode, BrushConfig, BrushStroke, StrokePoint, Layer, LayerStack,
-            wasm_register_font, wasm_is_font_registered, wasm_get_registered_fonts, wasm_unregister_font, wasm_clear_fonts
+            wasm_register_font, wasm_is_font_registered, wasm_get_registered_fonts, wasm_unregister_font, wasm_clear_fonts,
+            ncnnModule: loadedNcnnModule
         } = await loadWasmModule();
 
         // 将类型导出到全局 window 对象
@@ -4089,6 +4203,11 @@
         window.StrokePoint = StrokePoint;
         window.Layer = Layer;
         window.LayerStack = LayerStack;
+
+        // ncnn AI 增强模块
+        if (loadedNcnnModule) {
+            window.ncnnModule = loadedNcnnModule;
+        }
 
         // 字体注册函数导出到全局
         window.wasm_register_font = wasm_register_font;
@@ -6180,8 +6299,8 @@
         function updateUndoRedoButtons() {
             document.getElementById('undoBtn').disabled = appState.historyStack.length === 0;
             document.getElementById('redoBtn').disabled = appState.redoStack.length === 0;
-            document.getElementById('toolbarUndoBtn').disabled = appState.historyStack.length === 0;
-            document.getElementById('toolbarRedoBtn').disabled = appState.redoStack.length === 0;
+            document.getElementById('dropdownUndoBtn').disabled = appState.historyStack.length === 0;
+            document.getElementById('dropdownRedoBtn').disabled = appState.redoStack.length === 0;
         }
 
         // 清空历史记录并释放所有 Blob URL
@@ -6258,11 +6377,11 @@
                 initGlobalEvents();
 
                 // 检查快速导航相关元素是否存在
-                const quickNavToggle = document.getElementById('quickNavToggle');
+                const quickNavBtn = document.getElementById('quickNavBtn');
                 const quickNavPanel = document.getElementById('quickNavPanel');
                 const quickNavItems = document.getElementById('quickNavItems');
 
-                if (quickNavToggle && quickNavPanel && quickNavItems) {
+                if (quickNavBtn && quickNavPanel && quickNavItems) {
                     // 初始化快速导航
                     setTimeout(() => {
                         initializeQuickNav();
@@ -7456,10 +7575,17 @@
             });
 
             // 启用工具栏操作按钮
-            document.getElementById('toolbarUndoBtn').disabled = !appState.currentImage || appState.historyStack.length === 0;
-            document.getElementById('toolbarRedoBtn').disabled = !appState.currentImage || appState.redoStack.length === 0;
-            document.getElementById('toolbarResetBtn').disabled = !appState.currentImage;
-            document.getElementById('toolbarClearBtn').disabled = !appState.currentImage;
+            document.getElementById('dropdownUndoBtn').disabled = !appState.currentImage || appState.historyStack.length === 0;
+            document.getElementById('dropdownRedoBtn').disabled = !appState.currentImage || appState.redoStack.length === 0;
+            document.getElementById('dropdownResetBtn').disabled = !appState.currentImage;
+            document.getElementById('dropdownClearBtn').disabled = !appState.currentImage;
+
+            // AI 增强按钮需要同时检查 ncnn 模块和图像
+            const ncnnReady = window.ncnnModule && appState.currentImage;
+            document.getElementById('ncnnSharpenBtn').disabled = !ncnnReady;
+            document.getElementById('ncnnDenoiseBtn').disabled = !ncnnReady;
+            document.getElementById('ncnnSharpenStrength').disabled = !ncnnReady;
+            document.getElementById('ncnnDenoiseKernel').disabled = !ncnnReady;
 
             // 启用滑块
             const sliders = document.querySelectorAll('input[type="range"]');
@@ -7553,12 +7679,151 @@
             }
         }
 
+        // 侧边栏锁定状态
+        let sidebarLocked = false;
+
+        // 切换侧边栏锁定状态
+        window.toggleSidebarLock = function() {
+            sidebarLocked = !sidebarLocked;
+            updateSidebarLockState();
+        }
+
+        // 更新侧边栏锁定状态UI
+        window.updateSidebarLockState = function() {
+            const dropdownLockBtn = document.getElementById('dropdownLockBtn');
+            const dropdownLockIcon = document.getElementById('dropdownLockIcon');
+            const dropdownLockText = document.getElementById('dropdownLockText');
+            const sidebarContent = document.getElementById('sidebarContent');
+
+            if (!dropdownLockBtn || !dropdownLockIcon || !dropdownLockText || !sidebarContent) return;
+
+            if (sidebarLocked) {
+                // 锁定状态
+                dropdownLockBtn.classList.add('active');
+                dropdownLockIcon.innerHTML = '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path><line x1="12" y1="16" x2="12" y2="16" stroke="currentColor" stroke-width="3"></line>';
+                dropdownLockText.textContent = '已锁定';
+                dropdownLockBtn.style.background = 'rgba(139, 58, 58, 0.3)';
+                dropdownLockBtn.style.color = '#ff6b6b';
+
+                // 禁用所有侧边栏按钮
+                disableAllSidebarButtons(true);
+            } else {
+                // 解锁状态
+                dropdownLockBtn.classList.remove('active');
+                dropdownLockIcon.innerHTML = '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>';
+                dropdownLockText.textContent = '锁定侧边栏';
+                dropdownLockBtn.style.background = '';
+                dropdownLockBtn.style.color = '';
+
+                // 恢复所有侧边栏按钮状态
+                disableAllSidebarButtons(false);
+            }
+        }
+
+        // 禁用/启用所有侧边栏按钮
+        window.disableAllSidebarButtons = function(disable) {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+
+            // 获取所有按钮、输入、选择器等交互元素
+            const interactables = sidebar.querySelectorAll('button, input, select');
+
+            interactables.forEach(element => {
+                if (disable) {
+                    // 保存原始的disabled状态
+                    if (!element.hasAttribute('data-original-disabled')) {
+                        element.setAttribute('data-original-disabled', element.disabled ? 'true' : 'false');
+                    }
+                    element.disabled = true;
+                    element.style.opacity = '0.4';
+                    element.style.cursor = 'not-allowed';
+                } else {
+                    // 恢复原始的disabled状态
+                    const originalDisabled = element.getAttribute('data-original-disabled');
+                    if (originalDisabled === 'true') {
+                        element.disabled = true;
+                    } else {
+                        element.disabled = false;
+                    }
+                    element.style.opacity = '';
+                    element.style.cursor = '';
+                    element.removeAttribute('data-original-disabled');
+                }
+            });
+        }
+
+        // 智能侧边栏：显示并聚焦到指定section（类似PS的行为）
+        window.showSidebarWithFocus = function(sectionTitle) {
+            const sidebar = document.querySelector('.sidebar');
+            const toggle = document.getElementById('sidebarToggle');
+            const sidebarContent = document.getElementById('sidebarContent');
+
+            // 显示侧边栏
+            if (sidebar.classList.contains('hidden')) {
+                sidebar.classList.remove('hidden');
+                if (toggle) {
+                    toggle.textContent = '☰';
+                    toggle.style.left = '320px';
+                }
+            }
+
+            // 查找目标section
+            const sections = sidebarContent.querySelectorAll('.section');
+            let targetSection = null;
+
+            sections.forEach(section => {
+                const title = section.querySelector('h3');
+                if (title && title.textContent.trim() === sectionTitle) {
+                    targetSection = section;
+                }
+            });
+
+            if (targetSection) {
+                // 移除其他section的高亮
+                sections.forEach(s => s.classList.remove('focused'));
+
+                // 高亮目标section
+                targetSection.classList.add('focused');
+
+                // 滚动到目标section
+                targetSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+
+                // 添加闪烁动画效果
+                targetSection.style.animation = 'none';
+                targetSection.offsetHeight; // 触发重绘
+                targetSection.style.animation = 'focusPulse 0.5s ease-out';
+            } else {
+                console.warn(`未找到section: ${sectionTitle}`);
+            }
+        }
+
+        // 隐藏侧边栏（用于退出特定功能模式）
+        window.hideSidebar = function() {
+            const sidebar = document.querySelector('.sidebar');
+            const toggle = document.getElementById('sidebarToggle');
+
+            if (!sidebar.classList.contains('hidden')) {
+                sidebar.classList.add('hidden');
+                if (toggle) {
+                    toggle.textContent = '▶';
+                    toggle.style.left = '0';
+                }
+            }
+
+            // 移除所有section的高亮
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(s => s.classList.remove('focused'));
+        }
+
         // 切换快速导航面板
         window.toggleQuickNav = function() {
             const panel = document.getElementById('quickNavPanel');
-            const toggle = document.getElementById('quickNavToggle');
+            const btn = document.getElementById('quickNavBtn');
             panel.classList.toggle('active');
-            toggle.classList.toggle('active');
+            btn.classList.toggle('active');
         }
 
         // 初始化快速导航
@@ -7646,9 +7911,9 @@
             // 关闭导航面板
             setTimeout(() => {
                 const panel = document.getElementById('quickNavPanel');
-                const toggle = document.getElementById('quickNavToggle');
+                const btn = document.getElementById('quickNavBtn');
                 panel.classList.remove('active');
-                toggle.classList.remove('active');
+                btn.classList.remove('active');
             }, 300);
         }
 
@@ -7685,10 +7950,10 @@
         // 点击其他区域关闭快速导航面板
         document.addEventListener('click', (e) => {
             const panel = document.getElementById('quickNavPanel');
-            const toggle = document.getElementById('quickNavToggle');
-            if (!panel.contains(e.target) && !toggle.contains(e.target)) {
+            const btn = document.getElementById('quickNavBtn');
+            if (panel && btn && e.target && !panel.contains(e.target) && !btn.contains(e.target)) {
                 panel.classList.remove('active');
-                toggle.classList.remove('active');
+                btn.classList.remove('active');
             }
         });
 
@@ -7710,7 +7975,7 @@
         // 键盘导航支持
         document.addEventListener('keydown', (e) => {
             const panel = document.getElementById('quickNavPanel');
-            const toggle = document.getElementById('quickNavToggle');
+            const btn = document.getElementById('quickNavBtn');
 
             // 只有当导航面板打开时才响应键盘
             if (!panel.classList.contains('active')) {
@@ -7720,7 +7985,7 @@
             // Escape键关闭面板
             if (e.key === 'Escape') {
                 panel.classList.remove('active');
-                toggle.classList.remove('active');
+                btn.classList.remove('active');
                 return;
             }
 
@@ -7763,7 +8028,8 @@
         // 切换下拉菜单
         window.toggleDropdown = function(dropdownId) {
             const dropdown = document.getElementById(dropdownId);
-            const isActive = dropdown.classList.contains('active');
+            const dropdownContainer = dropdown ? dropdown.closest('.tool-dropdown') : null;
+            const isActive = dropdownContainer && dropdownContainer.classList.contains('active');
 
             // 关闭所有下拉菜单
             document.querySelectorAll('.tool-dropdown').forEach(d => {
@@ -7771,8 +8037,8 @@
             });
 
             // 如果之前未激活，则激活当前菜单
-            if (!isActive) {
-                dropdown.classList.add('active');
+            if (!isActive && dropdownContainer) {
+                dropdownContainer.classList.add('active');
             }
         };
 
@@ -7788,6 +8054,9 @@
         // 快速调整功能
         window.quickAdjust = function(type, value) {
             if (!appState.processor) return;
+
+            // 快捷调节不自动打开侧边栏，保持专注
+            // 用户可以手动点击"精细调节"按钮打开侧边栏
 
             const brightnessSlider = document.getElementById('brightnessSlider');
             const contrastSlider = document.getElementById('contrastSlider');
@@ -7817,6 +8086,30 @@
                         break;
                     case 'hue':
                         hueSlider.value = parseInt(hueSlider.value) + value;
+                        break;
+                    case 'temperature':
+                        const temperatureSlider = document.getElementById('temperatureSlider');
+                        if (temperatureSlider) {
+                            temperatureSlider.value = parseInt(temperatureSlider.value) + value;
+                        }
+                        break;
+                    case 'highlights':
+                        const highlightsSlider = document.getElementById('highlightsSlider');
+                        if (highlightsSlider) {
+                            highlightsSlider.value = parseInt(highlightsSlider.value) + value;
+                        }
+                        break;
+                    case 'shadows':
+                        const shadowsSlider = document.getElementById('shadowsSlider');
+                        if (shadowsSlider) {
+                            shadowsSlider.value = parseInt(shadowsSlider.value) + value;
+                        }
+                        break;
+                    case 'vignette':
+                        const vignetteSlider = document.getElementById('vignetteSlider');
+                        if (vignetteSlider) {
+                            vignetteSlider.value = parseInt(vignetteSlider.value) + value;
+                        }
                         break;
                     case 'lightness':
                         lightnessSlider.value = parseInt(lightnessSlider.value) + value;
@@ -9264,6 +9557,29 @@
             }, debounceDelay);
         };
 
+        // 应用双边滤波（工具栏快速调用，使用默认参数）
+        window.applyBilateralFilter = function() {
+            if (!appState.processor) {
+                Logger.warn('请先加载图片');
+                return;
+            }
+
+            try {
+                // 使用默认参数
+                const sigmaSpatial = 5.0;
+                const sigmaRange = 30.0;
+                const fastMode = true;
+
+                appState.processor.apply_bilateral_filter(sigmaSpatial, sigmaRange, fastMode);
+                updateCanvas();
+                saveHistory();
+                Logger.log('双边滤镜已应用');
+            } catch (error) {
+                console.error('双边滤镜错误:', error);
+                Logger.error('双边滤镜应用失败');
+            }
+        };
+
         // 应用无级调节
         window.applyAdjustments = function() {
             if (!appState.processor) return;
@@ -9857,6 +10173,10 @@
         // 进入裁剪模式
         window.cropImage = function() {
             if (!appState.processor) return;
+
+            // 智能侧边栏：裁剪模式隐藏侧边栏，让用户专注于画布操作
+            hideSidebar();
+
             appState.isCropMode = true;
 
             // 初始化裁剪框为图像中心的一半大小
@@ -11318,6 +11638,11 @@
             }
 
             appState.isPolygonCropMode = !appState.isPolygonCropMode;
+
+            // 智能侧边栏：多边形抠图模式隐藏侧边栏，让用户专注于画布操作
+            if (appState.isPolygonCropMode) {
+                hideSidebar();
+            }
             const btn = document.getElementById('polygonCropBtn');
             const canvas = document.getElementById('imageCanvas');
             const cropOverlay = document.getElementById('cropOverlay');
@@ -12039,6 +12364,127 @@
             showLoading(false);
         };
 
+        // ==================== AI 图像增强功能 ====================
+
+        // 更新ncnn滑块显示值
+        window.updateNcnnSharpenValue = function() {
+            const val = (parseInt(document.getElementById('ncnnSharpenStrength').value) / 10).toFixed(1);
+            document.getElementById('ncnnSharpenValue').textContent = val;
+        };
+        window.updateNcnnDenoiseValue = function() {
+            document.getElementById('ncnnDenoiseValue').textContent = document.getElementById('ncnnDenoiseKernel').value;
+        };
+
+        // AI 锐化
+        window.applyNcnnSharpen = function() {
+            if (!window.ncnnModule) {
+                alert('AI 增强模块未加载');
+                return;
+            }
+            if (!appState.processor) return;
+
+            showLoading(true, '正在 AI 锐化...');
+
+            try {
+                const width = appState.processor.get_width();
+                const height = appState.processor.get_height();
+                const rawPixels = appState.processor.get_raw_pixels();
+
+                const ncnn = window.ncnnModule;
+                const dataLength = width * height * 4;
+
+                const inputPtr = ncnn._malloc(dataLength);
+                ncnn.HEAPU8.set(rawPixels, inputPtr);
+
+                const strength = parseInt(document.getElementById('ncnnSharpenStrength').value) / 10;
+
+                let resultPtr;
+                if (typeof ncnn.sharpen_image_simple === 'function') {
+                    resultPtr = ncnn.sharpen_image_simple(inputPtr, width, height, strength);
+                } else {
+                    resultPtr = ncnn.ccall('sharpen_image_simple', 'number',
+                        ['number', 'number', 'number', 'number'],
+                        [inputPtr, width, height, strength]);
+                }
+
+                if (!resultPtr) {
+                    throw new Error('锐化处理返回空结果');
+                }
+
+                const resultData = new Uint8Array(ncnn.HEAPU8.buffer, resultPtr, dataLength);
+                const processedPixels = new Uint8Array(resultData);
+
+                ncnn.free_image_data(resultPtr);
+                ncnn._free(inputPtr);
+
+                appState.processor = new ImageProcessor(width, height, processedPixels);
+                saveToHistory();
+                updateCanvas();
+
+                Logger.info('AI 锐化完成, strength=' + strength);
+            } catch (error) {
+                Logger.error('AI 锐化失败:', error);
+                alert('AI 锐化失败: ' + error.message);
+            }
+
+            showLoading(false);
+        };
+
+        // AI 去噪
+        window.applyNcnnDenoise = function() {
+            if (!window.ncnnModule) {
+                alert('AI 增强模块未加载');
+                return;
+            }
+            if (!appState.processor) return;
+
+            showLoading(true, '正在 AI 去噪...');
+
+            try {
+                const width = appState.processor.get_width();
+                const height = appState.processor.get_height();
+                const rawPixels = appState.processor.get_raw_pixels();
+
+                const ncnn = window.ncnnModule;
+                const dataLength = width * height * 4;
+
+                const inputPtr = ncnn._malloc(dataLength);
+                ncnn.HEAPU8.set(rawPixels, inputPtr);
+
+                const kernelSize = parseInt(document.getElementById('ncnnDenoiseKernel').value);
+
+                let resultPtr;
+                if (typeof ncnn.denoise_image_simple === 'function') {
+                    resultPtr = ncnn.denoise_image_simple(inputPtr, width, height, kernelSize);
+                } else {
+                    resultPtr = ncnn.ccall('denoise_image_simple', 'number',
+                        ['number', 'number', 'number', 'number'],
+                        [inputPtr, width, height, kernelSize]);
+                }
+
+                if (!resultPtr) {
+                    throw new Error('去噪处理返回空结果');
+                }
+
+                const resultData = new Uint8Array(ncnn.HEAPU8.buffer, resultPtr, dataLength);
+                const processedPixels = new Uint8Array(resultData);
+
+                ncnn.free_image_data(resultPtr);
+                ncnn._free(inputPtr);
+
+                appState.processor = new ImageProcessor(width, height, processedPixels);
+                saveToHistory();
+                updateCanvas();
+
+                Logger.info('AI 去噪完成, kernelSize=' + kernelSize);
+            } catch (error) {
+                Logger.error('AI 去噪失败:', error);
+                alert('AI 去噪失败: ' + error.message);
+            }
+
+            showLoading(false);
+        };
+
         // 重置图片
         window.resetImage = function() {
             if (!appState.processor) return;
@@ -12061,6 +12507,8 @@
             document.getElementById('bilateralSigmaSpatialSlider').value = 0;
             document.getElementById('bilateralSigmaRangeSlider').value = 0;
             document.getElementById('noiseSlider').value = 0;
+            document.getElementById('ncnnSharpenStrength').value = 10;
+            document.getElementById('ncnnDenoiseKernel').value = 3;
 
             // 重置显示值
             document.getElementById('brightnessValue').textContent = '0';
@@ -12076,6 +12524,8 @@
             document.getElementById('bilateralSigmaSpatialValue').textContent = '0.0';
             document.getElementById('bilateralSigmaRangeValue').textContent = '0.0';
             document.getElementById('noiseValue').textContent = '0.0';
+            document.getElementById('ncnnSharpenValue').textContent = '1.0';
+            document.getElementById('ncnnDenoiseValue').textContent = '3';
 
             // 更新画布
             updateCanvas();
@@ -12150,26 +12600,46 @@
 
         // 下载图片
         window.downloadImage = function() {
-            const canvas = document.getElementById('imageCanvas');
-            const format = document.getElementById('formatSelect').value;
-            const quality = 0.92; // JPEG/WebP 质量
+            // 弹出格式选择对话框
+            const format = prompt(
+                `请选择下载格式:\n` +
+                `- 输入 1 或 png: PNG 格式 (无损)\n` +
+                `- 输入 2 或 jpeg: JPEG 格式 (有损，适合照片)\n` +
+                `- 输入 3 或 webp: WebP 格式 (现代格式，体积小)\n\n` +
+                `请输入格式名称或数字:`,
+                '1'
+            );
 
-            let mimeType = 'image/png';
-            if (format === 'jpeg') {
-                mimeType = 'image/jpeg';
-            } else if (format === 'webp') {
-                mimeType = 'image/webp';
+            if (format === null) {
+                return; // 用户取消
             }
 
-            const link = document.createElement('a');
-            link.download = `edited_image.${format}`;
-            link.href = canvas.toDataURL(mimeType, quality);
-            link.click();
+            // 转换为小写并去除空格
+            const formatLower = format.trim().toLowerCase();
+            let targetFormat;
+
+            // 解析用户输入
+            if (formatLower === '1' || formatLower === 'png') {
+                targetFormat = 'png';
+            } else if (formatLower === '2' || formatLower === 'jpeg' || formatLower === 'jpg') {
+                targetFormat = 'jpeg';
+            } else if (formatLower === '3' || formatLower === 'webp') {
+                targetFormat = 'webp';
+            } else {
+                alert('无效的格式，请输入 1/2/3 或 png/jpeg/webp');
+                return;
+            }
+
+            // 调用侧边栏的格式转换函数
+            convertFormat(targetFormat);
         };
 
         // 进入文本添加模式
         window.addTextMode = function() {
             if (!appState.processor) return;
+
+            // 智能侧边栏：显示并聚焦到文本绘制section
+            showSidebarWithFocus('文本绘制');
 
             const text = document.getElementById('textInput').value.trim();
             if (!text) {
@@ -13131,6 +13601,26 @@ function updateCanvas() {
             });
         }
 
+        // ==================== 网格功能 ====================
+
+        // 切换网格显示/隐藏
+        window.toggleGrid = function() {
+            const gridTypeSelect = document.getElementById('gridType');
+            if (!gridTypeSelect) return;
+
+            const currentType = gridTypeSelect.value;
+
+            // 如果当前是 'none'，切换到 'grid'，否则切换到 'none'
+            if (currentType === 'none') {
+                gridTypeSelect.value = 'grid';
+            } else {
+                gridTypeSelect.value = 'none';
+            }
+
+            // 触发 updateGridSettings 来应用更改
+            window.updateGridSettings();
+        };
+
         // ==================== 笔刷功能 ====================
 
         // 更新笔刷颜色（侧边栏）
@@ -13218,6 +13708,10 @@ window.updateBrushColorFromSidebar = function() {
                 alert('请先上传图片');
                 return;
             }
+
+            // 智能侧边栏：显示并聚焦到笔刷工具section
+            showSidebarWithFocus('笔刷工具');
+
             appState.isBrushMode = true;
             // 更新工具栏按钮
             const enableBtn = document.getElementById('enableBrushBtn');
