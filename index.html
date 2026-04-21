@@ -2044,6 +2044,12 @@
                                     </svg>
                                     <span id="dropdownLockText">锁定侧边栏</span>
                                 </button>
+                                <button class="menu-item" onclick="toggleAiSidebar()" id="dropdownAiSidebarBtn" title="AI 助手面板">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                    <span id="dropdownAiSidebarText">AI 助手面板</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -3277,15 +3283,19 @@
 
         window.toggleAiSidebar = function() {
             const sidebar = document.getElementById('aiSidebar');
-            const btn = document.getElementById('aiSidebarToggle');
+            const toggle = document.getElementById('aiSidebarToggle');
+            const menuText = document.getElementById('dropdownAiSidebarText');
             if (!sidebar) return;
             aiSidebarOpen = !aiSidebarOpen;
+            sidebar.classList.toggle('collapsed');
             if (aiSidebarOpen) {
-                sidebar.classList.remove('collapsed');
-                btn.style.display = 'none';
+                toggle.textContent = '▶';
+                toggle.style.right = '320px';
+                if (menuText) menuText.textContent = '关闭 AI 助手';
             } else {
-                sidebar.classList.add('collapsed');
-                btn.style.display = 'block';
+                toggle.textContent = '🤖';
+                toggle.style.right = '0';
+                if (menuText) menuText.textContent = 'AI 助手面板';
             }
         };
 
