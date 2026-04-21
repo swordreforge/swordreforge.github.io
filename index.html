@@ -1419,6 +1419,11 @@
             font-size: 0.85em;
             color: #888;
         }
+        #aiChatMessages::-webkit-scrollbar { width: 4px; }
+        #aiChatMessages::-webkit-scrollbar-track { background: transparent; }
+        #aiChatMessages::-webkit-scrollbar-thumb { background: #555; border-radius: 2px; }
+        #aiChatInput:focus { border-color: #667eea; }
+        #aiChatInput::placeholder { color: #888; }
     </style>
 </head>
 <body>
@@ -2993,6 +2998,19 @@
                     </div>
                 </div>
 
+                <div class="section" id="aiAssistantSection">
+                    <h3>AI 助手 <span style="font-size: 0.7em; color: #667eea; margin-left: 4px;">🤖</span></h3>
+                    <div id="aiChatMessages" style="max-height: 200px; overflow-y: auto; background: #1a1a1a; border-radius: 6px; padding: 8px; margin-bottom: 8px; font-size: 0.85em; color: #ccc; display: none;">
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="aiChatInput" placeholder="输入指令，如：亮度调高一点..." style="flex: 1; padding: 8px 10px; background: #333; color: #e0e0e0; border: 1px solid #555; border-radius: 6px; font-size: 0.9em; outline: none;" onkeydown="if(event.key==='Enter')sendAiMessage()">
+                        <button class="btn" onclick="sendAiMessage()" id="aiSendBtn" style="padding: 8px 12px;">发送</button>
+                    </div>
+                    <div id="aiApiKeyHint" style="margin-top: 6px; font-size: 0.75em; color: #888; cursor: pointer;" onclick="showAiConfig()">
+                        ⚙️ 点击配置 API Key
+                    </div>
+                </div>
+
                 <div class="info-panel" id="infoPanel">
                     <p>尺寸: <span id="imageSize">未加载</span></p>
                     <p>格式: <span id="imageFormat">-</span></p>
@@ -3044,7 +3062,170 @@
     </div>
 
     <script type="module">
-        // ==================== 条件化日志系统 ====================
+        // ==================== AI 助手功能 ====================
+
+        let aiFunctionsModule = null;
+
+        async function loadAiFunctions() {
+            if (aiFunctionsModule) return aiFunctionsModule;
+            aiFunctionsModule = await import('./ai-functions.js');
+            return aiFunctionsModule;
+        }
+
+        const aiConfig = {
+            apiKey: localStorage.getItem('ai_api_key') || '',
+            baseUrl: localStorage.getItem('ai_base_url') || 'https://api.openai.com/v1',
+            model: localStorage.getItem('ai_model') || 'gpt-4o-mini'
+        };
+
+        const SYSTEM_PROMPT = `你是一个图像编辑助手。用户会用中文告诉你他们想要对图像做什么修改。
+你需要调用合适的函数来完成任务。可用的函数包括调整亮度、对比度、饱和度、色相、色温、锐化、模糊、应用滤镜、旋转、翻转、重置图像等。
+请根据用户的描述选择合适的函数和参数。回复简洁中文说明你做了什么。`;
+
+        window.showAiConfig = function() {
+            const modal = document.getElementById('aiConfigModal');
+            modal.style.display = 'flex';
+            document.getElementById('aiApiKeyInput').value = aiConfig.apiKey;
+            document.getElementById('aiApiBaseInput').value = aiConfig.baseUrl;
+            document.getElementById('aiModelInput').value = aiConfig.model;
+        };
+
+        window.closeAiConfigModal = function() {
+            document.getElementById('aiConfigModal').style.display = 'none';
+        };
+
+        window.saveAiConfig = function() {
+            aiConfig.apiKey = document.getElementById('aiApiKeyInput').value.trim();
+            aiConfig.baseUrl = document.getElementById('aiApiBaseInput').value.trim() || 'https://api.openai.com/v1';
+            aiConfig.model = document.getElementById('aiModelInput').value.trim() || 'gpt-4o-mini';
+            localStorage.setItem('ai_api_key', aiConfig.apiKey);
+            localStorage.setItem('ai_base_url', aiConfig.baseUrl);
+            localStorage.setItem('ai_model', aiConfig.model);
+            closeAiConfigModal();
+            updateAiKeyHint();
+            addAiChatMessage('系统', '配置已保存 ✓', 'system');
+        };
+
+        function updateAiKeyHint() {
+            const hint = document.getElementById('aiApiKeyHint');
+            if (aiConfig.apiKey) {
+                hint.textContent = '✅ API Key 已配置 | 点击修改';
+                hint.style.color = '#4caf50';
+            } else {
+                hint.textContent = '⚙️ 点击配置 API Key';
+                hint.style.color = '#888';
+            }
+        }
+
+        let aiChatHistory = [];
+
+        function addAiChatMessage(role, content, type = 'normal') {
+            const container = document.getElementById('aiChatMessages');
+            container.style.display = 'block';
+            const msgDiv = document.createElement('div');
+            msgDiv.style.cssText = 'margin:4px 0;padding:6px 8px;border-radius:6px;word-break:break-word;';
+            if (type === 'system') {
+                msgDiv.style.background = '#1a3a2a';
+                msgDiv.style.color = '#81c784';
+            } else if (role === 'user') {
+                msgDiv.style.background = '#1a2a3a';
+                msgDiv.style.color = '#90caf9';
+            } else {
+                msgDiv.style.background = '#2a2a2a';
+                msgDiv.style.color = '#e0e0e0';
+            }
+            const prefix = role === 'user' ? '你' : (type === 'system' ? '⚙️' : '🤖');
+            msgDiv.innerHTML = '<span style="font-weight:600;">' + prefix + ':</span> ' + content;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        window.sendAiMessage = async function() {
+            const input = document.getElementById('aiChatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            if (!aiConfig.apiKey) {
+                showAiConfig();
+                return;
+            }
+
+            input.value = '';
+            addAiChatMessage('user', message);
+
+            const sendBtn = document.getElementById('aiSendBtn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = '思考中...';
+
+            try {
+                const { AI_FUNCTION_DEFINITIONS, executeAiFunction, FUNCTION_DISPLAY_NAMES } = await loadAiFunctions();
+
+                aiChatHistory.push({ role: 'user', content: message });
+
+                const response = await fetch(aiConfig.baseUrl + '/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + aiConfig.apiKey
+                    },
+                    body: JSON.stringify({
+                        model: aiConfig.model,
+                        messages: [
+                            { role: 'system', content: SYSTEM_PROMPT },
+                            ...aiChatHistory.slice(-10)
+                        ],
+                        tools: AI_FUNCTION_DEFINITIONS.map(function(f) { return { type: 'function', function: f }; }),
+                        tool_choice: 'auto',
+                        max_tokens: 500
+                    })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(function() { return {}; });
+                    throw new Error(errData.error && errData.error.message ? errData.error.message : 'API 错误 ' + response.status);
+                }
+
+                const data = await response.json();
+                const choice = data.choices[0];
+                const assistantMsg = choice.message;
+
+                let actionDescs = [];
+
+                if (assistantMsg.tool_calls && assistantMsg.tool_calls.length > 0) {
+                    for (let i = 0; i < assistantMsg.tool_calls.length; i++) {
+                        const toolCall = assistantMsg.tool_calls[i];
+                        const fnName = toolCall.function.name;
+                        const fnParams = JSON.parse(toolCall.function.arguments);
+                        const result = executeAiFunction(appState.processor, fnName, fnParams);
+
+                        if (result.success) {
+                            const displayName = FUNCTION_DISPLAY_NAMES[fnName] || fnName;
+                            const paramDesc = Object.entries(fnParams).map(function(e) { return e[0] + '=' + e[1]; }).join(', ');
+                            actionDescs.push(displayName + (paramDesc ? ' ' + paramDesc : ''));
+                            addAiChatMessage('assistant', '已执行: ' + displayName + (paramDesc ? ' ' + paramDesc : ''));
+                        } else {
+                            addAiChatMessage('assistant', '执行失败: ' + result.error, 'system');
+                        }
+                    }
+                    saveToHistory();
+                    updateCanvas();
+                    aiChatHistory.push({ role: 'assistant', content: assistantMsg.content || actionDescs.join('；') });
+                } else if (assistantMsg.content) {
+                    addAiChatMessage('assistant', assistantMsg.content);
+                    aiChatHistory.push({ role: 'assistant', content: assistantMsg.content });
+                }
+
+            } catch (error) {
+                addAiChatMessage('assistant', '错误: ' + error.message, 'system');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = '发送';
+            }
+        };
+
+        updateAiKeyHint();
+
+        // ==================== 初始化 ====================
         const Logger = {
             // 日志级别配置
             levels: {
@@ -4115,7 +4296,7 @@
                     if (typeof NcnnEnhance === 'function') {
                         ncnnStatusEl.textContent = '⏳ AI模块初始化中...';
                         ncnnModule = await NcnnEnhance();
-                        if (ncnnModule && typeof ncnnModule.sharpen_image_simple === 'function') {
+                        if (ncnnModule && typeof ncnnModule.__Z20sharpen_image_simplePKhiif === 'function') {
                             ncnnStatusEl.textContent = '✅ AI模块已就绪';
                             ncnnStatusEl.style.color = '#4caf50';
                             Logger.info('NCNN AI 增强模块加载成功');
@@ -12399,12 +12580,10 @@
                 const strength = parseInt(document.getElementById('ncnnSharpenStrength').value) / 10;
 
                 let resultPtr;
-                if (typeof ncnn.sharpen_image_simple === 'function') {
-                    resultPtr = ncnn.sharpen_image_simple(inputPtr, width, height, strength);
+                if (typeof ncnn.__Z20sharpen_image_simplePKhiif === 'function') {
+                    resultPtr = ncnn.__Z20sharpen_image_simplePKhiif(inputPtr, width, height, strength);
                 } else {
-                    resultPtr = ncnn.ccall('sharpen_image_simple', 'number',
-                        ['number', 'number', 'number', 'number'],
-                        [inputPtr, width, height, strength]);
+                    throw new Error('sharpen_image_simple 函数未找到');
                 }
 
                 if (!resultPtr) {
@@ -12414,7 +12593,7 @@
                 const resultData = new Uint8Array(ncnn.HEAPU8.buffer, resultPtr, dataLength);
                 const processedPixels = new Uint8Array(resultData);
 
-                ncnn.free_image_data(resultPtr);
+                ncnn.__Z15free_image_dataPh(resultPtr);
                 ncnn._free(inputPtr);
 
                 appState.processor = new ImageProcessor(width, height, processedPixels);
@@ -12454,12 +12633,10 @@
                 const kernelSize = parseInt(document.getElementById('ncnnDenoiseKernel').value);
 
                 let resultPtr;
-                if (typeof ncnn.denoise_image_simple === 'function') {
-                    resultPtr = ncnn.denoise_image_simple(inputPtr, width, height, kernelSize);
+                if (typeof ncnn.__Z20denoise_image_simplePKhiii === 'function') {
+                    resultPtr = ncnn.__Z20denoise_image_simplePKhiii(inputPtr, width, height, kernelSize);
                 } else {
-                    resultPtr = ncnn.ccall('denoise_image_simple', 'number',
-                        ['number', 'number', 'number', 'number'],
-                        [inputPtr, width, height, kernelSize]);
+                    throw new Error('denoise_image_simple 函数未找到');
                 }
 
                 if (!resultPtr) {
@@ -12469,7 +12646,7 @@
                 const resultData = new Uint8Array(ncnn.HEAPU8.buffer, resultPtr, dataLength);
                 const processedPixels = new Uint8Array(resultData);
 
-                ncnn.free_image_data(resultPtr);
+                ncnn.__Z15free_image_dataPh(resultPtr);
                 ncnn._free(inputPtr);
 
                 appState.processor = new ImageProcessor(width, height, processedPixels);
@@ -13843,5 +14020,28 @@ window.updateBrushColorFromSidebar = function() {
         // 初始化
         initWasm();
     </script>
+
+    <div id="aiConfigModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:#2a2a2a; border-radius:12px; padding:24px; width:400px; max-width:90vw; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+            <h3 style="color:#e0e0e0; margin-bottom:16px;">AI 助手配置</h3>
+            <div style="margin-bottom:12px;">
+                <label style="color:#aaa; font-size:0.85em;">API Key</label>
+                <input type="password" id="aiApiKeyInput" placeholder="sk-..." style="width:100%; padding:8px; background:#333; color:#e0e0e0; border:1px solid #555; border-radius:6px; margin-top:4px;">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="color:#aaa; font-size:0.85em;">API Base URL</label>
+                <input type="text" id="aiApiBaseInput" placeholder="https://api.openai.com/v1" style="width:100%; padding:8px; background:#333; color:#e0e0e0; border:1px solid #555; border-radius:6px; margin-top:4px;">
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="color:#aaa; font-size:0.85em;">模型</label>
+                <input type="text" id="aiModelInput" placeholder="gpt-4o-mini" style="width:100%; padding:8px; background:#333; color:#e0e0e0; border:1px solid #555; border-radius:6px; margin-top:4px;">
+            </div>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+                <button class="btn" onclick="closeAiConfigModal()" style="padding:8px 16px;">取消</button>
+                <button class="btn btn-success" onclick="saveAiConfig()" style="padding:8px 16px;">保存</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
