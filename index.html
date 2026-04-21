@@ -3107,6 +3107,7 @@
                 <div style="padding:10px;border-top:1px solid #444;display:flex;gap:6px;">
                     <input type="text" id="aiChatInput" placeholder="输入指令..." style="flex:1;padding:8px 10px;background:#333;color:#e0e0e0;border:1px solid #555;border-radius:6px;font-size:0.9em;outline:none;" onkeydown="if(event.key==='Enter')sendAiMessage()">
                     <button class="btn" onclick="sendAiMessage()" id="aiSendBtn" style="padding:8px 12px;">发送</button>
+                    <button class="btn btn-danger" onclick="clearAiHistory()" title="清除对话记忆" style="padding:8px 10px;font-size:0.8em;">清除</button>
                 </div>
             </div>
         </div>
@@ -3128,9 +3129,174 @@
             model: localStorage.getItem('ai_model') || 'gpt-4o-mini'
         };
 
-        const SYSTEM_PROMPT = `你是一个图像编辑助手。用户会用中文告诉你他们想要对图像做什么修改。
+        const AI_HISTORY_KEY = 'ai_chat_history';
+        const AI_OPS_KEY = 'ai_operation_log';
+        const AI_IMAGE_ID_KEY = 'ai_image_id';
+
+        const BASE_SYSTEM_PROMPT = `你是一个图像编辑助手。用户会用中文告诉你他们想要对图像做什么修改。
 你需要调用合适的函数来完成任务。可用的函数包括调整亮度、对比度、饱和度、色相、色温、锐化、模糊、应用滤镜、旋转、翻转、重置图像等。
-请根据用户的描述选择合适的函数和参数。回复简洁中文说明你做了什么。`;
+如果需要多步操作，请一次性调用所有需要的函数。回复简洁中文说明你做了什么。`;
+
+        let aiOperationLog = [];
+        let aiCurrentImageId = '';
+        let aiChatHistory = [];
+
+        try {
+            const savedOps = localStorage.getItem(AI_OPS_KEY);
+            if (savedOps) aiOperationLog = JSON.parse(savedOps);
+            const savedImgId = localStorage.getItem(AI_IMAGE_ID_KEY);
+            if (savedImgId) aiCurrentImageId = savedImgId;
+            const savedHistory = localStorage.getItem(AI_HISTORY_KEY);
+            if (savedHistory) aiChatHistory = JSON.parse(savedHistory);
+        } catch(e) { aiChatHistory = []; aiOperationLog = []; }
+
+        function persistAiOps() {
+            try { localStorage.setItem(AI_OPS_KEY, JSON.stringify(aiOperationLog)); } catch(e) {}
+        }
+        function persistAiImageId() {
+            try { localStorage.setItem(AI_IMAGE_ID_KEY, aiCurrentImageId); } catch(e) {}
+        }
+        function persistAiChatHistory() {
+            try {
+                const toSave = aiChatHistory.slice(-30);
+                localStorage.setItem(AI_HISTORY_KEY, JSON.stringify(toSave));
+                aiChatHistory = toSave;
+            } catch(e) {}
+        }
+
+        function generateImageId(file) {
+            if (!file) return '';
+            return file.name + '|' + file.size + '|' + file.lastModified;
+        }
+
+        function aiOnImageChange(file) {
+            const newId = generateImageId(file);
+            if (newId && newId !== aiCurrentImageId) {
+                aiCurrentImageId = newId;
+                aiOperationLog = [];
+                aiChatHistory = [];
+                persistAiImageId();
+                persistAiOps();
+                localStorage.removeItem(AI_HISTORY_KEY);
+                const container = document.getElementById('aiChatMessages');
+                if (container) container.innerHTML = '<div style="text-align:center;color:#666;padding:20px 0;">新图像已加载，记忆已刷新<br><span style="font-size:0.85em;">如：亮度调高、加复古滤镜</span></div>';
+            }
+        }
+
+        function aiOnImageReset() {
+            aiOperationLog = [];
+            persistAiOps();
+            aiChatHistory.push({ role: 'system', content: '[系统事件: 图像已重置到原始状态，之前所有编辑操作已撤销]' });
+            persistAiChatHistory();
+        }
+
+        function aiLogOperation(fnName, fnParams) {
+            aiOperationLog.push({ fn: fnName, params: fnParams, ts: Date.now() });
+            if (aiOperationLog.length > 100) aiOperationLog = aiOperationLog.slice(-100);
+            persistAiOps();
+        }
+
+        function buildOperationSummary() {
+            if (aiOperationLog.length === 0) return '';
+            const lines = aiOperationLog.map(function(op, i) {
+                const p = Object.entries(op.params).map(function(e) { return e[0] + '=' + e[1]; }).join(', ');
+                return (i + 1) + '. ' + op.fn + (p ? '(' + p + ')' : '');
+            });
+            return '当前图像已执行的编辑操作（按顺序）：\n' + lines.join('\n');
+        }
+
+        function buildSystemPrompt() {
+            let prompt = BASE_SYSTEM_PROMPT;
+            const opSummary = buildOperationSummary();
+            if (opSummary) {
+                prompt += '\n\n' + opSummary;
+                prompt += '\n\n注意：上述操作已按顺序累积应用到图像上。请基于此上下文理解用户的请求，不要重复已执行的操作。';
+            }
+            if (aiOperationLog.length === 0) {
+                prompt += '\n\n当前图像尚未执行任何编辑操作。';
+            }
+            return prompt;
+        }
+
+        function compressHistory(history) {
+            if (history.length <= 8) return history;
+            const recent = history.slice(-6);
+            const old = history.slice(0, -6);
+            const compressed = [];
+            let userParts = [];
+            let toolParts = [];
+
+            for (let i = 0; i < old.length; i++) {
+                const msg = old[i];
+                if (msg.role === 'user') {
+                    userParts.push(msg.content);
+                } else if (msg.role === 'tool') {
+                    try {
+                        const parsed = JSON.parse(msg.content);
+                        if (parsed.success && parsed.action) toolParts.push(parsed.action);
+                    } catch(e) {}
+                }
+            }
+
+            if (userParts.length > 0 || toolParts.length > 0) {
+                let summary = '[对话摘要] ';
+                if (userParts.length > 0) summary += '用户曾要求: ' + userParts.join('；');
+                if (toolParts.length > 0) summary += ' | 已执行: ' + toolParts.join('、');
+                compressed.push({ role: 'assistant', content: summary });
+            }
+
+            return compressed.concat(recent);
+        }
+
+        function estimateTokens(text) {
+            return Math.ceil(text.length * 0.6);
+        }
+
+        function buildMessagesForApi() {
+            const compressed = compressHistory(aiChatHistory);
+            const systemPrompt = buildSystemPrompt();
+            const systemTokens = estimateTokens(systemPrompt);
+
+            let messages = [{ role: 'system', content: systemPrompt }];
+            let totalTokens = systemTokens;
+            const MAX_CONTEXT_TOKENS = 4000;
+
+            for (let i = compressed.length - 1; i >= 0; i--) {
+                const msg = compressed[i];
+                const content = msg.content || '';
+                const msgTokens = estimateTokens(content) + 20;
+                if (totalTokens + msgTokens > MAX_CONTEXT_TOKENS) break;
+                messages.splice(1, 0, msg);
+                totalTokens += msgTokens;
+            }
+
+            if (messages.length < 2 && compressed.length > 0) {
+                messages.splice(1, 0, compressed[compressed.length - 1]);
+            }
+
+            return messages;
+        }
+
+        function rebuildAiChatUI() {
+            const container = document.getElementById('aiChatMessages');
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 0; i < aiChatHistory.length; i++) {
+                const msg = aiChatHistory[i];
+                if (msg.role === 'user') {
+                    addAiChatMessage('user', msg.content);
+                } else if (msg.role === 'assistant' && msg.content) {
+                    addAiChatMessage('assistant', msg.content);
+                } else if (msg.role === 'tool' && msg.content) {
+                    try {
+                        const parsed = JSON.parse(msg.content);
+                        if (parsed.success && parsed.action) {
+                            addAiChatMessage('assistant', '已执行: ' + parsed.action);
+                        }
+                    } catch(e) {}
+                }
+            }
+        }
 
         window.showAiConfig = function() {
             const modal = document.getElementById('aiConfigModal');
@@ -3151,7 +3317,7 @@
             localStorage.setItem('ai_api_key', aiConfig.apiKey);
             localStorage.setItem('ai_base_url', aiConfig.baseUrl);
             localStorage.setItem('ai_model', aiConfig.model);
-            closeAiConfigModal();
+closeAiConfigModal();
             updateAiKeyHint();
             addAiChatMessage('系统', '配置已保存 ✓', 'system');
         };
@@ -3166,8 +3332,6 @@
                 hint.style.color = '#888';
             }
         }
-
-        let aiChatHistory = [];
 
         function addAiChatMessage(role, content, type = 'normal') {
             const container = document.getElementById('aiChatMessages');
@@ -3192,6 +3356,16 @@
             container.scrollTop = container.scrollHeight;
         }
 
+        window.clearAiHistory = function() {
+            aiChatHistory = [];
+            aiOperationLog = [];
+            localStorage.removeItem(AI_HISTORY_KEY);
+            localStorage.removeItem(AI_OPS_KEY);
+            const container = document.getElementById('aiChatMessages');
+            if (container) container.innerHTML = '<div style="text-align:center;color:#666;padding:20px 0;">记忆已清除</div>';
+            addAiChatMessage('系统', '对话记忆与操作记录已清除', 'system');
+        };
+
         window.sendAiMessage = async function() {
             const input = document.getElementById('aiChatInput');
             const message = input.value.trim();
@@ -3213,58 +3387,88 @@
                 const { AI_FUNCTION_DEFINITIONS, executeAiFunction, FUNCTION_DISPLAY_NAMES } = await loadAiFunctions();
 
                 aiChatHistory.push({ role: 'user', content: message });
+                persistAiChatHistory();
 
-                const response = await fetch(aiConfig.baseUrl + '/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + aiConfig.apiKey
-                    },
-                    body: JSON.stringify({
-                        model: aiConfig.model,
-                        messages: [
-                            { role: 'system', content: SYSTEM_PROMPT },
-                            ...aiChatHistory.slice(-10)
-                        ],
-                        tools: AI_FUNCTION_DEFINITIONS.map(function(f) { return { type: 'function', function: f }; }),
-                        tool_choice: 'auto',
-                        max_tokens: 500
-                    })
-                });
+                const tools = AI_FUNCTION_DEFINITIONS.map(function(f) { return { type: 'function', function: f }; });
+                let allActionDescs = [];
 
-                if (!response.ok) {
-                    const errData = await response.json().catch(function() { return {}; });
-                    throw new Error(errData.error && errData.error.message ? errData.error.message : 'API 错误 ' + response.status);
-                }
+                const MAX_TURNS = 10;
+                for (let turn = 0; turn < MAX_TURNS; turn++) {
+                    const apiMessages = buildMessagesForApi();
 
-                const data = await response.json();
-                const choice = data.choices[0];
-                const assistantMsg = choice.message;
+                    const response = await fetch(aiConfig.baseUrl + '/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + aiConfig.apiKey
+                        },
+                        body: JSON.stringify({
+                            model: aiConfig.model,
+                            messages: apiMessages,
+                            tools: tools,
+                            tool_choice: 'auto',
+                            max_tokens: 500
+                        })
+                    });
 
-                let actionDescs = [];
+                    if (!response.ok) {
+                        const errData = await response.json().catch(function() { return {}; });
+                        throw new Error(errData.error && errData.error.message ? errData.error.message : 'API 错误 ' + response.status);
+                    }
 
-                if (assistantMsg.tool_calls && assistantMsg.tool_calls.length > 0) {
-                    for (let i = 0; i < assistantMsg.tool_calls.length; i++) {
-                        const toolCall = assistantMsg.tool_calls[i];
-                        const fnName = toolCall.function.name;
-                        const fnParams = JSON.parse(toolCall.function.arguments);
-                        const result = executeAiFunction(appState.processor, fnName, fnParams);
+                    const data = await response.json();
+                    const choice = data.choices[0];
+                    const assistantMsg = choice.message;
 
-                        if (result.success) {
+                    if (assistantMsg.tool_calls && assistantMsg.tool_calls.length > 0) {
+                        aiChatHistory.push(assistantMsg);
+                        persistAiChatHistory();
+                        let turnActionDescs = [];
+
+                        for (let i = 0; i < assistantMsg.tool_calls.length; i++) {
+                            const toolCall = assistantMsg.tool_calls[i];
+                            const fnName = toolCall.function.name;
+                            const fnParams = JSON.parse(toolCall.function.arguments);
+                            const result = executeAiFunction(appState.processor, fnName, fnParams);
                             const displayName = FUNCTION_DISPLAY_NAMES[fnName] || fnName;
                             const paramDesc = Object.entries(fnParams).map(function(e) { return e[0] + '=' + e[1]; }).join(', ');
-                            actionDescs.push(displayName + (paramDesc ? ' ' + paramDesc : ''));
-                            addAiChatMessage('assistant', '已执行: ' + displayName + (paramDesc ? ' ' + paramDesc : ''));
-                        } else {
-                            addAiChatMessage('assistant', '执行失败: ' + result.error, 'system');
+
+                            if (result.success) {
+                                aiLogOperation(fnName, fnParams);
+                            }
+
+                            aiChatHistory.push({
+                                role: 'tool',
+                                tool_call_id: toolCall.id,
+                                content: result.success
+                                    ? JSON.stringify({ success: true, action: fnName, params: fnParams })
+                                    : JSON.stringify({ success: false, error: result.error })
+                            });
+                            persistAiChatHistory();
+
+                            if (result.success) {
+                                turnActionDescs.push(displayName + (paramDesc ? ' ' + paramDesc : ''));
+                                addAiChatMessage('assistant', '已执行: ' + displayName + (paramDesc ? ' ' + paramDesc : ''));
+                            } else {
+                                addAiChatMessage('assistant', '执行失败: ' + result.error, 'system');
+                            }
                         }
+
+                        allActionDescs = allActionDescs.concat(turnActionDescs);
+                        saveToHistory();
+                        updateCanvas();
+
+                        if (choice.finish_reason === 'stop') break;
+                    } else {
+                        if (assistantMsg.content) {
+                            addAiChatMessage('assistant', assistantMsg.content);
+                        } else if (allActionDescs.length > 0) {
+                            addAiChatMessage('assistant', '已完成所有操作: ' + allActionDescs.join('；'));
+                        }
+                        aiChatHistory.push({ role: 'assistant', content: assistantMsg.content || allActionDescs.join('；') });
+                        persistAiChatHistory();
+                        break;
                     }
-                    saveToHistory();
-                    updateCanvas();
-                    aiChatHistory.push({ role: 'assistant', content: assistantMsg.content || actionDescs.join('；') });
-                } else if (assistantMsg.content) {
-                    addAiChatMessage('assistant', assistantMsg.content);
-                    aiChatHistory.push({ role: 'assistant', content: assistantMsg.content });
                 }
 
             } catch (error) {
@@ -3276,6 +3480,7 @@
         };
 
         updateAiKeyHint();
+        if (aiChatHistory.length > 0) rebuildAiChatUI();
 
         let aiSidebarOpen = false;
         const aiSidebarEl = document.getElementById('aiSidebar');
@@ -8897,6 +9102,8 @@
                         // 清空历史记录，防止用户通过撤销/重做回到之前的图片
                         clearHistory();
 
+                        if (typeof aiOnImageChange === 'function') aiOnImageChange(file);
+
                         // 重置缩放和位置
                         resetZoom();
 
@@ -12743,6 +12950,8 @@
             // 重置 WebAssembly 处理器
             appState.processor.reset();
 
+            if (typeof aiOnImageReset === 'function') aiOnImageReset();
+
             // 重置滑块
             document.getElementById('brightnessSlider').value = 0;
             document.getElementById('contrastSlider').value = 100;
@@ -12785,6 +12994,8 @@
         // 清空图像
         window.clearImage = function() {
             if (!appState.currentImage) return;
+
+            if (typeof aiOnImageChange === 'function') aiOnImageChange(null);
 
             // 清空处理器和图像数据
             appState.clearProcessor();
