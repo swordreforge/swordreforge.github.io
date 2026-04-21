@@ -66,7 +66,7 @@ const AI_FUNCTION_DEFINITIONS = [
                 name: {
                     type: "string",
                     description: "滤镜名称",
-                    enum: ["oceanic", "islands", "marine", "seagreen", "flagblue", "diamante", "liquid", "water", "freshblue", "lofi", "vintage", "dramatic", "amber", "lavender", "rosetint", "hometown", "fragole", "sindoni", "golden", "pastelpink", "coffee", "perfume", "bipo"]
+                    enum: ["oceanic", "islands", "marine", "seagreen", "flagblue", "diamante", "liquid", "radio", "twenties", "rosetint", "mauve", "bluechrome", "vintage", "perfume", "serenity", "golden", "pastel_pink", "cali", "dramatic", "firenze", "obsidian", "lofi"]
                 }
             },
             required: ["name"]
