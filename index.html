@@ -1424,6 +1424,44 @@
         #aiChatMessages::-webkit-scrollbar-thumb { background: #555; border-radius: 2px; }
         #aiChatInput:focus { border-color: #667eea; }
         #aiChatInput::placeholder { color: #888; }
+
+        .ai-sidebar {
+            width: 320px;
+            background: #2a2a2a;
+            border-left: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+            transition: margin-right 0.3s ease;
+            overflow: hidden;
+        }
+        .ai-sidebar.collapsed {
+            margin-right: -320px;
+        }
+        .ai-sidebar-header {
+            padding: 12px 14px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .ai-sidebar-toggle {
+            position: fixed;
+            right: 0;
+            top: calc(50% + 42px);
+            transform: translateY(-50%);
+            background: #444;
+            color: white;
+            border: none;
+            padding: 15px 8px;
+            cursor: pointer;
+            z-index: 1000;
+            border-radius: 5px 0 0 5px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .ai-sidebar-toggle:hover {
+            background: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -2019,6 +2057,8 @@
     </div>
 
     <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
+
+    <button class="ai-sidebar-toggle" id="aiSidebarToggle" onclick="toggleAiSidebar()">🤖</button>
 
     <!-- 快速导航面板 -->
     <div class="quick-nav-panel" id="quickNavPanel">
@@ -2998,19 +3038,6 @@
                     </div>
                 </div>
 
-                <div class="section" id="aiAssistantSection">
-                    <h3>AI 助手 <span style="font-size: 0.7em; color: #667eea; margin-left: 4px;">🤖</span></h3>
-                    <div id="aiChatMessages" style="max-height: 200px; overflow-y: auto; background: #1a1a1a; border-radius: 6px; padding: 8px; margin-bottom: 8px; font-size: 0.85em; color: #ccc; display: none;">
-                    </div>
-                    <div style="display: flex; gap: 6px;">
-                        <input type="text" id="aiChatInput" placeholder="输入指令，如：亮度调高一点..." style="flex: 1; padding: 8px 10px; background: #333; color: #e0e0e0; border: 1px solid #555; border-radius: 6px; font-size: 0.9em; outline: none;" onkeydown="if(event.key==='Enter')sendAiMessage()">
-                        <button class="btn" onclick="sendAiMessage()" id="aiSendBtn" style="padding: 8px 12px;">发送</button>
-                    </div>
-                    <div id="aiApiKeyHint" style="margin-top: 6px; font-size: 0.75em; color: #888; cursor: pointer;" onclick="showAiConfig()">
-                        ⚙️ 点击配置 API Key
-                    </div>
-                </div>
-
                 <div class="info-panel" id="infoPanel">
                     <p>尺寸: <span id="imageSize">未加载</span></p>
                     <p>格式: <span id="imageFormat">-</span></p>
@@ -3058,8 +3085,25 @@
                         <div class="watermark-handle se"></div>
                     </div>
                 </div>
+</div>
+
+            <div class="ai-sidebar" id="aiSidebar">
+                <div class="ai-sidebar-header">
+                    <h3 style="color:#e0e0e0;font-size:0.95em;margin:0;">🤖 AI 助手</h3>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <span id="aiApiKeyHint" style="font-size:0.7em;color:#888;cursor:pointer;" onclick="showAiConfig()">⚙️ 配置</span>
+                        <button onclick="toggleAiSidebar()" style="background:transparent;border:none;color:#888;cursor:pointer;font-size:16px;padding:2px 6px;">✕</button>
+                    </div>
+                </div>
+                <div id="aiChatMessages" style="flex:1;overflow-y:auto;background:transparent;padding:8px;font-size:0.85em;color:#ccc;">
+                    <div style="text-align:center;color:#666;padding:20px 0;">输入指令开始编辑图片<br><span style="font-size:0.85em;">如：亮度调高、加复古滤镜</span></div>
+                </div>
+                <div style="padding:10px;border-top:1px solid #444;display:flex;gap:6px;">
+                    <input type="text" id="aiChatInput" placeholder="输入指令..." style="flex:1;padding:8px 10px;background:#333;color:#e0e0e0;border:1px solid #555;border-radius:6px;font-size:0.9em;outline:none;" onkeydown="if(event.key==='Enter')sendAiMessage()">
+                    <button class="btn" onclick="sendAiMessage()" id="aiSendBtn" style="padding:8px 12px;">发送</button>
+                </div>
             </div>
-    </div>
+        </div>
 
     <script type="module">
         // ==================== AI 助手功能 ====================
@@ -3121,7 +3165,9 @@
 
         function addAiChatMessage(role, content, type = 'normal') {
             const container = document.getElementById('aiChatMessages');
-            container.style.display = 'block';
+            if (container.querySelector('div[style*="text-align:center"]')) {
+                container.innerHTML = '';
+            }
             const msgDiv = document.createElement('div');
             msgDiv.style.cssText = 'margin:4px 0;padding:6px 8px;border-radius:6px;word-break:break-word;';
             if (type === 'system') {
@@ -3224,6 +3270,24 @@
         };
 
         updateAiKeyHint();
+
+        let aiSidebarOpen = false;
+        const aiSidebarEl = document.getElementById('aiSidebar');
+        if (aiSidebarEl) aiSidebarEl.classList.add('collapsed');
+
+        window.toggleAiSidebar = function() {
+            const sidebar = document.getElementById('aiSidebar');
+            const btn = document.getElementById('aiSidebarToggle');
+            if (!sidebar) return;
+            aiSidebarOpen = !aiSidebarOpen;
+            if (aiSidebarOpen) {
+                sidebar.classList.remove('collapsed');
+                btn.style.display = 'none';
+            } else {
+                sidebar.classList.add('collapsed');
+                btn.style.display = 'block';
+            }
+        };
 
         // ==================== 初始化 ====================
         const Logger = {
