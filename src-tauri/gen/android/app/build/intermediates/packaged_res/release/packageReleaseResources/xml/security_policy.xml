@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    安全策略配置文件
+    防止应用被调试和篡改
+-->
+<network-security-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 仅在生产环境禁用用户添加的证书 -->
+</network-security-config>

@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/swordreforge/project/wasm-test/ncnn-enhance/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

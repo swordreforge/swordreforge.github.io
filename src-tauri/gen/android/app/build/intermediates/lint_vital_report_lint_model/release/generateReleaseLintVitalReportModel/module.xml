@@ -1,0 +1,18 @@
+<lint-module
+    format="1"
+    dir="/home/swordreforge/project/wasm-test/src-tauri/gen/android/app"
+    name=":app"
+    type="APP"
+    maven="wasm-image-processor:app:unspecified"
+    agpVersion="8.7.3"
+    buildFolder="build"
+    bootClassPath="/home/swordreforge/Android/Sdk/platforms/android-35/android.jar:/home/swordreforge/Android/Sdk/build-tools/34.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="1.8"
+    compileTarget="android-35">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>

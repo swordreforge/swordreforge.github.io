@@ -1,0 +1,1 @@
+{"name": "wasm-image-processor", "version": "0.1.0", "description": "WASM图像处理器", "type": "module", "scripts": {"tauri": "tauri", "dev": "python3 -m http.server 3000", "android:init": "tauri android init", "android:build": "tauri android build"}, "dependencies": {}, "devDependencies": {"@tauri-apps/cli": "^2.10.0"}}

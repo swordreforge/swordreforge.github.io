@@ -1,0 +1,1085 @@
+
+---
+events:
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineSystem.cmake:12 (find_program)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_UNAME"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "uname"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/uname"
+      - "/home/swordreforge/emsdk/upstream/emscripten/uname"
+      - "/home/swordreforge/.local/bin/uname"
+      - "/usr/local/sbin/uname"
+      - "/usr/local/bin/uname"
+    found: "/usr/bin/uname"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/home/swordreforge/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake:410 (find_program)"
+      - "/usr/share/cmake/Modules/CMakeDetermineSystem.cmake:146 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "NODE_JS_EXECUTABLE"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "nodejs"
+      - "node"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+      - "/sbin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/nodejs"
+      - "/home/swordreforge/emsdk/upstream/emscripten/nodejs"
+      - "/home/swordreforge/.local/bin/nodejs"
+      - "/usr/local/sbin/nodejs"
+      - "/usr/local/bin/nodejs"
+      - "/usr/bin/nodejs"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/nodejs"
+      - "/var/lib/flatpak/exports/bin/nodejs"
+      - "/usr/lib/jvm/default/bin/nodejs"
+      - "/usr/bin/site_perl/nodejs"
+      - "/usr/bin/vendor_perl/nodejs"
+      - "/usr/bin/core_perl/nodejs"
+      - "/usr/lib/rustup/bin/nodejs"
+      - "/home/swordreforge/go/bin/nodejs"
+      - "/bin/nodejs"
+      - "/sbin/nodejs"
+      - "/home/swordreforge/emsdk/node"
+      - "/home/swordreforge/emsdk/upstream/emscripten/node"
+      - "/home/swordreforge/.local/bin/node"
+      - "/usr/local/sbin/node"
+      - "/usr/local/bin/node"
+    found: "/usr/bin/node"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeDetermineSystem.cmake:207 (message)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      The target system is: Emscripten - 1 - x86
+      The host system is: Linux - 6.18.13-zen1-1-zen - x86_64
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeUnixFindMake.cmake:5 (find_program)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_MAKE_PROGRAM"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "gmake"
+      - "make"
+      - "smake"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+      - "/sbin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/gmake"
+      - "/home/swordreforge/emsdk/upstream/emscripten/gmake"
+      - "/home/swordreforge/.local/bin/gmake"
+      - "/usr/local/sbin/gmake"
+      - "/usr/local/bin/gmake"
+      - "/usr/bin/gmake"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/gmake"
+      - "/var/lib/flatpak/exports/bin/gmake"
+      - "/usr/lib/jvm/default/bin/gmake"
+      - "/usr/bin/site_perl/gmake"
+      - "/usr/bin/vendor_perl/gmake"
+      - "/usr/bin/core_perl/gmake"
+      - "/usr/lib/rustup/bin/gmake"
+      - "/home/swordreforge/go/bin/gmake"
+      - "/bin/gmake"
+      - "/sbin/gmake"
+      - "/home/swordreforge/emsdk/make"
+      - "/home/swordreforge/emsdk/upstream/emscripten/make"
+      - "/home/swordreforge/.local/bin/make"
+      - "/usr/local/sbin/make"
+      - "/usr/local/bin/make"
+    found: "/usr/bin/make"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot;/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_STRIP"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "llvm-strip"
+      - "strip"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+      - "/sbin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/llvm-strip"
+      - "/home/swordreforge/emsdk/llvm-strip"
+      - "/home/swordreforge/.local/bin/llvm-strip"
+      - "/usr/local/sbin/llvm-strip"
+      - "/usr/local/bin/llvm-strip"
+    found: "/usr/bin/llvm-strip"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot;/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_LINKER"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "ld.lld"
+      - "ld"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+      - "/sbin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/ld.lld"
+      - "/home/swordreforge/emsdk/ld.lld"
+      - "/home/swordreforge/.local/bin/ld.lld"
+      - "/usr/local/sbin/ld.lld"
+      - "/usr/local/bin/ld.lld"
+    found: "/usr/bin/ld.lld"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot;/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_NM"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "llvm-nm"
+      - "nm"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+      - "/sbin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/llvm-nm"
+      - "/home/swordreforge/emsdk/llvm-nm"
+      - "/home/swordreforge/.local/bin/llvm-nm"
+      - "/usr/local/sbin/llvm-nm"
+      - "/usr/local/bin/llvm-nm"
+    found: "/usr/bin/llvm-nm"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot;/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_OBJDUMP"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "llvm-objdump"
+      - "objdump"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+      - "/sbin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/llvm-objdump"
+      - "/home/swordreforge/emsdk/llvm-objdump"
+      - "/home/swordreforge/.local/bin/llvm-objdump"
+      - "/usr/local/sbin/llvm-objdump"
+      - "/usr/local/bin/llvm-objdump"
+    found: "/usr/bin/llvm-objdump"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot;/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_OBJCOPY"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "llvm-objcopy"
+      - "objcopy"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+      - "/sbin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/llvm-objcopy"
+      - "/home/swordreforge/emsdk/llvm-objcopy"
+      - "/home/swordreforge/.local/bin/llvm-objcopy"
+      - "/usr/local/sbin/llvm-objcopy"
+      - "/usr/local/bin/llvm-objcopy"
+    found: "/usr/bin/llvm-objcopy"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot;/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_READELF"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "llvm-readelf"
+      - "readelf"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+      - "/sbin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/llvm-readelf"
+      - "/home/swordreforge/emsdk/llvm-readelf"
+      - "/home/swordreforge/.local/bin/llvm-readelf"
+      - "/usr/local/sbin/llvm-readelf"
+      - "/usr/local/bin/llvm-readelf"
+    found: "/usr/bin/llvm-readelf"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot;/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_DLLTOOL"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "llvm-dlltool"
+      - "dlltool"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+      - "/sbin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/llvm-dlltool"
+      - "/home/swordreforge/emsdk/llvm-dlltool"
+      - "/home/swordreforge/.local/bin/llvm-dlltool"
+      - "/usr/local/sbin/llvm-dlltool"
+      - "/usr/local/bin/llvm-dlltool"
+    found: "/usr/bin/llvm-dlltool"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot;/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_ADDR2LINE"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "llvm-addr2line"
+      - "addr2line"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+      - "/sbin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/llvm-addr2line"
+      - "/home/swordreforge/emsdk/llvm-addr2line"
+      - "/home/swordreforge/.local/bin/llvm-addr2line"
+      - "/usr/local/sbin/llvm-addr2line"
+      - "/usr/local/bin/llvm-addr2line"
+    found: "/usr/bin/llvm-addr2line"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot;/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/CMakeFindBinUtils.cmake:243 (find_program)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:200 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_TAPI"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "tapi"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+      - "/sbin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/tapi"
+      - "/home/swordreforge/emsdk/tapi"
+      - "/home/swordreforge/.local/bin/tapi"
+      - "/usr/local/sbin/tapi"
+      - "/usr/local/bin/tapi"
+      - "/usr/bin/tapi"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/tapi"
+      - "/var/lib/flatpak/exports/bin/tapi"
+      - "/usr/lib/jvm/default/bin/tapi"
+      - "/usr/bin/site_perl/tapi"
+      - "/usr/bin/vendor_perl/tapi"
+      - "/usr/bin/core_perl/tapi"
+      - "/usr/lib/rustup/bin/tapi"
+      - "/home/swordreforge/go/bin/tapi"
+      - "/bin/tapi"
+      - "/sbin/tapi"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot;/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Compiler/Clang-FindBinUtils.cmake:50 (find_program)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCCompiler.cmake:201 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_C_COMPILER_CLANG_SCAN_DEPS"
+    description: "`clang-scan-deps` dependency scanner"
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "clang-scan-deps-16.0"
+      - "clang-scan-deps-16"
+      - "clang-scan-deps16"
+      - "clang-scan-deps"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+      - "/sbin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/clang-scan-deps-16.0"
+      - "/home/swordreforge/emsdk/clang-scan-deps-16.0"
+      - "/home/swordreforge/.local/bin/clang-scan-deps-16.0"
+      - "/usr/local/sbin/clang-scan-deps-16.0"
+      - "/usr/local/bin/clang-scan-deps-16.0"
+      - "/usr/bin/clang-scan-deps-16.0"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/clang-scan-deps-16.0"
+      - "/var/lib/flatpak/exports/bin/clang-scan-deps-16.0"
+      - "/usr/lib/jvm/default/bin/clang-scan-deps-16.0"
+      - "/usr/bin/site_perl/clang-scan-deps-16.0"
+      - "/usr/bin/vendor_perl/clang-scan-deps-16.0"
+      - "/usr/bin/core_perl/clang-scan-deps-16.0"
+      - "/usr/lib/rustup/bin/clang-scan-deps-16.0"
+      - "/home/swordreforge/go/bin/clang-scan-deps-16.0"
+      - "/bin/clang-scan-deps-16.0"
+      - "/sbin/clang-scan-deps-16.0"
+      - "/home/swordreforge/emsdk/upstream/emscripten/clang-scan-deps-16"
+      - "/home/swordreforge/emsdk/clang-scan-deps-16"
+      - "/home/swordreforge/.local/bin/clang-scan-deps-16"
+      - "/usr/local/sbin/clang-scan-deps-16"
+      - "/usr/local/bin/clang-scan-deps-16"
+      - "/usr/bin/clang-scan-deps-16"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/clang-scan-deps-16"
+      - "/var/lib/flatpak/exports/bin/clang-scan-deps-16"
+      - "/usr/lib/jvm/default/bin/clang-scan-deps-16"
+      - "/usr/bin/site_perl/clang-scan-deps-16"
+      - "/usr/bin/vendor_perl/clang-scan-deps-16"
+      - "/usr/bin/core_perl/clang-scan-deps-16"
+      - "/usr/lib/rustup/bin/clang-scan-deps-16"
+      - "/home/swordreforge/go/bin/clang-scan-deps-16"
+      - "/bin/clang-scan-deps-16"
+      - "/sbin/clang-scan-deps-16"
+      - "/home/swordreforge/emsdk/upstream/emscripten/clang-scan-deps16"
+      - "/home/swordreforge/emsdk/clang-scan-deps16"
+      - "/home/swordreforge/.local/bin/clang-scan-deps16"
+      - "/usr/local/sbin/clang-scan-deps16"
+      - "/usr/local/bin/clang-scan-deps16"
+      - "/usr/bin/clang-scan-deps16"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/clang-scan-deps16"
+      - "/var/lib/flatpak/exports/bin/clang-scan-deps16"
+      - "/usr/lib/jvm/default/bin/clang-scan-deps16"
+      - "/usr/bin/site_perl/clang-scan-deps16"
+      - "/usr/bin/vendor_perl/clang-scan-deps16"
+      - "/usr/bin/core_perl/clang-scan-deps16"
+      - "/usr/lib/rustup/bin/clang-scan-deps16"
+      - "/home/swordreforge/go/bin/clang-scan-deps16"
+      - "/bin/clang-scan-deps16"
+      - "/sbin/clang-scan-deps16"
+      - "/home/swordreforge/emsdk/upstream/emscripten/clang-scan-deps"
+      - "/home/swordreforge/emsdk/clang-scan-deps"
+      - "/home/swordreforge/.local/bin/clang-scan-deps"
+      - "/usr/local/sbin/clang-scan-deps"
+      - "/usr/local/bin/clang-scan-deps"
+    found: "/usr/bin/clang-scan-deps"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot;/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Compiler/Clang-FindBinUtils.cmake:50 (find_program)"
+      - "/usr/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:207 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "program"
+    variable: "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS"
+    description: "`clang-scan-deps` dependency scanner"
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: false
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: false
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "clang-scan-deps-16.0"
+      - "clang-scan-deps-16"
+      - "clang-scan-deps16"
+      - "clang-scan-deps"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/"
+      - "/home/swordreforge/emsdk/"
+      - "/home/swordreforge/.local/bin/"
+      - "/usr/local/sbin/"
+      - "/usr/local/bin/"
+      - "/usr/bin/"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/"
+      - "/var/lib/flatpak/exports/bin/"
+      - "/usr/lib/jvm/default/bin/"
+      - "/usr/bin/site_perl/"
+      - "/usr/bin/vendor_perl/"
+      - "/usr/bin/core_perl/"
+      - "/usr/lib/rustup/bin/"
+      - "/home/swordreforge/go/bin/"
+      - "/bin/"
+      - "/sbin/"
+    searched_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/clang-scan-deps-16.0"
+      - "/home/swordreforge/emsdk/clang-scan-deps-16.0"
+      - "/home/swordreforge/.local/bin/clang-scan-deps-16.0"
+      - "/usr/local/sbin/clang-scan-deps-16.0"
+      - "/usr/local/bin/clang-scan-deps-16.0"
+      - "/usr/bin/clang-scan-deps-16.0"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/clang-scan-deps-16.0"
+      - "/var/lib/flatpak/exports/bin/clang-scan-deps-16.0"
+      - "/usr/lib/jvm/default/bin/clang-scan-deps-16.0"
+      - "/usr/bin/site_perl/clang-scan-deps-16.0"
+      - "/usr/bin/vendor_perl/clang-scan-deps-16.0"
+      - "/usr/bin/core_perl/clang-scan-deps-16.0"
+      - "/usr/lib/rustup/bin/clang-scan-deps-16.0"
+      - "/home/swordreforge/go/bin/clang-scan-deps-16.0"
+      - "/bin/clang-scan-deps-16.0"
+      - "/sbin/clang-scan-deps-16.0"
+      - "/home/swordreforge/emsdk/upstream/emscripten/clang-scan-deps-16"
+      - "/home/swordreforge/emsdk/clang-scan-deps-16"
+      - "/home/swordreforge/.local/bin/clang-scan-deps-16"
+      - "/usr/local/sbin/clang-scan-deps-16"
+      - "/usr/local/bin/clang-scan-deps-16"
+      - "/usr/bin/clang-scan-deps-16"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/clang-scan-deps-16"
+      - "/var/lib/flatpak/exports/bin/clang-scan-deps-16"
+      - "/usr/lib/jvm/default/bin/clang-scan-deps-16"
+      - "/usr/bin/site_perl/clang-scan-deps-16"
+      - "/usr/bin/vendor_perl/clang-scan-deps-16"
+      - "/usr/bin/core_perl/clang-scan-deps-16"
+      - "/usr/lib/rustup/bin/clang-scan-deps-16"
+      - "/home/swordreforge/go/bin/clang-scan-deps-16"
+      - "/bin/clang-scan-deps-16"
+      - "/sbin/clang-scan-deps-16"
+      - "/home/swordreforge/emsdk/upstream/emscripten/clang-scan-deps16"
+      - "/home/swordreforge/emsdk/clang-scan-deps16"
+      - "/home/swordreforge/.local/bin/clang-scan-deps16"
+      - "/usr/local/sbin/clang-scan-deps16"
+      - "/usr/local/bin/clang-scan-deps16"
+      - "/usr/bin/clang-scan-deps16"
+      - "/home/swordreforge/.local/share/flatpak/exports/bin/clang-scan-deps16"
+      - "/var/lib/flatpak/exports/bin/clang-scan-deps16"
+      - "/usr/lib/jvm/default/bin/clang-scan-deps16"
+      - "/usr/bin/site_perl/clang-scan-deps16"
+      - "/usr/bin/vendor_perl/clang-scan-deps16"
+      - "/usr/bin/core_perl/clang-scan-deps16"
+      - "/usr/lib/rustup/bin/clang-scan-deps16"
+      - "/home/swordreforge/go/bin/clang-scan-deps16"
+      - "/bin/clang-scan-deps16"
+      - "/sbin/clang-scan-deps16"
+      - "/home/swordreforge/emsdk/upstream/emscripten/clang-scan-deps"
+      - "/home/swordreforge/emsdk/clang-scan-deps"
+      - "/home/swordreforge/.local/bin/clang-scan-deps"
+      - "/usr/local/sbin/clang-scan-deps"
+      - "/usr/local/bin/clang-scan-deps"
+    found: "/usr/bin/clang-scan-deps"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot;/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+  -
+    kind: "find-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Platform/Emscripten.cmake:6 (find_file)"
+      - "/usr/share/cmake/Modules/CMakeSystemSpecificInformation.cmake:32 (include)"
+      - "CMakeLists.txt:2 (project)"
+    mode: "file"
+    variable: "_EMSCRIPTEN_PLATFORM_MODULE"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "Platform/Emscripten.cmake"
+    candidate_directories:
+      - "/home/swordreforge/emsdk/upstream/emscripten/cmake/Modules/"
+    found: "/home/swordreforge/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+    search_context:
+      ENV{PATH}:
+        - "/home/swordreforge/emsdk"
+        - "/home/swordreforge/emsdk/upstream/emscripten"
+        - "/home/swordreforge/.local/bin"
+        - "/usr/local/sbin"
+        - "/usr/local/bin"
+        - "/usr/bin"
+        - "/home/swordreforge/.local/share/flatpak/exports/bin"
+        - "/var/lib/flatpak/exports/bin"
+        - "/usr/lib/jvm/default/bin"
+        - "/usr/bin/site_perl"
+        - "/usr/bin/vendor_perl"
+        - "/usr/bin/core_perl"
+        - "/usr/lib/rustup/bin"
+        - "/home/swordreforge/go/bin"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/"
+        - "/"
+      CMAKE_FIND_ROOT_PATH: "/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot;/home/swordreforge/emsdk/upstream/emscripten/cache/sysroot"
+...

@@ -1,0 +1,337 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:2:1-44:12
+INJECTED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:2:1-44:12
+INJECTED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:2:1-44:12
+INJECTED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:2:1-44:12
+MERGED from [com.google.android.material:material:1.11.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/6e48b05d2fd3c040fb08f98592e03d30/transformed/material-1.11.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/17c47dc80bd953a7c64630bb44a317e3/transformed/jetified-appcompat-resources-1.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/6b9e8c3bd96755a8393888b153754d7c/transformed/constraintlayout-2.0.1/AndroidManifest.xml:2:1-11:12
+MERGED from [androidx.appcompat:appcompat:1.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/d4a878c7c05dccaf9c87061ec3d18eb0/transformed/appcompat-1.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.webkit:webkit:1.10.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/86b558ae979b7e273fde2afd5ca3233b/transformed/webkit-1.10.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/09a076a54efd855782f5f0cc400fe362/transformed/jetified-emoji2-views-helper-1.2.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/c96e56e437a60690b364ff9fb1a4ff83/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:17:1-35:12
+MERGED from [androidx.viewpager2:viewpager2:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/394a62bbf3ec270d6818db4b9a0f291b/transformed/jetified-viewpager2-1.0.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.fragment:fragment:1.3.6] /home/swordreforge/.gradle/caches/9.3.1/transforms/7f8352dcf708808c83aa583c77cc2b8e/transformed/fragment-1.3.6/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.activity:activity:1.8.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3f46587c36c350a94dbe7164f0a0701c/transformed/jetified-activity-1.8.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/ecf4bf75ea73bddf455d493f802c05fe/transformed/drawerlayout-1.1.1/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/e85baf616287485d272721d8816d4e48/transformed/coordinatorlayout-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/801d49a48de0aa9312327a11fee510a3/transformed/dynamicanimation-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.transition:transition:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/8f4ff4d0d323b7ecf45e342b90571a4f/transformed/transition-1.2.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/0ab8d4bd71bdf1973e70a7685ed5d8e7/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/196d7f5a75800c5f127133d247771c2d/transformed/vectordrawable-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.viewpager:viewpager:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/e7ef0ea91155b5c407fbd34f2cb133ab/transformed/viewpager-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/512ece7bb8ea2a33acde6b0c1036f47c/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.loader:loader:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/72769a43538035db6f1d7ebdfc1dae80/transformed/loader-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.recyclerview:recyclerview:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/87aa9341d523f62d7bbfb807f8327038/transformed/recyclerview-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.customview:customview:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/4f1330eaf4012f5061c4ba77d803548f/transformed/customview-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:17:1-30:12
+MERGED from [androidx.savedstate:savedstate:1.2.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/00360fe0e7617d76633060906e088c03/transformed/jetified-savedstate-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/1d74a82b5305f9fc7f00d3984b7cda42/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:17:1-35:12
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/59cf8afad2c2fc1ac1803aaa2f3163a9/transformed/lifecycle-livedata-core-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/eeb59722ac091d0ae6f1b51d46717c4b/transformed/lifecycle-livedata-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/9cf30675436d7df75cd8d0fd5c10402f/transformed/lifecycle-viewmodel-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/8d297c6e66cf94e4f2707082bd7cc82b/transformed/lifecycle-runtime-2.6.1/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/b15447a1c78dc9b8f135559ec45a0d2a/transformed/jetified-lifecycle-viewmodel-savedstate-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.core:core-ktx:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/fa90e4fc69055748d38082d79c1c700b/transformed/jetified-core-ktx-1.12.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.annotation:annotation-experimental:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/36b412f28012b72e9f5e7607dedb6a36/transformed/jetified-annotation-experimental-1.3.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f0466982c264b3a01bc51079f24504ba/transformed/cursoradapter-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.cardview:cardview:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/2c33a4ecbec348e97c8d13a28c357802/transformed/cardview-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.interpolator:interpolator:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/0c7c58233ab5747ad4f84c4b568c3dc9/transformed/interpolator-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/80940de508c9077a254299c9d9bb33f3/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:17:1-27:12
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:17:1-55:12
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/4c9cab32e753ca54448b7049e697b909/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:17:1-33:12
+MERGED from [androidx.tracing:tracing:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/e8d23d88ea101325917ad3e66d4bafa4/transformed/jetified-tracing-1.0.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/5ad8840495322204930b63fbb149144e/transformed/core-runtime-2.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.documentfile:documentfile:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/ce754cd80e66c419f5781ac88310a3a5/transformed/documentfile-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/9427dd93bfa1da338d6dfc55d588e58b/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.print:print:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/364916f9914053284dd1b122d623750c/transformed/print-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.multidex:multidex:2.0.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/ef817b16c21bcb9221d92c147880958b/transformed/multidex-2.0.1/AndroidManifest.xml:17:1-22:12
+	package
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:3:5-41
+		INJECTED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml
+	android:versionName
+		INJECTED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml
+	android:versionCode
+		INJECTED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:2:11-69
+uses-permission#android.permission.READ_EXTERNAL_STORAGE
+ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:6:5-79
+	android:name
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:6:22-77
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:7:5-8:37
+	android:maxSdkVersion
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:8:9-35
+	android:name
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:7:22-78
+uses-permission#android.permission.READ_MEDIA_IMAGES
+ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:9:5-75
+	android:name
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:9:22-73
+uses-permission#android.permission.INTERNET
+ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:12:5-66
+	android:name
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:12:22-64
+uses-permission#android.permission.POST_NOTIFICATIONS
+ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:15:5-76
+	android:name
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:15:22-74
+application
+ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:17:5-43:19
+INJECTED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:17:5-43:19
+MERGED from [com.google.android.material:material:1.11.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/6e48b05d2fd3c040fb08f98592e03d30/transformed/material-1.11.0/AndroidManifest.xml:22:5-20
+MERGED from [com.google.android.material:material:1.11.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/6e48b05d2fd3c040fb08f98592e03d30/transformed/material-1.11.0/AndroidManifest.xml:22:5-20
+MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/6b9e8c3bd96755a8393888b153754d7c/transformed/constraintlayout-2.0.1/AndroidManifest.xml:9:5-20
+MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/6b9e8c3bd96755a8393888b153754d7c/transformed/constraintlayout-2.0.1/AndroidManifest.xml:9:5-20
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/c96e56e437a60690b364ff9fb1a4ff83/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/c96e56e437a60690b364ff9fb1a4ff83/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:28:5-89
+MERGED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:28:5-89
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/1d74a82b5305f9fc7f00d3984b7cda42/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/1d74a82b5305f9fc7f00d3984b7cda42/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/80940de508c9077a254299c9d9bb33f3/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/80940de508c9077a254299c9d9bb33f3/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/4c9cab32e753ca54448b7049e697b909/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/4c9cab32e753ca54448b7049e697b909/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+	android:extractNativeLibs
+		INJECTED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml
+	android:requestLegacyExternalStorage
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:26:9-53
+	android:appComponentFactory
+		ADDED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:28:18-86
+	android:label
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:18:9-34
+	android:fullBackupContent
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:22:9-42
+	android:allowTaskReparenting
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:25:9-45
+	android:icon
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:20:9-43
+	android:allowBackup
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:21:9-36
+	android:theme
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:19:9-40
+	android:networkSecurityConfig
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:23:9-69
+	android:usesCleartextTraffic
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:24:9-45
+activity#com.wasmimageprocessor.app.MainActivity
+ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:27:9-42:20
+	android:screenOrientation
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:34:13-52
+	android:launchMode
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:32:13-44
+	android:windowSoftInputMode
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:33:13-55
+	android:exported
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:29:13-36
+	android:supportsPictureInPicture
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:37:13-53
+	android:resizeableActivity
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:36:13-46
+	android:configChanges
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:31:13-163
+	android:allowTaskReparenting
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:35:13-49
+	android:theme
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:30:13-44
+	android:name
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:28:13-67
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
+ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:38:13-41:29
+action#android.intent.action.MAIN
+ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:39:17-68
+	android:name
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:39:25-66
+category#android.intent.category.LAUNCHER
+ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:40:17-76
+	android:name
+		ADDED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml:40:27-74
+uses-sdk
+INJECTED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml
+INJECTED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml
+MERGED from [com.google.android.material:material:1.11.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/6e48b05d2fd3c040fb08f98592e03d30/transformed/material-1.11.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.android.material:material:1.11.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/6e48b05d2fd3c040fb08f98592e03d30/transformed/material-1.11.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/17c47dc80bd953a7c64630bb44a317e3/transformed/jetified-appcompat-resources-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/17c47dc80bd953a7c64630bb44a317e3/transformed/jetified-appcompat-resources-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/6b9e8c3bd96755a8393888b153754d7c/transformed/constraintlayout-2.0.1/AndroidManifest.xml:5:5-7:41
+MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/6b9e8c3bd96755a8393888b153754d7c/transformed/constraintlayout-2.0.1/AndroidManifest.xml:5:5-7:41
+MERGED from [androidx.appcompat:appcompat:1.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/d4a878c7c05dccaf9c87061ec3d18eb0/transformed/appcompat-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat:1.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/d4a878c7c05dccaf9c87061ec3d18eb0/transformed/appcompat-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.webkit:webkit:1.10.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/86b558ae979b7e273fde2afd5ca3233b/transformed/webkit-1.10.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.webkit:webkit:1.10.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/86b558ae979b7e273fde2afd5ca3233b/transformed/webkit-1.10.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/09a076a54efd855782f5f0cc400fe362/transformed/jetified-emoji2-views-helper-1.2.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/09a076a54efd855782f5f0cc400fe362/transformed/jetified-emoji2-views-helper-1.2.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/c96e56e437a60690b364ff9fb1a4ff83/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/c96e56e437a60690b364ff9fb1a4ff83/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.viewpager2:viewpager2:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/394a62bbf3ec270d6818db4b9a0f291b/transformed/jetified-viewpager2-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.viewpager2:viewpager2:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/394a62bbf3ec270d6818db4b9a0f291b/transformed/jetified-viewpager2-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.fragment:fragment:1.3.6] /home/swordreforge/.gradle/caches/9.3.1/transforms/7f8352dcf708808c83aa583c77cc2b8e/transformed/fragment-1.3.6/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.fragment:fragment:1.3.6] /home/swordreforge/.gradle/caches/9.3.1/transforms/7f8352dcf708808c83aa583c77cc2b8e/transformed/fragment-1.3.6/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.activity:activity:1.8.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3f46587c36c350a94dbe7164f0a0701c/transformed/jetified-activity-1.8.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity:1.8.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3f46587c36c350a94dbe7164f0a0701c/transformed/jetified-activity-1.8.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/ecf4bf75ea73bddf455d493f802c05fe/transformed/drawerlayout-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/ecf4bf75ea73bddf455d493f802c05fe/transformed/drawerlayout-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/e85baf616287485d272721d8816d4e48/transformed/coordinatorlayout-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/e85baf616287485d272721d8816d4e48/transformed/coordinatorlayout-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/801d49a48de0aa9312327a11fee510a3/transformed/dynamicanimation-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/801d49a48de0aa9312327a11fee510a3/transformed/dynamicanimation-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.transition:transition:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/8f4ff4d0d323b7ecf45e342b90571a4f/transformed/transition-1.2.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.transition:transition:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/8f4ff4d0d323b7ecf45e342b90571a4f/transformed/transition-1.2.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/0ab8d4bd71bdf1973e70a7685ed5d8e7/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/0ab8d4bd71bdf1973e70a7685ed5d8e7/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/196d7f5a75800c5f127133d247771c2d/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/196d7f5a75800c5f127133d247771c2d/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.viewpager:viewpager:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/e7ef0ea91155b5c407fbd34f2cb133ab/transformed/viewpager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager:viewpager:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/e7ef0ea91155b5c407fbd34f2cb133ab/transformed/viewpager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/512ece7bb8ea2a33acde6b0c1036f47c/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/512ece7bb8ea2a33acde6b0c1036f47c/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.loader:loader:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/72769a43538035db6f1d7ebdfc1dae80/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.loader:loader:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/72769a43538035db6f1d7ebdfc1dae80/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.recyclerview:recyclerview:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/87aa9341d523f62d7bbfb807f8327038/transformed/recyclerview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.recyclerview:recyclerview:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/87aa9341d523f62d7bbfb807f8327038/transformed/recyclerview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.customview:customview:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/4f1330eaf4012f5061c4ba77d803548f/transformed/customview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.customview:customview:1.1.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/4f1330eaf4012f5061c4ba77d803548f/transformed/customview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate:1.2.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/00360fe0e7617d76633060906e088c03/transformed/jetified-savedstate-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate:1.2.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/00360fe0e7617d76633060906e088c03/transformed/jetified-savedstate-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/1d74a82b5305f9fc7f00d3984b7cda42/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/1d74a82b5305f9fc7f00d3984b7cda42/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/59cf8afad2c2fc1ac1803aaa2f3163a9/transformed/lifecycle-livedata-core-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/59cf8afad2c2fc1ac1803aaa2f3163a9/transformed/lifecycle-livedata-core-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/eeb59722ac091d0ae6f1b51d46717c4b/transformed/lifecycle-livedata-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/eeb59722ac091d0ae6f1b51d46717c4b/transformed/lifecycle-livedata-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/9cf30675436d7df75cd8d0fd5c10402f/transformed/lifecycle-viewmodel-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/9cf30675436d7df75cd8d0fd5c10402f/transformed/lifecycle-viewmodel-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/8d297c6e66cf94e4f2707082bd7cc82b/transformed/lifecycle-runtime-2.6.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/8d297c6e66cf94e4f2707082bd7cc82b/transformed/lifecycle-runtime-2.6.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/b15447a1c78dc9b8f135559ec45a0d2a/transformed/jetified-lifecycle-viewmodel-savedstate-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/b15447a1c78dc9b8f135559ec45a0d2a/transformed/jetified-lifecycle-viewmodel-savedstate-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core-ktx:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/fa90e4fc69055748d38082d79c1c700b/transformed/jetified-core-ktx-1.12.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.core:core-ktx:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/fa90e4fc69055748d38082d79c1c700b/transformed/jetified-core-ktx-1.12.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/36b412f28012b72e9f5e7607dedb6a36/transformed/jetified-annotation-experimental-1.3.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/36b412f28012b72e9f5e7607dedb6a36/transformed/jetified-annotation-experimental-1.3.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f0466982c264b3a01bc51079f24504ba/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f0466982c264b3a01bc51079f24504ba/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cardview:cardview:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/2c33a4ecbec348e97c8d13a28c357802/transformed/cardview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cardview:cardview:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/2c33a4ecbec348e97c8d13a28c357802/transformed/cardview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/0c7c58233ab5747ad4f84c4b568c3dc9/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/0c7c58233ab5747ad4f84c4b568c3dc9/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/80940de508c9077a254299c9d9bb33f3/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/80940de508c9077a254299c9d9bb33f3/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/4c9cab32e753ca54448b7049e697b909/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/4c9cab32e753ca54448b7049e697b909/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.tracing:tracing:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/e8d23d88ea101325917ad3e66d4bafa4/transformed/jetified-tracing-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.tracing:tracing:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/e8d23d88ea101325917ad3e66d4bafa4/transformed/jetified-tracing-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/5ad8840495322204930b63fbb149144e/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/5ad8840495322204930b63fbb149144e/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.documentfile:documentfile:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/ce754cd80e66c419f5781ac88310a3a5/transformed/documentfile-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.documentfile:documentfile:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/ce754cd80e66c419f5781ac88310a3a5/transformed/documentfile-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/9427dd93bfa1da338d6dfc55d588e58b/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/9427dd93bfa1da338d6dfc55d588e58b/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.print:print:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/364916f9914053284dd1b122d623750c/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.print:print:1.0.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/364916f9914053284dd1b122d623750c/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.multidex:multidex:2.0.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/ef817b16c21bcb9221d92c147880958b/transformed/multidex-2.0.1/AndroidManifest.xml:20:5-43
+MERGED from [androidx.multidex:multidex:2.0.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/ef817b16c21bcb9221d92c147880958b/transformed/multidex-2.0.1/AndroidManifest.xml:20:5-43
+	android:targetSdkVersion
+		INJECTED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /home/swordreforge/project/wasm-test/src-tauri/gen/android/app/src/main/AndroidManifest.xml
+provider#androidx.startup.InitializationProvider
+ADDED from [androidx.emoji2:emoji2:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/c96e56e437a60690b364ff9fb1a4ff83/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/1d74a82b5305f9fc7f00d3984b7cda42/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/1d74a82b5305f9fc7f00d3984b7cda42/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/4c9cab32e753ca54448b7049e697b909/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/4c9cab32e753ca54448b7049e697b909/transformed/jetified-startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+	tools:node
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/c96e56e437a60690b364ff9fb1a4ff83/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:28:13-31
+	android:authorities
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/c96e56e437a60690b364ff9fb1a4ff83/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:26:13-68
+	android:exported
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/c96e56e437a60690b364ff9fb1a4ff83/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:27:13-37
+	android:name
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/c96e56e437a60690b364ff9fb1a4ff83/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:25:13-67
+meta-data#androidx.emoji2.text.EmojiCompatInitializer
+ADDED from [androidx.emoji2:emoji2:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/c96e56e437a60690b364ff9fb1a4ff83/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/c96e56e437a60690b364ff9fb1a4ff83/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/c96e56e437a60690b364ff9fb1a4ff83/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:30:17-75
+permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:23:9-81
+permission#com.wasmimageprocessor.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:23:9-81
+uses-permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:26:22-94
+uses-permission#com.wasmimageprocessor.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.12.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/3c3b3e297b8be5422e844ef9b971052b/transformed/core-1.12.0/AndroidManifest.xml:26:22-94
+meta-data#androidx.lifecycle.ProcessLifecycleInitializer
+ADDED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/1d74a82b5305f9fc7f00d3984b7cda42/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/1d74a82b5305f9fc7f00d3984b7cda42/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/swordreforge/.gradle/caches/9.3.1/transforms/1d74a82b5305f9fc7f00d3984b7cda42/transformed/jetified-lifecycle-process-2.6.1/AndroidManifest.xml:30:17-78
+meta-data#androidx.profileinstaller.ProfileInstallerInitializer
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:30:17-85
+receiver#androidx.profileinstaller.ProfileInstallReceiver
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:34:9-52:20
+	android:enabled
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:37:13-35
+	android:exported
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:38:13-36
+	android:permission
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:39:13-57
+	android:directBootAware
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:36:13-44
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:35:13-76
+intent-filter#action:name:androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:40:13-42:29
+action#androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:41:17-91
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:41:25-88
+intent-filter#action:name:androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:43:13-45:29
+action#androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:44:17-85
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:44:25-82
+intent-filter#action:name:androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:46:13-48:29
+action#androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:47:17-88
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:47:25-85
+intent-filter#action:name:androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:49:13-51:29
+action#androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:50:17-95
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/swordreforge/.gradle/caches/9.3.1/transforms/f88cc8b914d703a113456d05bd442477/transformed/jetified-profileinstaller-1.3.0/AndroidManifest.xml:50:25-92

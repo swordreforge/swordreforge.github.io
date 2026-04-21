@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCNN AI 图像增强 - 示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .canvas-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .canvas-wrapper {
+            flex: 1;
+            min-width: 300px;
+        }
+        canvas {
+            width: 100%;
+            height: auto;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            background: #fff;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #5568d3;
+            color: white;
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .slider-container {
+            margin: 10px 0;
+        }
+        .slider-container label {
+            display: inline-block;
+            width: 150px;
+        }
+        input[type="range"] {
+            width: 200px;
+            vertical-align: middle;
+        }
+        .info {
+            padding: 10px;
+            background: #e8f4f8;
+            border-left: 4px solid #667eea;
+            margin: 10px 0;
+        }
+        .error {
+            padding: 10px;
+            background: #fee;
+            border-left: 4px solid #f44;
+            margin: 10px 0;
+        }
+        .success {
+            padding: 10px;
+            background: #efe;
+            border-left: 4px solid #4a4;
+            margin: 10px 0;
+        }
+        #status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+        .loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .ready {
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 NCNN AI 图像增强</h1>
+
+        <div id="status" class="loading">⏳ 正在加载 WebAssembly 模块...</div>
+
+        <div class="section">
+            <h2>📸 图像上传</h2>
+            <input type="file" id="imageInput" accept="image/*">
+            <p class="info">💡 提示：选择一张图片进行测试</p>
+        </div>
+
+        <div class="controls">
+            <h2>🛠️ 增强控制</h2>
+            <div class="slider-container">
+                <label for="sharpness">锐化强度:</label>
+                <input type="range" id="sharpness" min="0" max="2" step="0.1" value="1">
+                <span id="sharpnessValue">1.0</span>
+            </div>
+            <div class="slider-container">
+                <label for="denoiseKernel">去噪核大小:</label>
+                <input type="range" id="denoiseKernel" min="3" max="7" step="2" value="3">
+                <span id="denoiseKernelValue">3</span>
+            </div>
+            <button id="sharpenBtn" disabled>🔍 简单锐化</button>
+            <button id="denoiseBtn" disabled>🎯 简单去噪</button>
+            <button id="aiEnhanceBtn" disabled>✨ AI 增强 (需要模型)</button>
+        </div>
+
+        <div class="canvas-container">
+            <div class="canvas-wrapper">
+                <h3>原始图像</h3>
+                <canvas id="originalCanvas"></canvas>
+            </div>
+            <div class="canvas-wrapper">
+                <h3>增强结果</h3>
+                <canvas id="enhancedCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 使用说明</h2>
+            <div class="info">
+                <strong>功能介绍：</strong>
+                <ul>
+                    <li>🔍 <strong>简单锐化</strong>：使用传统拉普拉斯算子进行图像锐化，无需AI模型</li>
+                    <li>🎯 <strong>简单去噪</strong>：使用中值滤波去除图像噪声，无需AI模型</li>
+                    <li>✨ <strong>AI 增强</strong>：使用神经网络进行智能图像优化（需要加载ncnn模型）</li>
+                </ul>
+            </div>
+            <div class="info">
+                <strong>性能提示：</strong>
+                <ul>
+                    <li>简单算法速度较快，适合实时预览</li>
+                    <li>AI增强需要先加载模型文件，处理速度取决于模型复杂度</li>
+                    <li>建议在Web Worker中运行以避免阻塞UI</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import createModule from './pkg/ncnn_enhance.js';
+
+        let module = null;
+        let originalImageData = null;
+
+        // DOM 元素
+        const statusDiv = document.getElementById('status');
+        const imageInput = document.getElementById('imageInput');
+        const originalCanvas = document.getElementById('originalCanvas');
+        const enhancedCanvas = document.getElementById('enhancedCanvas');
+        const originalCtx = originalCanvas.getContext('2d');
+        const enhancedCtx = enhancedCanvas.getContext('2d');
+        const sharpenBtn = document.getElementById('sharpenBtn');
+        const denoiseBtn = document.getElementById('denoiseBtn');
+        const aiEnhanceBtn = document.getElementById('aiEnhanceBtn');
+        const sharpnessSlider = document.getElementById('sharpness');
+        const sharpnessValue = document.getElementById('sharpnessValue');
+        const denoiseKernelSlider = document.getElementById('denoiseKernel');
+        const denoiseKernelValue = document.getElementById('denoiseKernelValue');
+
+        // 初始化模块
+        async function init() {
+            try {
+                module = await createModule();
+                statusDiv.className = 'ready';
+                statusDiv.textContent = '✅ WebAssembly 模块加载成功！';
+
+                // 检查网络状态
+                const netLoaded = module.is_net_loaded();
+                if (!netLoaded) {
+                    console.log('AI网络未加载，仅使用简单算法');
+                    aiEnhanceBtn.disabled = true;
+                    aiEnhanceBtn.title = '需要先加载AI模型';
+                }
+            } catch (error) {
+                statusDiv.className = 'error';
+                statusDiv.textContent = '❌ WebAssembly 模块加载失败: ' + error.message;
+                console.error('加载失败:', error);
+            }
+        }
+
+        // 图像上传处理
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    // 设置画布尺寸
+                    const maxWidth = 600;
+                    const scale = Math.min(1, maxWidth / img.width);
+                    const width = img.width * scale;
+                    const height = img.height * scale;
+
+                    originalCanvas.width = width;
+                    originalCanvas.height = height;
+                    enhancedCanvas.width = width;
+                    enhancedCanvas.height = height;
+
+                    // 绘制原始图像
+                    originalCtx.drawImage(img, 0, 0, width, height);
+                    originalImageData = originalCtx.getImageData(0, 0, width, height);
+
+                    // 清空增强画布
+                    enhancedCtx.clearRect(0, 0, width, height);
+
+                    // 启用按钮
+                    sharpenBtn.disabled = false;
+                    denoiseBtn.disabled = false;
+
+                    statusDiv.textContent = `✅ 图像已加载: ${width}x${height}`;
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 简单锐化
+        sharpenBtn.addEventListener('click', function() {
+            if (!module || !originalImageData) return;
+
+            const sharpness = parseFloat(sharpnessSlider.value);
+            const data = new Uint8Array(originalImageData.data.buffer);
+
+            // 调用C++函数
+            const resultPtr = module.sharpen_image_simple(
+                data.byteOffset,
+                originalImageData.width,
+                originalImageData.height,
+                sharpness
+            );
+
+            // 获取结果数据
+            const resultData = new Uint8Array(
+                module.HEAP8.buffer,
+                resultPtr,
+                originalImageData.width * originalImageData.height * 4
+            );
+
+            // 显示结果
+            const resultImageData = new ImageData(
+                new Uint8ClampedArray(resultData),
+                originalImageData.width,
+                originalImageData.height
+            );
+            enhancedCtx.putImageData(resultImageData, 0, 0);
+
+            // 释放内存
+            module.free_image_data(resultPtr);
+
+            statusDiv.textContent = `✅ 锐化完成 (强度: ${sharpness})`;
+        });
+
+        // 简单去噪
+        denoiseBtn.addEventListener('click', function() {
+            if (!module || !originalImageData) return;
+
+            const kernelSize = parseInt(denoiseKernelSlider.value);
+            const data = new Uint8Array(originalImageData.data.buffer);
+
+            // 调用C++函数
+            const resultPtr = module.denoise_image_simple(
+                data.byteOffset,
+                originalImageData.width,
+                originalImageData.height,
+                kernelSize
+            );
+
+            // 获取结果数据
+            const resultData = new Uint8Array(
+                module.HEAP8.buffer,
+                resultPtr,
+                originalImageData.width * originalImageData.height * 4
+            );
+
+            // 显示结果
+            const resultImageData = new ImageData(
+                new Uint8ClampedArray(resultData),
+                originalImageData.width,
+                originalImageData.height
+            );
+            enhancedCtx.putImageData(resultImageData, 0, 0);
+
+            // 释放内存
+            module.free_image_data(resultPtr);
+
+            statusDiv.textContent = `✅ 去噪完成 (核大小: ${kernelSize})`;
+        });
+
+        // AI增强（示例，需要实际模型）
+        aiEnhanceBtn.addEventListener('click', function() {
+            if (!module || !originalImageData) return;
+
+            if (!module.is_net_loaded()) {
+                alert('请先加载AI模型文件！');
+                return;
+            }
+
+            const data = new Uint8Array(originalImageData.data.buffer);
+
+            // 调用AI增强函数
+            const result = module.enhance_image(
+                data.byteOffset,
+                originalImageData.width,
+                originalImageData.height,
+                0  // 增强类型: 0=通用
+            );
+
+            if (result.success) {
+                // 获取结果数据
+                const resultData = new Uint8Array(
+                    module.HEAP8.buffer,
+                    result.data,
+                    result.width * result.height * result.channels
+                );
+
+                // 显示结果
+                const resultImageData = new ImageData(
+                    new Uint8ClampedArray(resultData),
+                    result.width,
+                    result.height
+                );
+                enhancedCanvas.width = result.width;
+                enhancedCanvas.height = result.height;
+                enhancedCtx.putImageData(resultImageData, 0, 0);
+
+                // 释放内存
+                module.free_enhance_result(result);
+
+                statusDiv.textContent = '✅ AI 增强完成';
+            } else {
+                statusDiv.className = 'error';
+                statusDiv.textContent = '❌ AI 增强失败: ' + result.error;
+            }
+        });
+
+        // 滑块值更新
+        sharpnessSlider.addEventListener('input', function() {
+            sharpnessValue.textContent = parseFloat(this.value).toFixed(1);
+        });
+
+        denoiseKernelSlider.addEventListener('input', function() {
+            denoiseKernelValue.textContent = this.value;
+        });
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>

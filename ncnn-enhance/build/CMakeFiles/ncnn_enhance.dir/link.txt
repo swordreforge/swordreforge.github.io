@@ -1,0 +1,2 @@
+/home/swordreforge/emsdk/upstream/emscripten/emar qc libncnn_enhance.a CMakeFiles/ncnn_enhance.dir/ncnn_enhance.cpp.o
+/home/swordreforge/emsdk/upstream/emscripten/emranlib libncnn_enhance.a

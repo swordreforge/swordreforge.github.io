@@ -1,0 +1,4 @@
+#Sun Mar 01 20:35:44 CST 2026
+base.0=/home/swordreforge/project/wasm-test/src-tauri/gen/android/app/build/intermediates/dex/release/minifyReleaseWithR8/classes.dex
+path.0=classes.dex
+renamed.0=classes.dex
