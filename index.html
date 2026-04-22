@@ -3366,7 +3366,7 @@
                 let summary = '[对话摘要] ';
                 if (userParts.length > 0) summary += '用户曾要求: ' + userParts.join('；');
                 if (toolParts.length > 0) summary += ' | 已执行: ' + toolParts.join('、');
-                compressed.push({ role: 'assistant', content: summary });
+                compressed.push({ role: 'user', content: summary });
             }
 
             // Flatten recent groups back into messages
