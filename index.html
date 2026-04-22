@@ -3573,6 +3573,64 @@ localStorage.setItem('ai_model', aiConfig.model);
             }
         }
 
+        let confirmResolve = null;
+
+        function waitForConfirm() {
+            return new Promise(function(resolve) {
+                confirmResolve = resolve;
+            });
+        }
+
+        function resolveConfirm(confirmed) {
+            if (confirmResolve) {
+                confirmResolve(confirmed);
+                confirmResolve = null;
+            }
+        }
+
+        function renderConfirmCard(riskyCalls, displayNames) {
+            const container = document.getElementById('aiChatMessages');
+            const card = document.createElement('div');
+            card.className = 'ai-confirm-card';
+            card.id = 'aiConfirmCard_' + Date.now();
+
+            let itemsHtml = '';
+            for (let i = 0; i < riskyCalls.length; i++) {
+                const tc = riskyCalls[i];
+                const fnName = tc.function.name;
+                let fnParams;
+                try { fnParams = JSON.parse(tc.function.arguments); } catch(e) { fnParams = {}; }
+                const displayName = displayNames[fnName] || fnName;
+                const paramDesc = Object.entries(fnParams).map(function(e) { return e[0] + '=' + e[1]; }).join(', ');
+                itemsHtml += '<div class="confirm-item">' + (i + 1) + '. ' + displayName + (paramDesc ? ' (' + paramDesc + ')' : '') + '</div>';
+            }
+
+            card.innerHTML = '<div class="confirm-title">\u26A0\uFE0F \u5F85\u786E\u8BA4\u64CD\u4F5C</div>' +
+                itemsHtml +
+                '<div class="confirm-actions">' +
+                '<button class="confirm-btn confirm-btn-execute" onclick="handleAiConfirm(true, \'' + card.id + '\')">\u2713 \u6267\u884C</button>' +
+                '<button class="confirm-btn confirm-btn-cancel" onclick="handleAiConfirm(false, \'' + card.id + '\')">\u2715 \u53D6\u6D88</button>' +
+                '</div>';
+
+            container.appendChild(card);
+            container.scrollTop = container.scrollHeight;
+            return card.id;
+        }
+
+        window.handleAiConfirm = function(confirmed, cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            card.classList.add('resolved');
+            if (confirmed) {
+                card.classList.add('confirmed');
+            } else {
+                card.classList.add('cancelled');
+            }
+            const btns = card.querySelectorAll('.confirm-btn');
+            btns.forEach(function(b) { b.disabled = true; });
+            resolveConfirm(confirmed);
+        };
+
         function addAiChatMessage(role, content, type = 'normal') {
             const container = document.getElementById('aiChatMessages');
             if (container.querySelector('div[style*="text-align:center"]')) {
@@ -3606,6 +3664,57 @@ localStorage.setItem('ai_model', aiConfig.model);
             addAiChatMessage('系统', '对话记忆与操作记录已清除', 'system');
         };
 
+        async function executeToolCall(fnName, fnParams) {
+            if (fnName === 'undo') {
+                try {
+                    await undo();
+                    return { success: true, action: fnName, params: fnParams };
+                } catch(e) {
+                    return { success: false, error: e.message };
+                }
+            } else if (fnName === 'redo') {
+                try {
+                    await redo();
+                    return { success: true, action: fnName, params: fnParams };
+                } catch(e) {
+                    return { success: false, error: e.message };
+                }
+            } else if (fnName === 'apply_circular_mask') {
+                try {
+                    var w = appState.processor.get_width();
+                    var h = appState.processor.get_height();
+                    var cx = fnParams.center_x !== undefined ? fnParams.center_x : w / 2;
+                    var cy = fnParams.center_y !== undefined ? fnParams.center_y : h / 2;
+                    var r = fnParams.radius !== undefined ? fnParams.radius : Math.min(w, h) * 0.3;
+                    var f = fnParams.feather !== undefined ? fnParams.feather : 2;
+                    appState.processor.apply_circular_mask(cx, cy, r, f);
+                    return { success: true, action: fnName, params: fnParams };
+                } catch(e) {
+                    return { success: false, error: e.message };
+                }
+            } else if (fnName === 'auto_crop_by_color') {
+                try {
+                    var tol = fnParams.tolerance !== undefined ? fnParams.tolerance : 30;
+                    var f = fnParams.feather !== undefined ? fnParams.feather : 2;
+                    appState.processor.auto_crop_by_color(fnParams.r, fnParams.g, fnParams.b, tol, f);
+                    return { success: true, action: fnName, params: fnParams };
+                } catch(e) {
+                    return { success: false, error: e.message };
+                }
+            } else if (fnName === 'smart_crop') {
+                try {
+                    var t = fnParams.threshold !== undefined ? fnParams.threshold : 50;
+                    var f = fnParams.feather !== undefined ? fnParams.feather : 2;
+                    appState.processor.smart_crop(t, f);
+                    return { success: true, action: fnName, params: fnParams };
+                } catch(e) {
+                    return { success: false, error: e.message };
+                }
+            } else {
+                return executeAiFunction(appState.processor, fnName, fnParams);
+            }
+        }
+
         window.sendAiMessage = async function() {
             const input = document.getElementById('aiChatInput');
             const message = input.value.trim();
@@ -3624,7 +3733,7 @@ localStorage.setItem('ai_model', aiConfig.model);
             sendBtn.textContent = '思考中...';
 
             try {
-                const { AI_FUNCTION_DEFINITIONS, executeAiFunction, FUNCTION_DISPLAY_NAMES } = await loadAiFunctions();
+                const { AI_FUNCTION_DEFINITIONS, executeAiFunction, FUNCTION_DISPLAY_NAMES, RISKY_FUNCTIONS } = await loadAiFunctions();
 
                 aiChatHistory.push({ role: 'user', content: message });
                 persistAiChatHistory();
@@ -3663,64 +3772,28 @@ localStorage.setItem('ai_model', aiConfig.model);
                     if (assistantMsg.tool_calls && assistantMsg.tool_calls.length > 0) {
                         aiChatHistory.push(assistantMsg);
                         persistAiChatHistory();
-                        let turnActionDescs = [];
 
-                        for (let i = 0; i < assistantMsg.tool_calls.length; i++) {
-                            const toolCall = assistantMsg.tool_calls[i];
-                            const fnName = toolCall.function.name;
-                            const fnParams = JSON.parse(toolCall.function.arguments);
-
-                            let result;
-                            if (fnName === 'undo') {
-                                try {
-                                    await undo();
-                                    result = { success: true, action: fnName, params: fnParams };
-                                } catch(e) {
-                                    result = { success: false, error: e.message };
-                                }
-                            } else if (fnName === 'redo') {
-                                try {
-                                    await redo();
-                                    result = { success: true, action: fnName, params: fnParams };
-                                } catch(e) {
-                                    result = { success: false, error: e.message };
-                                }
-                            } else if (fnName === 'apply_circular_mask') {
-                                try {
-                                    const w = appState.processor.get_width();
-                                    const h = appState.processor.get_height();
-                                    const cx = fnParams.center_x !== undefined ? fnParams.center_x : w / 2;
-                                    const cy = fnParams.center_y !== undefined ? fnParams.center_y : h / 2;
-                                    const r = fnParams.radius !== undefined ? fnParams.radius : Math.min(w, h) * 0.3;
-                                    const f = fnParams.feather !== undefined ? fnParams.feather : 2;
-                                    appState.processor.apply_circular_mask(cx, cy, r, f);
-                                    result = { success: true, action: fnName, params: fnParams };
-                                } catch(e) {
-                                    result = { success: false, error: e.message };
-                                }
-                            } else if (fnName === 'auto_crop_by_color') {
-                                try {
-                                    const tol = fnParams.tolerance !== undefined ? fnParams.tolerance : 30;
-                                    const f = fnParams.feather !== undefined ? fnParams.feather : 2;
-                                    appState.processor.auto_crop_by_color(fnParams.r, fnParams.g, fnParams.b, tol, f);
-                                    result = { success: true, action: fnName, params: fnParams };
-                                } catch(e) {
-                                    result = { success: false, error: e.message };
-                                }
-                            } else if (fnName === 'smart_crop') {
-                                try {
-                                    const t = fnParams.threshold !== undefined ? fnParams.threshold : 50;
-                                    const f = fnParams.feather !== undefined ? fnParams.feather : 2;
-                                    appState.processor.smart_crop(t, f);
-                                    result = { success: true, action: fnName, params: fnParams };
-                                } catch(e) {
-                                    result = { success: false, error: e.message };
-                                }
+                        var safeCalls = [];
+                        var riskyCalls = [];
+                        for (var i = 0; i < assistantMsg.tool_calls.length; i++) {
+                            var tc = assistantMsg.tool_calls[i];
+                            if (aiConfig.confirmEnabled && RISKY_FUNCTIONS.has(tc.function.name)) {
+                                riskyCalls.push(tc);
                             } else {
-                                result = executeAiFunction(appState.processor, fnName, fnParams);
+                                safeCalls.push(tc);
                             }
-                            const displayName = FUNCTION_DISPLAY_NAMES[fnName] || fnName;
-                            const paramDesc = Object.entries(fnParams).map(function(e) { return e[0] + '=' + e[1]; }).join(', ');
+                        }
+
+                        var turnActionDescs = [];
+                        for (var i = 0; i < safeCalls.length; i++) {
+                            var toolCall = safeCalls[i];
+                            var fnName = toolCall.function.name;
+                            var fnParams;
+                            try { fnParams = JSON.parse(toolCall.function.arguments); } catch(e) { fnParams = {}; }
+
+                            var result = await executeToolCall(fnName, fnParams);
+                            var displayName = FUNCTION_DISPLAY_NAMES[fnName] || fnName;
+                            var paramDesc = Object.entries(fnParams).map(function(e) { return e[0] + '=' + e[1]; }).join(', ');
 
                             if (result.success) {
                                 aiLogOperation(fnName, fnParams);
@@ -3743,16 +3816,82 @@ localStorage.setItem('ai_model', aiConfig.model);
                             }
                         }
 
-                        allActionDescs = allActionDescs.concat(turnActionDescs);
                         if (turnActionDescs.length > 0) {
-                            const hasUndoRedo = assistantMsg.tool_calls.some(function(tc) {
+                            var hasUndoRedo = safeCalls.some(function(tc) {
                                 return tc.function.name === 'undo' || tc.function.name === 'redo';
                             });
                             if (!hasUndoRedo) {
                                 saveToHistory();
                             }
+                            updateCanvas();
                         }
-                        updateCanvas();
+
+                        if (riskyCalls.length > 0) {
+                            var cardId = renderConfirmCard(riskyCalls, FUNCTION_DISPLAY_NAMES);
+                            sendBtn.disabled = true;
+                            sendBtn.textContent = '待确认...';
+
+                            var confirmed = await waitForConfirm();
+
+                            sendBtn.disabled = false;
+                            sendBtn.textContent = '发送';
+
+                            if (confirmed) {
+                                for (var i = 0; i < riskyCalls.length; i++) {
+                                    var toolCall = riskyCalls[i];
+                                    var fnName = toolCall.function.name;
+                                    var fnParams;
+                                    try { fnParams = JSON.parse(toolCall.function.arguments); } catch(e) { fnParams = {}; }
+
+                                    var result = await executeToolCall(fnName, fnParams);
+                                    var displayName = FUNCTION_DISPLAY_NAMES[fnName] || fnName;
+                                    var paramDesc = Object.entries(fnParams).map(function(e) { return e[0] + '=' + e[1]; }).join(', ');
+
+                                    if (result.success) {
+                                        aiLogOperation(fnName, fnParams);
+                                    }
+
+                                    aiChatHistory.push({
+                                        role: 'tool',
+                                        tool_call_id: toolCall.id,
+                                        content: result.success
+                                            ? JSON.stringify({ success: true, action: fnName, params: fnParams })
+                                            : JSON.stringify({ success: false, error: result.error })
+                                    });
+                                    persistAiChatHistory();
+
+                                    if (result.success) {
+                                        turnActionDescs.push(displayName + (paramDesc ? ' ' + paramDesc : ''));
+                                        addAiChatMessage('assistant', '已执行: ' + displayName + (paramDesc ? ' ' + paramDesc : ''));
+                                    } else {
+                                        addAiChatMessage('assistant', '执行失败: ' + result.error, 'system');
+                                    }
+                                }
+
+                                var hasReset = riskyCalls.some(function(tc) {
+                                    return tc.function.name === 'reset_image';
+                                });
+                                if (hasReset) {
+                                    aiOnImageReset();
+                                } else {
+                                    saveToHistory();
+                                }
+                                updateCanvas();
+                            } else {
+                                for (var i = 0; i < riskyCalls.length; i++) {
+                                    var toolCall = riskyCalls[i];
+                                    aiChatHistory.push({
+                                        role: 'tool',
+                                        tool_call_id: toolCall.id,
+                                        content: JSON.stringify({ success: false, error: '用户取消了此操作' })
+                                    });
+                                }
+                                persistAiChatHistory();
+                                addAiChatMessage('assistant', '已取消操作', 'system');
+                            }
+                        }
+
+                        allActionDescs = allActionDescs.concat(turnActionDescs);
 
                         if (choice.finish_reason === 'stop') break;
                     } else {
