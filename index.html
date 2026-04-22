@@ -3232,12 +3232,44 @@
 - apply_emboss() — 浮雕效果
 
 ### 绘制
-- draw_brush_stroke(points, color, width, opacity, brush_type) — 笔刷绘制
+
+推荐优先使用意图方式绘制（自动根据图像尺寸生成坐标路径）:
+
+- draw_brush_intent(region, shape, color, width, opacity, brush_type, size_ratio) — 智能笔刷绘制
+  region: 绘制区域 left-top/center-top/right-top/left-center/center/right-center/left-bottom/center-bottom/right-bottom/full
+  shape: 形状 circle/oval/line-horizontal/line-vertical/line-diagonal/wave/arrow-right/arrow-left/arrow-up/arrow-down/cross/star/smile/frown/tick/cross-mark/highlight-horizontal/spiral/heart
+  color: 十六进制如#FF0000，默认#000000
+  width: 笔刷宽度1-100，默认5
+  opacity: 0.0-1.0，默认1.0
+  brush_type: basic/pencil/marker/watercolor/eraser，默认basic
+  size_ratio: 形状大小0.1-1.0，默认0.5
+
+- draw_brush_stroke(points, color, width, opacity, brush_type) — 精确路径绘制（需手动指定坐标）
   points: [[x,y],...]路径点，坐标原点左上角，x向右y向下
-  color: 十六进制如#FF0000
-  width: 1-100
-  opacity: 0.0-1.0
-  brush_type: basic/pencil/marker/watercolor/eraser
+  仅在需要精确控制路径时使用，一般场景推荐用draw_brush_intent
+
+笔刷类型选择指南:
+| 类型 | 效果 | 适合场景 | 推荐宽度 |
+|------|------|---------|---------|
+| basic | 均匀线条，边缘清晰 | 一般绘制、标注、箭头 | 3-15 |
+| pencil | 细线条，略有纹理 | 素描、勾线、草稿 | 1-5 |
+| marker | 半透明宽笔触，叠加深 | 荧光标注、高亮 | 10-30 |
+| watercolor | 边缘柔和，有水韵扩散 | 艺术涂抹、装饰 | 5-25 |
+| eraser | 用白色覆盖（橡皮擦） | 擦除已有内容 | 10-50 |
+
+常见意图映射:
+| 用户说法 | 应调用 |
+| 画个圈/圆/椭圆 | draw_brush_intent(region="center", shape="circle") |
+| 右上角画个红星 | draw_brush_intent(region="right-top", shape="star", color="#FF0000") |
+| 底部画波浪线装饰 | draw_brush_intent(region="center-bottom", shape="wave") |
+| 中间画条横线 | draw_brush_intent(region="center", shape="line-horizontal") |
+| 画个对号/勾 | draw_brush_intent(region="center", shape="tick", color="#00FF00") |
+| 画个叉/打叉 | draw_brush_intent(region="center", shape="cross-mark", color="#FF0000") |
+| 高亮标注某区域 | draw_brush_intent(region="center", shape="highlight-horizontal", brush_type="marker") |
+| 画个爱心装饰 | draw_brush_intent(region="center", shape="heart", color="#FF69B4") |
+| 涂掉/打码 | draw_brush_intent(region="center", shape="highlight-horizontal", brush_type="marker", width=30) |
+| 右边画个箭头 | draw_brush_intent(region="right-center", shape="arrow-right") |
+
 - draw_text(text, x, y, font_size, color, has_shadow) — 添加文字
   坐标原点左下角，font_size 10-200默认36
 
@@ -3365,7 +3397,13 @@
         function buildSystemPrompt() {
             let prompt = BASE_SYSTEM_PROMPT;
             if (appState.processor) {
-                prompt += '\n\n当前图像尺寸: ' + appState.processor.get_width() + 'x' + appState.processor.get_height() + ' 像素。绘制和文字坐标请参考此尺寸。';
+                var w = appState.processor.get_width();
+                var h = appState.processor.get_height();
+                var w3 = Math.round(w / 3);
+                var w6 = Math.round(w * 2 / 3);
+                var h3 = Math.round(h / 3);
+                var h6 = Math.round(h * 2 / 3);
+                prompt += '\n\n## 当前图像信息\n- 尺寸: ' + w + 'x' + h + ' 像素\n- 坐标系: 原点左上角，x向右y向下\n- 区域参考:\n  左上(0-' + w3 + ', 0-' + h3 + ') | 中上(' + w3 + '-' + w6 + ', 0-' + h3 + ') | 右上(' + w6 + '-' + w + ', 0-' + h3 + ')\n  左中(0-' + w3 + ', ' + h3 + '-' + h6 + ') | 中心(' + w3 + '-' + w6 + ', ' + h3 + '-' + h6 + ') | 右中(' + w6 + '-' + w + ', ' + h3 + '-' + h6 + ')\n  左下(0-' + w3 + ', ' + h6 + '-' + h + ') | 中下(' + w3 + '-' + w6 + ', ' + h6 + '-' + h + ') | 右下(' + w6 + '-' + w + ', ' + h6 + '-' + h + ')';
             }
             const opSummary = buildOperationSummary();
             if (opSummary) {
@@ -3744,7 +3782,7 @@ localStorage.setItem('ai_model', aiConfig.model);
             aiMessageInProgress = true;
 
             try {
-                const { AI_FUNCTION_DEFINITIONS, executeAiFunction, FUNCTION_DISPLAY_NAMES, RISKY_FUNCTIONS } = await loadAiFunctions();
+                const { AI_FUNCTION_DEFINITIONS, executeAiFunction, FUNCTION_DISPLAY_NAMES, RISKY_FUNCTIONS, resolveBrushIntent } = await loadAiFunctions();
 
                 aiChatHistory.push({ role: 'user', content: message });
                 persistAiChatHistory();
