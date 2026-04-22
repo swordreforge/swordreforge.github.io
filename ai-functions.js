@@ -518,4 +518,19 @@ const FUNCTION_DISPLAY_NAMES = {
     smart_crop: "智能抠图"
 };
 
-export { AI_FUNCTION_DEFINITIONS, executeAiFunction, FUNCTION_DISPLAY_NAMES };
+const RISKY_FUNCTIONS = new Set([
+    "smart_crop",
+    "apply_circular_mask",
+    "auto_crop_by_color",
+    "apply_threshold",
+    "apply_grayscale",
+    "apply_sepia",
+    "apply_invert",
+    "apply_pixelate",
+    "apply_oil",
+    "apply_emboss",
+    "apply_solarize",
+    "reset_image"
+]);
+
+export { AI_FUNCTION_DEFINITIONS, executeAiFunction, FUNCTION_DISPLAY_NAMES, RISKY_FUNCTIONS };
