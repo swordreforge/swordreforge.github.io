@@ -3574,17 +3574,21 @@ localStorage.setItem('ai_model', aiConfig.model);
         }
 
         let confirmResolve = null;
+        let confirmTimer = null;
 
         function waitForConfirm() {
             return new Promise(function(resolve) {
                 confirmResolve = resolve;
+                confirmTimer = setTimeout(function() { resolveConfirm(false); }, 60000);
             });
         }
 
         function resolveConfirm(confirmed) {
             if (confirmResolve) {
+                clearTimeout(confirmTimer);
                 confirmResolve(confirmed);
                 confirmResolve = null;
+                confirmTimer = null;
             }
         }
 
@@ -3659,6 +3663,7 @@ localStorage.setItem('ai_model', aiConfig.model);
             aiOperationLog = [];
             localStorage.removeItem(AI_HISTORY_KEY);
             localStorage.removeItem(AI_OPS_KEY);
+            resolveConfirm(false);
             const container = document.getElementById('aiChatMessages');
             if (container) container.innerHTML = '<div style="text-align:center;color:#666;padding:20px 0;">记忆已清除</div>';
             addAiChatMessage('系统', '对话记忆与操作记录已清除', 'system');
@@ -3715,7 +3720,11 @@ localStorage.setItem('ai_model', aiConfig.model);
             }
         }
 
+        let aiMessageInProgress = false;
+
         window.sendAiMessage = async function() {
+            if (aiMessageInProgress) return;
+
             const input = document.getElementById('aiChatInput');
             const message = input.value.trim();
             if (!message) return;
@@ -3730,7 +3739,9 @@ localStorage.setItem('ai_model', aiConfig.model);
 
             const sendBtn = document.getElementById('aiSendBtn');
             sendBtn.disabled = true;
+            input.disabled = true;
             sendBtn.textContent = '思考中...';
+            aiMessageInProgress = true;
 
             try {
                 const { AI_FUNCTION_DEFINITIONS, executeAiFunction, FUNCTION_DISPLAY_NAMES, RISKY_FUNCTIONS } = await loadAiFunctions();
@@ -3816,7 +3827,7 @@ localStorage.setItem('ai_model', aiConfig.model);
                             }
                         }
 
-                        if (turnActionDescs.length > 0) {
+                        if (turnActionDescs.length > 0 && riskyCalls.length === 0) {
                             var hasUndoRedo = safeCalls.some(function(tc) {
                                 return tc.function.name === 'undo' || tc.function.name === 'redo';
                             });
@@ -3838,8 +3849,8 @@ localStorage.setItem('ai_model', aiConfig.model);
 
                             var confirmed = await waitForConfirm();
 
-                            sendBtn.disabled = false;
-                            sendBtn.textContent = '发送';
+                            sendBtn.disabled = true;
+                            sendBtn.textContent = '\u601D\u8003\u4E2D...';
 
                             if (confirmed) {
                                 for (var i = 0; i < riskyCalls.length; i++) {
@@ -3867,22 +3878,35 @@ localStorage.setItem('ai_model', aiConfig.model);
 
                                     if (result.success) {
                                         turnActionDescs.push(displayName + (paramDesc ? ' ' + paramDesc : ''));
-                                        addAiChatMessage('assistant', '已执行: ' + displayName + (paramDesc ? ' ' + paramDesc : ''));
+                                        addAiChatMessage('assistant', '\u5DF2\u6267\u884C: ' + displayName + (paramDesc ? ' ' + paramDesc : ''));
                                     } else {
-                                        addAiChatMessage('assistant', '执行失败: ' + result.error, 'system');
+                                        addAiChatMessage('assistant', '\u6267\u884C\u5931\u8D25: ' + result.error, 'system');
                                     }
                                 }
 
-                                var hasReset = riskyCalls.some(function(tc) {
+                                var allCalls = safeCalls.concat(riskyCalls);
+                                var hasReset = allCalls.some(function(tc) {
                                     return tc.function.name === 'reset_image';
+                                });
+                                var hasUndoRedo = allCalls.some(function(tc) {
+                                    return tc.function.name === 'undo' || tc.function.name === 'redo';
                                 });
                                 if (hasReset) {
                                     aiOnImageReset();
-                                } else {
+                                } else if (!hasUndoRedo) {
                                     saveToHistory();
                                 }
                                 updateCanvas();
                             } else {
+                                if (turnActionDescs.length > 0) {
+                                    var hasUndoRedo = safeCalls.some(function(tc) {
+                                        return tc.function.name === 'undo' || tc.function.name === 'redo';
+                                    });
+                                    if (!hasUndoRedo) {
+                                        saveToHistory();
+                                    }
+                                    updateCanvas();
+                                }
                                 for (var i = 0; i < riskyCalls.length; i++) {
                                     var toolCall = riskyCalls[i];
                                     aiChatHistory.push({
@@ -3914,7 +3938,9 @@ localStorage.setItem('ai_model', aiConfig.model);
             } catch (error) {
                 addAiChatMessage('assistant', '错误: ' + error.message, 'system');
             } finally {
+                aiMessageInProgress = false;
                 sendBtn.disabled = false;
+                input.disabled = false;
                 sendBtn.textContent = '发送';
             }
         };
