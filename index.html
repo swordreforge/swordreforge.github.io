@@ -1424,6 +1424,71 @@
         #aiChatMessages::-webkit-scrollbar-thumb { background: #555; border-radius: 2px; }
         #aiChatInput:focus { border-color: #667eea; }
         #aiChatInput::placeholder { color: #888; }
+        .ai-confirm-card {
+            margin: 8px 0;
+            padding: 10px 12px;
+            background: #2a2520;
+            border-left: 3px solid #ff9800;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 0.85em;
+        }
+        .ai-confirm-card .confirm-title {
+            font-weight: 600;
+            color: #ff9800;
+            margin-bottom: 6px;
+        }
+        .ai-confirm-card .confirm-item {
+            padding: 2px 0;
+            padding-left: 12px;
+            color: #ccc;
+        }
+        .ai-confirm-card .confirm-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .ai-confirm-card .confirm-btn {
+            padding: 5px 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .ai-confirm-card .confirm-btn-execute {
+            background: #4aaa6b;
+            color: white;
+        }
+        .ai-confirm-card .confirm-btn-execute:hover {
+            background: #5bbb7c;
+        }
+        .ai-confirm-card .confirm-btn-cancel {
+            background: #555;
+            color: #ccc;
+        }
+        .ai-confirm-card .confirm-btn-cancel:hover {
+            background: #666;
+        }
+        .ai-confirm-card.resolved {
+            opacity: 0.5;
+            border-left-color: #555;
+        }
+        .ai-confirm-card.resolved .confirm-title {
+            color: #888;
+        }
+        .ai-confirm-card.resolved .confirm-btn {
+            cursor: default;
+            pointer-events: none;
+        }
+        .ai-confirm-card.resolved.confirmed .confirm-title::after {
+            content: ' — 已执行';
+            color: #4aaa6b;
+        }
+        .ai-confirm-card.resolved.cancelled .confirm-title::after {
+            content: ' — 已取消';
+            color: #ff6b6b;
+        }
 
         .ai-sidebar {
             width: 320px;
