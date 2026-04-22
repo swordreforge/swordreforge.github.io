@@ -11856,7 +11856,14 @@ closeAiConfigModal();
                 cropOverlay.parentNode.replaceChild(newCropOverlay, cropOverlay);
                 
                 // 重新添加多边形抠图的事件监听器
-                newCropOverlay.addEventListener('click', handlePolygonClick);
+                newCropOverlay.addEventListener('mousedown', handlePolygonMouseDown);
+                newCropOverlay.addEventListener('mousemove', handlePolygonMouseMove);
+                newCropOverlay.addEventListener('mouseup', handlePolygonMouseUp);
+                newCropOverlay.addEventListener('mouseleave', function(e) {
+                    if (polygonLassoDrawing) {
+                        handlePolygonMouseUp(e);
+                    }
+                });
                 newCropOverlay.addEventListener('contextmenu', handlePolygonContextMenu);
                 newCropOverlay.addEventListener('dblclick', handlePolygonDoubleClick);
             }
@@ -11906,10 +11913,13 @@ closeAiConfigModal();
                 alert(`预览失败: ${error.message}`);
                 if (maskPreviewImageData) {
                     try {
-                        // 提取纯 base64 数据（移除可能的 data URI 前缀）
-                        const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
-                        const originalBytes = base64_to_bytes(base64Data);
-                        appState.processor = ImageProcessor.new_from_bytes(originalBytes);
+                        if (maskPreviewImageData instanceof Uint8Array) {
+                            appState.processor = ImageProcessor.new_from_bytes(maskPreviewImageData);
+                        } else {
+                            const base64Data = maskPreviewImageData.includes(',') ? maskPreviewImageData.split(',')[1] : maskPreviewImageData;
+                            const originalBytes = base64_to_bytes(base64Data);
+                            appState.processor = ImageProcessor.new_from_bytes(originalBytes);
+                        }
                         updateCanvas();
                     } catch (e) {
                         console.error('Failed to restore image:', e);
@@ -12111,8 +12121,20 @@ closeAiConfigModal();
             appState.isPolygonCropMode = !appState.isPolygonCropMode;
 
             // 智能侧边栏：多边形抠图模式隐藏侧边栏，让用户专注于画布操作
+            // 禁用过渡动画，防止画布位置偏移导致坐标不准
             if (appState.isPolygonCropMode) {
-                hideSidebar();
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar) {
+                    sidebar.style.transition = 'none';
+                    hideSidebar();
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            sidebar.style.transition = '';
+                        });
+                    });
+                } else {
+                    hideSidebar();
+                }
             }
             const btn = document.getElementById('polygonCropBtn');
             const canvas = document.getElementById('imageCanvas');
@@ -12159,9 +12181,10 @@ closeAiConfigModal();
         // 定义多边形套索鼠标按下处理函数
         function handlePolygonMouseDown(e) {
             if (!appState.isPolygonCropMode || !appState.processor) return;
-            if (e.button !== 0) return; // 只响应左键
+            if (e.button !== 0) return;
 
             e.preventDefault();
+            e.stopPropagation();
 
             // 清空之前的数据
             polygonLassoPoints = [];
@@ -12189,6 +12212,7 @@ closeAiConfigModal();
             if (!appState.isPolygonCropMode || !polygonLassoDrawing || !appState.processor) return;
 
             e.preventDefault();
+            e.stopPropagation();
 
             const canvas = document.getElementById('imageCanvas');
             const rect = canvas.getBoundingClientRect();
@@ -12237,6 +12261,7 @@ closeAiConfigModal();
             if (!appState.isPolygonCropMode || !polygonLassoDrawing) return;
 
             e.preventDefault();
+            e.stopPropagation();
 
             finishPolygonLasso();
         }
