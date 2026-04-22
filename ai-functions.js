@@ -273,6 +273,57 @@ const AI_FUNCTION_DEFINITIONS = [
         name: "reset_image",
         description: "重置图像到原始状态，撤销所有修改",
         parameters: { type: "object", properties: {} }
+    },
+    {
+        name: "undo",
+        description: "撤销上一步操作。用户说'撤销'、'回退'、'刚才的不要了'、'恢复'等时使用",
+        parameters: { type: "object", properties: {} }
+    },
+    {
+        name: "redo",
+        description: "重做上一步被撤销的操作。用户说'重做'、'恢复刚才撤销的'时使用",
+        parameters: { type: "object", properties: {} }
+    },
+    {
+        name: "apply_circular_mask",
+        description: "圆形抠图/裁剪，保留指定圆形区域内的内容，其余变为透明",
+        parameters: {
+            type: "object",
+            properties: {
+                center_x: { type: "number", description: "圆心X坐标（像素），默认为图像宽度的一半" },
+                center_y: { type: "number", description: "圆心Y坐标（像素），默认为图像高度的一半" },
+                radius: { type: "number", description: "圆的半径（像素），默认为图像短边的30%" },
+                feather: { type: "number", description: "边缘羽化半径（像素），值越大边缘越柔和，默认2" }
+            },
+            required: []
+        }
+    },
+    {
+        name: "auto_crop_by_color",
+        description: "根据颜色自动抠图，保留与指定颜色相近的区域，其余变为透明",
+        parameters: {
+            type: "object",
+            properties: {
+                r: { type: "integer", description: "目标颜色红色通道0-255" },
+                g: { type: "integer", description: "目标颜色绿色通道0-255" },
+                b: { type: "integer", description: "目标颜色蓝色通道0-255" },
+                tolerance: { type: "integer", description: "颜色容差0-100，越大匹配范围越宽，默认30" },
+                feather: { type: "number", description: "边缘羽化半径，默认2" }
+            },
+            required: ["r", "g", "b"]
+        }
+    },
+    {
+        name: "smart_crop",
+        description: "智能抠图，自动检测并抠出图像中的主体（人物/物体），去除背景",
+        parameters: {
+            type: "object",
+            properties: {
+                threshold: { type: "integer", description: "边缘检测阈值，越高越严格，默认50" },
+                feather: { type: "number", description: "边缘羽化半径，默认2" }
+            },
+            required: []
+        }
     }
 ];
 
@@ -419,6 +470,12 @@ function executeAiFunction(processor, functionName, params) {
             case "reset_image":
                 processor.reset();
                 break;
+            case "undo":
+            case "redo":
+            case "apply_circular_mask":
+            case "auto_crop_by_color":
+            case "smart_crop":
+                return { success: true, action: functionName, params: params, needsSpecialHandling: true };
             default:
                 return { success: false, error: "未知操作: " + functionName };
         }
@@ -453,7 +510,12 @@ const FUNCTION_DISPLAY_NAMES = {
     draw_text: "添加文字",
     rotate_image: "旋转",
     flip_image: "翻转",
-    reset_image: "重置"
+    reset_image: "重置",
+    undo: "撤销",
+    redo: "重做",
+    apply_circular_mask: "圆形抠图",
+    auto_crop_by_color: "颜色抠图",
+    smart_crop: "智能抠图"
 };
 
 export { AI_FUNCTION_DEFINITIONS, executeAiFunction, FUNCTION_DISPLAY_NAMES };

@@ -3133,18 +3133,100 @@
         const AI_OPS_KEY = 'ai_operation_log';
         const AI_IMAGE_ID_KEY = 'ai_image_id';
 
-        const BASE_SYSTEM_PROMPT = `你是一个图像编辑助手。用户会用中文告诉你他们想要对图像做什么修改。
-你需要调用合适的函数来完成任务。可用的函数包括：
-- 基础调整：亮度、对比度、饱和度、色相、色温
-- 效果滤镜：预设滤镜、灰度、复古、反色、二值化、锐化、模糊
-- 胶片/风格：暗角(vignette)、叠色(tint)、噪点(noise)、双色调(duotone)、曝光过度(solarize)
-- 特效：像素化、油画、浮雕
-- 绘制：笔刷绘制(draw_brush_stroke)、添加文字(draw_text)
-- 变换：旋转、翻转
-- 重置图像
+        const BASE_SYSTEM_PROMPT = `你是一个专业的图像编辑助手。用户会用中文描述想要的编辑效果，你需要理解意图并调用合适的函数。
 
-笔刷绘制说明：points为[[x,y],...]路径点数组，坐标原点在左上角，支持5种笔刷类型(basic/pencil/marker/watercolor/eraser)。
-如果需要多步操作，请一次性调用所有需要的函数。回复简洁中文说明你做了什么。`;
+## 可用函数
+
+### 基础调整
+- adjust_brightness(level) — 亮度，-255到255（-100变暗/100变亮为常用范围）
+- adjust_contrast(level) — 对比度，-255到255（常用±50~100）
+- adjust_saturation(level) — 饱和度，-1到1（-0.5降饱和/0.5增饱和）
+- adjust_hue(level) — 色相旋转，-360到360（±30为微调，±90为大幅偏色）
+- adjust_temperature(value) — 色温，-100到100（正值暖色偏黄橙，负值冷色偏蓝）
+
+### 效果/滤镜
+- apply_filter(name) — 预设滤镜，可选：oceanic, islands, marine, seagreen, flagblue, diamante, liquid, radio, twenties, rosetint, mauve, bluechrome, vintage, perfume, serenity, golden, pastel_pink, cali, dramatic, firenze, obsidian, lofi
+- apply_grayscale() — 黑白
+- apply_sepia() — 复古褐色调
+- apply_invert() — 反色/负片
+- apply_threshold(threshold) — 二值化，阈值0-255，默认128
+- apply_sharpen(strength) — 锐化，0-10（1轻微/5中等/10强烈）
+- apply_blur(type, radius) — 模糊，type: gaussian/box，radius 1-20
+
+### 胶片/风格
+- apply_vignette(intensity, radius) — 暗角，intensity 0-1（0.3-0.7常用），radius 0-1（越小暗角越大）
+- apply_tint(r, g, b) — 整体偏色，RGB各0-255
+- apply_noise(strength) — 胶片颗粒，0-200（30轻微/80中等/150粗粒）
+- apply_solarize() — 曝光过度/日晒效果
+- apply_duotone(r1,g1,b1, r2,g2,b2) — 双色调，暗部和亮部各一个RGB
+
+### 特效
+- apply_pixelate(pixel_size) — 像素化/马赛克，2-50
+- apply_oil(radius, intensity) — 油画，radius 1-5，intensity 1-10
+- apply_emboss() — 浮雕效果
+
+### 绘制
+- draw_brush_stroke(points, color, width, opacity, brush_type) — 笔刷绘制
+  points: [[x,y],...]路径点，坐标原点左上角，x向右y向下
+  color: 十六进制如#FF0000
+  width: 1-100
+  opacity: 0.0-1.0
+  brush_type: basic/pencil/marker/watercolor/eraser
+- draw_text(text, x, y, font_size, color, has_shadow) — 添加文字
+  坐标原点左下角，font_size 10-200默认36
+
+### 变换
+- rotate_image(angle) — 旋转，90的倍数
+- flip_image(direction) — 翻转，horizontal/vertical
+- reset_image() — 重置到原始状态
+
+### 撤销/重做
+- undo() — 撤销上一步操作
+- redo() — 重做被撤销的操作
+
+### 抠图
+- apply_circular_mask(center_x, center_y, radius, feather) — 圆形抠图，保留圆内区域。不传参数则默认居中、短边30%半径
+- auto_crop_by_color(r, g, b, tolerance, feather) — 按颜色抠图，保留与目标色相近的区域。tolerance默认30
+- smart_crop(threshold, feather) — 智能抠图，自动检测主体去背景。threshold默认50
+
+## 常见意图映射
+
+| 用户说法 | 应调用 |
+|---------|--------|
+| 太暗了/调亮一点 | adjust_brightness(30~60) |
+| 太亮了/调暗 | adjust_brightness(-30~-60) |
+| 对比不够/加强对比 | adjust_contrast(50~100) |
+| 色彩太淡/鲜艳一点 | adjust_saturation(0.3~0.5) |
+| 颜色太艳/素一点 | adjust_saturation(-0.3~-0.5) |
+| 偏冷/偏蓝 | adjust_temperature(-30~-60) |
+| 偏暖/偏黄 | adjust_temperature(30~60) |
+| 想要胶片感 | apply_vignette(0.5,0.5) + apply_noise(30~50) |
+| 想要复古风 | apply_sepia() 或 apply_filter("vintage") |
+| 有点模糊/不够清晰 | apply_sharpen(2~4) |
+| 马赛克/打码 | apply_pixelate(10~30) |
+| 黑白/去色 | apply_grayscale() |
+| 想要电影感 | apply_filter("dramatic") 或 apply_filter("lofi") |
+| 让它好看一点 | 适当组合：adjust_brightness(20) + adjust_contrast(30) + adjust_saturation(0.2) |
+| 太平淡了 | adjust_contrast(40~60) + adjust_saturation(0.3) |
+| 撤销/回退/不要了 | undo() |
+| 重做/刚才的去掉了想恢复 | redo() |
+| 去掉背景/抠出主体 | smart_crop() |
+| 做个圆形头像/圆形裁剪 | apply_circular_mask() |
+| 去除白色背景 | auto_crop_by_color(255, 255, 255, 40) |
+
+## 边界情况
+
+1. 用户说"再亮一点"——基于当前状态微调，用小幅度(15~25)，不要重复使用大幅值
+2. 用户说"算了/太过了/刚才的不要了"——调用undo()撤销
+3. 用户说"恢复刚才撤销的"——调用redo()重做
+4. 用户要求的功能不存在时——诚实告知不在支持范围，推荐最接近的替代方案
+5. 参数超出范围——自动clamp到合理范围，如用户说"亮度加1000"，用adjust_brightness(255)
+6. 用户说"和上次一样"——参考操作历史中的参数复用
+
+## 多步操作
+可以一次调用多个函数，按顺序执行。例如"让它更有质感"可以同时调用 adjust_brightness(15) + adjust_contrast(40) + apply_vignette(0.4, 0.6)。
+
+回复用简洁中文说明做了什么，不要解释函数参数含义。`;
 
         let aiOperationLog = [];
         let aiCurrentImageId = '';
@@ -3216,6 +3298,9 @@
 
         function buildSystemPrompt() {
             let prompt = BASE_SYSTEM_PROMPT;
+            if (appState.processor) {
+                prompt += '\n\n当前图像尺寸: ' + appState.processor.get_width() + 'x' + appState.processor.get_height() + ' 像素。绘制和文字坐标请参考此尺寸。';
+            }
             const opSummary = buildOperationSummary();
             if (opSummary) {
                 prompt += '\n\n' + opSummary;
@@ -3229,24 +3314,54 @@
 
         function compressHistory(history) {
             if (history.length <= 8) return history;
-            const recent = history.slice(-6);
-            const old = history.slice(0, -6);
-            const compressed = [];
-            let userParts = [];
-            let toolParts = [];
 
-            for (let i = 0; i < old.length; i++) {
-                const msg = old[i];
-                if (msg.role === 'user') {
-                    userParts.push(msg.content);
+            // Group messages into logical units that must stay together:
+            // - standalone: user, assistant(text), system, assistant summary
+            // - tool_call_group: assistant(tool_calls) + all following tool responses
+            const groups = [];
+            let i = 0;
+            while (i < history.length) {
+                const msg = history[i];
+                if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
+                    const group = [msg];
+                    i++;
+                    while (i < history.length && history[i].role === 'tool') {
+                        group.push(history[i]);
+                        i++;
+                    }
+                    groups.push(group);
                 } else if (msg.role === 'tool') {
-                    try {
-                        const parsed = JSON.parse(msg.content);
-                        if (parsed.success && parsed.action) toolParts.push(parsed.action);
-                    } catch(e) {}
+                    // Orphaned tool message without parent, skip it
+                    i++;
+                } else {
+                    groups.push([msg]);
+                    i++;
                 }
             }
 
+            if (groups.length <= 4) return history;
+
+            // Compress old groups into a summary
+            const keepCount = 4;
+            const oldGroups = groups.slice(0, groups.length - keepCount);
+            const recentGroups = groups.slice(groups.length - keepCount);
+
+            let userParts = [];
+            let toolParts = [];
+            for (const group of oldGroups) {
+                for (const msg of group) {
+                    if (msg.role === 'user') {
+                        userParts.push(msg.content);
+                    } else if (msg.role === 'tool') {
+                        try {
+                            const parsed = JSON.parse(msg.content);
+                            if (parsed.success && parsed.action) toolParts.push(parsed.action);
+                        } catch(e) {}
+                    }
+                }
+            }
+
+            const compressed = [];
             if (userParts.length > 0 || toolParts.length > 0) {
                 let summary = '[对话摘要] ';
                 if (userParts.length > 0) summary += '用户曾要求: ' + userParts.join('；');
@@ -3254,7 +3369,15 @@
                 compressed.push({ role: 'assistant', content: summary });
             }
 
-            return compressed.concat(recent);
+            // Flatten recent groups back into messages
+            const result = compressed.slice();
+            for (const group of recentGroups) {
+                for (const msg of group) {
+                    result.push(msg);
+                }
+            }
+
+            return result;
         }
 
         function estimateTokens(text) {
@@ -3266,21 +3389,60 @@
             const systemPrompt = buildSystemPrompt();
             const systemTokens = estimateTokens(systemPrompt);
 
+            // Group messages into logical units that must stay together
+            const groups = [];
+            let i = 0;
+            while (i < compressed.length) {
+                const msg = compressed[i];
+                if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
+                    const group = [msg];
+                    i++;
+                    while (i < compressed.length && compressed[i].role === 'tool') {
+                        group.push(compressed[i]);
+                        i++;
+                    }
+                    groups.push(group);
+                } else if (msg.role === 'tool') {
+                    // Orphaned tool message without parent, skip it
+                    i++;
+                } else {
+                    groups.push([msg]);
+                    i++;
+                }
+            }
+
             let messages = [{ role: 'system', content: systemPrompt }];
             let totalTokens = systemTokens;
             const MAX_CONTEXT_TOKENS = 4000;
 
-            for (let i = compressed.length - 1; i >= 0; i--) {
-                const msg = compressed[i];
-                const content = msg.content || '';
-                const msgTokens = estimateTokens(content) + 20;
-                if (totalTokens + msgTokens > MAX_CONTEXT_TOKENS) break;
-                messages.splice(1, 0, msg);
-                totalTokens += msgTokens;
+            // Add groups from newest to oldest, respecting token budget
+            for (let g = groups.length - 1; g >= 0; g--) {
+                const group = groups[g];
+                let groupTokens = 0;
+                for (const msg of group) {
+                    const content = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content || '');
+                    groupTokens += estimateTokens(content) + 20;
+                }
+                // Estimate tool_calls tokens
+                if (group[0].tool_calls) {
+                    groupTokens += estimateTokens(JSON.stringify(group[0].tool_calls)) + 20;
+                }
+                if (totalTokens + groupTokens > MAX_CONTEXT_TOKENS) break;
+                // Insert group messages in correct order at position 1
+                for (let m = group.length - 1; m >= 0; m--) {
+                    messages.splice(1, 0, group[m]);
+                }
+                totalTokens += groupTokens;
             }
 
+            // Fallback: ensure at least one user message is included
             if (messages.length < 2 && compressed.length > 0) {
-                messages.splice(1, 0, compressed[compressed.length - 1]);
+                for (let j = compressed.length - 1; j >= 0; j--) {
+                    if (compressed[j].role === 'user') {
+                        messages.splice(1, 0, compressed[j]);
+                        break;
+                    }
+                }
             }
 
             return messages;
@@ -3416,7 +3578,7 @@ closeAiConfigModal();
                             messages: apiMessages,
                             tools: tools,
                             tool_choice: 'auto',
-                            max_tokens: 500
+                            max_tokens: 1024
                         })
                     });
 
@@ -3438,7 +3600,56 @@ closeAiConfigModal();
                             const toolCall = assistantMsg.tool_calls[i];
                             const fnName = toolCall.function.name;
                             const fnParams = JSON.parse(toolCall.function.arguments);
-                            const result = executeAiFunction(appState.processor, fnName, fnParams);
+
+                            let result;
+                            if (fnName === 'undo') {
+                                try {
+                                    await undo();
+                                    result = { success: true, action: fnName, params: fnParams };
+                                } catch(e) {
+                                    result = { success: false, error: e.message };
+                                }
+                            } else if (fnName === 'redo') {
+                                try {
+                                    await redo();
+                                    result = { success: true, action: fnName, params: fnParams };
+                                } catch(e) {
+                                    result = { success: false, error: e.message };
+                                }
+                            } else if (fnName === 'apply_circular_mask') {
+                                try {
+                                    const w = appState.processor.get_width();
+                                    const h = appState.processor.get_height();
+                                    const cx = fnParams.center_x !== undefined ? fnParams.center_x : w / 2;
+                                    const cy = fnParams.center_y !== undefined ? fnParams.center_y : h / 2;
+                                    const r = fnParams.radius !== undefined ? fnParams.radius : Math.min(w, h) * 0.3;
+                                    const f = fnParams.feather !== undefined ? fnParams.feather : 2;
+                                    appState.processor.apply_circular_mask(cx, cy, r, f);
+                                    result = { success: true, action: fnName, params: fnParams };
+                                } catch(e) {
+                                    result = { success: false, error: e.message };
+                                }
+                            } else if (fnName === 'auto_crop_by_color') {
+                                try {
+                                    const tol = fnParams.tolerance !== undefined ? fnParams.tolerance : 30;
+                                    const f = fnParams.feather !== undefined ? fnParams.feather : 2;
+                                    appState.processor.auto_crop_by_color(fnParams.r, fnParams.g, fnParams.b, tol, f);
+                                    result = { success: true, action: fnName, params: fnParams };
+                                } catch(e) {
+                                    result = { success: false, error: e.message };
+                                }
+                            } else if (fnName === 'smart_crop') {
+                                try {
+                                    const t = fnParams.threshold !== undefined ? fnParams.threshold : 50;
+                                    const f = fnParams.feather !== undefined ? fnParams.feather : 2;
+                                    appState.processor.smart_crop(t, f);
+                                    result = { success: true, action: fnName, params: fnParams };
+                                } catch(e) {
+                                    result = { success: false, error: e.message };
+                                }
+                            } else {
+                                result = executeAiFunction(appState.processor, fnName, fnParams);
+                            }
                             const displayName = FUNCTION_DISPLAY_NAMES[fnName] || fnName;
                             const paramDesc = Object.entries(fnParams).map(function(e) { return e[0] + '=' + e[1]; }).join(', ');
 
@@ -3464,7 +3675,14 @@ closeAiConfigModal();
                         }
 
                         allActionDescs = allActionDescs.concat(turnActionDescs);
-                        saveToHistory();
+                        if (turnActionDescs.length > 0) {
+                            const hasUndoRedo = assistantMsg.tool_calls.some(function(tc) {
+                                return tc.function.name === 'undo' || tc.function.name === 'redo';
+                            });
+                            if (!hasUndoRedo) {
+                                saveToHistory();
+                            }
+                        }
                         updateCanvas();
 
                         if (choice.finish_reason === 'stop') break;
