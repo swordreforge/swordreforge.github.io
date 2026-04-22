@@ -3754,7 +3754,8 @@ localStorage.setItem('ai_model', aiConfig.model);
                     return { success: false, error: e.message };
                 }
             } else {
-                return executeAiFunction(appState.processor, fnName, fnParams);
+                if (!aiFunctionsModule) aiFunctionsModule = await loadAiFunctions();
+                return aiFunctionsModule.executeAiFunction(appState.processor, fnName, fnParams);
             }
         }
 
