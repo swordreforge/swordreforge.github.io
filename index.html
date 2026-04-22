@@ -3820,7 +3820,12 @@ localStorage.setItem('ai_model', aiConfig.model);
                             var hasUndoRedo = safeCalls.some(function(tc) {
                                 return tc.function.name === 'undo' || tc.function.name === 'redo';
                             });
-                            if (!hasUndoRedo) {
+                            var hasReset = safeCalls.some(function(tc) {
+                                return tc.function.name === 'reset_image';
+                            });
+                            if (hasReset) {
+                                aiOnImageReset();
+                            } else if (!hasUndoRedo) {
                                 saveToHistory();
                             }
                             updateCanvas();
