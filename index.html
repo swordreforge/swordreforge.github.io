@@ -9619,6 +9619,20 @@ localStorage.setItem('ai_model', aiConfig.model);
                         document.getElementById('imageSize').textContent = `${width} x ${height}`;
                         document.getElementById('imageFormat').textContent = file.type.split('/')[1].toUpperCase();
 
+                        // 更新 AI 超分状态
+                        var srStatusEl = document.getElementById('srStatus');
+                        if (srStatusEl) {
+                            if (width > 1024 || height > 1024) {
+                                srStatusEl.textContent = '⚠️ 图片太大，请使用 ≤1024x1024';
+                            } else {
+                                srStatusEl.textContent = '✅ 图片已加载，可以开始超分';
+                            }
+                        }
+
+                        // 启用超分按钮
+                        var srBtn = document.getElementById('srBtn');
+                        if (srBtn) srBtn.disabled = (width > 1024 || height > 1024);
+
                         // 清空历史记录，防止用户通过撤销/重做回到之前的图片
                         clearHistory();
 
