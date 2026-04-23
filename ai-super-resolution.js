@@ -2,7 +2,7 @@
 async function loadTf() {
     if (window.tf) return window.tf;
     var tfLib = await import('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/+esm');
-    window.tf = tfLib.tf;
+    window.tf = tfLib.default || tfLib;
     return window.tf;
 }
 
