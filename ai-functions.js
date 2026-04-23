@@ -544,6 +544,8 @@ function executeAiFunction(processor, functionName, params) {
             case "auto_crop_by_color":
             case "smart_crop":
                 return { success: true, action: functionName, params: params, needsSpecialHandling: true };
+            case "super_resolution_2x":
+                return { success: true, action: functionName, params: params, needsSpecialHandling: true };
             default:
                 return { success: false, error: "未知操作: " + functionName };
         }

@@ -2885,6 +2885,14 @@
                     <div style="margin-top: 8px; font-size: 0.8em; color: #999;">
                         💡 简单算法无需AI模型，速度较快
                     </div>
+                    <hr style="border: none; border-top: 1px solid #444; margin: 16px 0;">
+                    <h4 style="margin: 0 0 8px 0; color: #667eea;">🖼️ AI 超分辨率</h4>
+                    <div id="srStatus" style="padding: 6px 10px; background: #333; border-radius: 6px; font-size: 0.85em; color: #888; margin-bottom: 8px;">
+                        ⏳ 等待图片加载...
+                    </div>
+                    <div class="btn-group" style="margin-top: 8px;">
+                        <button class="btn btn-primary" onclick="applySuperResolution()" id="srBtn" disabled>📈 2x 超分</button>
+                    </div>
                 </div>
 
                 <div class="section">
@@ -8552,6 +8560,13 @@ localStorage.setItem('ai_model', aiConfig.model);
             document.getElementById('ncnnSharpenStrength').disabled = !ncnnReady;
             document.getElementById('ncnnDenoiseKernel').disabled = !ncnnReady;
 
+            // AI 超分按钮
+            if (appState.currentImage) {
+                var w = appState.processor ? appState.processor.get_width() : 0;
+                var h = appState.processor ? appState.processor.get_height() : 0;
+                document.getElementById('srBtn').disabled = (w > 1024 || h > 1024);
+            }
+
             // 启用滑块
             const sliders = document.querySelectorAll('input[type="range"]');
             sliders.forEach(slider => {
@@ -13471,6 +13486,84 @@ localStorage.setItem('ai_model', aiConfig.model);
             }
 
             showLoading(false);
+        };
+
+        // AI 2x 超分辨率
+        var srModule = null;
+        async function loadSrModule() {
+            if (srModule) return srModule;
+            try {
+                srModule = await import('./ai-super-resolution.js');
+                return srModule;
+            } catch (e) {
+                console.error('加载超分模块失败:', e);
+                return null;
+            }
+        }
+
+        window.applySuperResolution = async function() {
+            if (!appState.processor) {
+                alert('请先加载图片');
+                return;
+            }
+
+            var srStatusEl = document.getElementById('srStatus');
+            var srBtn = document.getElementById('srBtn');
+            srStatusEl.textContent = '⏳ 加载模型中...';
+            srBtn.disabled = true;
+
+            try {
+                var SrClass = await loadSrModule();
+                if (!SrClass) {
+                    throw new Error('超分模块加载失败');
+                }
+
+                var sr = new SrClass.default();
+                await sr.load();
+                srStatusEl.textContent = '✅ 模型已加载';
+
+                var width = appState.processor.get_width();
+                var height = appState.processor.get_height();
+
+                if (width > 1024 || height > 1024) {
+                    srStatusEl.textContent = '⚠️ 图片太大，请使用 ≤1024x1024';
+                    srBtn.disabled = false;
+                    return;
+                }
+
+                srStatusEl.textContent = '⏳ 处理中...';
+
+                var canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                var ctx = canvas.getContext('2d');
+                var imageData = ctx.createImageData(width, height);
+                var pixels = appState.processor.get_raw_pixels();
+                imageData.data.set(pixels);
+
+                var startTime = performance.now();
+                var resultData = await sr.process(imageData, function(progress) {
+                    srStatusEl.textContent = '⏳ 处理中... ' + progress + '%';
+                });
+                var elapsed = (performance.now() - startTime) / 1000;
+
+                var newWidth = width * 2;
+                var newHeight = height * 2;
+                appState.processor = new ImageProcessor(newWidth, newHeight, resultData.data);
+                saveToHistory();
+                updateCanvas();
+
+                srStatusEl.textContent = '✅ 完成! 耗时: ' + elapsed.toFixed(1) + 's';
+                Logger.info('AI 超分完成: ' + width + 'x' + height + ' -> ' + newWidth + 'x' + newHeight + ', 耗时: ' + elapsed.toFixed(1) + 's');
+
+                sr.dispose();
+            } catch (error) {
+                Logger.error('AI 超分失败:', error);
+                srStatusEl.textContent = '❌ 错误: ' + error.message;
+                alert('AI 超分失败: ' + error.message);
+            }
+
+            srBtn.disabled = false;
         };
 
         // 重置图片
