@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 NCNN to ONNX converter for Real-ESRGANv2-anime x2 model.
-Fixed: Load weights as float16, not float32.
+Fixed: Load weights as float16, preserve as float32.
 """
 import numpy as np
 import onnx
@@ -9,15 +9,16 @@ from onnx import helper, TensorProto, numpy_helper
 
 
 def load_ncnn_weights_float16(bin_file):
-    """Load ncnn bin file - correctly interpreting as float16 quantized."""
+    """Load ncnn bin file - correctly interpreting as float16 quantized, stored as float32."""
     with open(bin_file, 'rb') as f:
         raw = f.read()
     
     # Key fix: bin file is float16 quantized stored as uint16
     uints = np.frombuffer(raw, dtype=np.uint16)
+    # Preserve as float32 (not quantized)
     weights = uints.view(np.float16).astype(np.float32)
     
-    print(f"Total weights (float32 equiv): {len(weights)}")
+    print(f"Total weights (float32): {len(weights)}")
     return weights
 
 
@@ -86,8 +87,6 @@ def create_esrgan_onnx(bin_file, output_file):
     init_list.append(numpy_helper.from_array(w_final, name='conv_final_weight'))
     init_list.append(numpy_helper.from_array(b_final, name='conv_final_bias'))
     
-    # 跳过 Split/Interp/Add 分支 - 简化为单分支输出
-    # 直接 PixelShuffle 上采样 2x
     nodes.append(helper.make_node(
         'Conv', [prev, 'conv_final_weight', 'conv_final_bias'],
         ['conv_final_out'], name='conv_final',
