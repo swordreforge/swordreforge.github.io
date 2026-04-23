@@ -349,6 +349,17 @@ const AI_FUNCTION_DEFINITIONS = [
             },
             required: []
         }
+    },
+    {
+        name: "super_resolution_2x",
+        description: "AI 2x 超分放大 (使用 Real-ESRGAN)",
+        parameters: {
+            type: "object",
+            properties: {
+                model: { type: "string", description: "超分模型类型", enum: ["esrgan-anime"] }
+            },
+            required: ["model"]
+        }
     }
 ];
 
@@ -573,7 +584,8 @@ const FUNCTION_DISPLAY_NAMES = {
     redo: "重做",
     apply_circular_mask: "圆形抠图",
     auto_crop_by_color: "颜色抠图",
-    smart_crop: "智能抠图"
+    smart_crop: "智能抠图",
+    super_resolution_2x: "AI超分"
 };
 
 const RISKY_FUNCTIONS = new Set([
