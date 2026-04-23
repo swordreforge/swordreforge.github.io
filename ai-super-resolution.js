@@ -1,0 +1,124 @@
+import * as tf from '@tensorflow/tfjs';
+
+const TILE_SIZE = 512;
+const OVERLAP = 10;
+
+class SuperResolution {
+    constructor() {
+        this.model = null;
+        this.modelUrl = 'models/real_esrgan_x2_webgl/model.json';
+        this.loaded = false;
+    }
+
+    async load() {
+        if (this.loaded) return;
+        this.model = await tf.loadGraphModel(this.modelUrl);
+        this.loaded = true;
+    }
+
+    async process(imageData, onProgress, scale = 2) {
+        await this.load();
+
+        const width = imageData.width;
+        const height = imageData.height;
+        const totalPixels = width * height;
+
+        if (width <= TILE_SIZE && height <= TILE_SIZE) {
+            return await this.processFull(imageData, scale);
+        }
+
+        return await this.processTiled(imageData, width, height, scale, onProgress);
+    }
+
+    async processFull(imageData, scale) {
+        const tensor = tf.browser.fromPixels(imageData);
+        const expanded = tensor.expandDims(0);
+        const normalized = expanded.div(255.0);
+
+        const result = this.model.predict(normalized);
+        const output = result.squeeze().mul(255.0);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = imageData.width * scale;
+        canvas.height = imageData.height * scale;
+        const outputImageData = await tf.browser.toPixels(output, canvas);
+        return outputImageData;
+    }
+
+    async processTiled(imageData, width, height, scale, onProgress) {
+        const scaledWidth = width * scale;
+        const scaledHeight = height * scale;
+        const outputCanvas = document.createElement('canvas');
+        outputCanvas.width = scaledWidth;
+        outputCanvas.height = scaledHeight;
+        const outputCtx = outputCanvas.getContext('2d');
+        const outputImageData = outputCtx.getImageData(0, 0, scaledWidth, scaledHeight);
+
+        const tileSize = TILE_SIZE;
+        const step = tileSize - OVERLAP;
+        const tilesX = Math.ceil((width - OVERLAP) / step);
+        const tilesY = Math.ceil((height - OVERLAP) / step);
+        const totalTiles = tilesX * tilesY;
+        let processedTiles = 0;
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = width;
+        tempCanvas.height = height;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(imageData, 0, 0);
+
+        for (let y = 0; y < height; y += step) {
+            for (let x = 0; x < width; x += step) {
+                const tileW = Math.min(tileSize, width - x);
+                const tileH = Math.min(tileSize, height - y);
+
+                const tileImageData = tempCtx.getImageData(x, y, tileW, tileH);
+
+                const tensor = tf.browser.fromPixels(tileImageData);
+                const expanded = tensor.expandDims(0);
+                const normalized = expanded.div(255.0);
+
+                const result = this.model.predict(normalized);
+                const outputTensor = result.squeeze().mul(255.0);
+
+                const scaledTileW = tileW * scale;
+                const scaledTileH = tileH * scale;
+                const tileCanvas = document.createElement('canvas');
+                tileCanvas.width = scaledTileW;
+                tileCanvas.height = scaledTileH;
+                const tiledImageData = await tf.browser.toPixels(outputTensor, tileCanvas);
+
+                const scaledX = x * scale;
+                const scaledY = y * scale;
+
+                for (let ty = 0; ty < scaledTileH; ty++) {
+                    for (let tx = 0; tx < scaledTileW; tx++) {
+                        const dstIdx = (scaledY + ty) * scaledWidth * 4 + (scaledX + tx) * 4;
+                        const srcIdx = ty * scaledTileW * 4 + tx * 4;
+                        outputImageData.data[dstIdx] = tiledImageData.data[srcIdx];
+                        outputImageData.data[dstIdx + 1] = tiledImageData.data[srcIdx + 1];
+                        outputImageData.data[dstIdx + 2] = tiledImageData.data[srcIdx + 2];
+                        outputImageData.data[dstIdx + 3] = tiledImageData.data[srcIdx + 3];
+                    }
+                }
+
+                processedTiles++;
+                if (onProgress) {
+                    onProgress(Math.round((processedTiles / totalTiles) * 100));
+                }
+            }
+        }
+
+        outputCtx.putImageData(outputImageData, 0, 0);
+        return outputCtx.getImageData(0, 0, scaledWidth, scaledHeight);
+    }
+
+    dispose() {
+        if (this.model) {
+            this.model.dispose();
+            this.loaded = false;
+        }
+    }
+}
+
+export default SuperResolution;
