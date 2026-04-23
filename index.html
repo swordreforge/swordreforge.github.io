@@ -1573,7 +1573,7 @@
                             <div class="menu-category">预设尺寸</div>
                             <div class="menu-items">
                                 <button class="menu-item" onclick="createNewCanvas(800, 600)">800×600</button>
-                                <button class="menu-item" onclick="createNewCanvas(1024, 768)">1024×768</button>
+                                <button class="menu-item" onclick="createNewCanvas(2048, 768)">2048×768</button>
                                 <button class="menu-item" onclick="createNewCanvas(1920, 1080)">1920×1080</button>
                                 <button class="menu-item" onclick="createNewCanvas(500, 500)">500×500</button>
                             </div>
@@ -3814,7 +3814,7 @@ localStorage.setItem('ai_model', aiConfig.model);
                             messages: apiMessages,
                             tools: tools,
                             tool_choice: 'auto',
-                            max_tokens: 1024
+                            max_tokens: 2048
                         })
                     });
 
@@ -4910,9 +4910,9 @@ localStorage.setItem('ai_model', aiConfig.model);
             if (window.performance && window.performance.memory) {
                 const memory = window.performance.memory;
                 const memoryInfo = {
-                    used: Math.round(memory.usedJSHeapSize / 1024 / 1024) + ' MB',
-                    total: Math.round(memory.totalJSHeapSize / 1024 / 1024) + ' MB',
-                    limit: Math.round(memory.jsHeapSizeLimit / 1024 / 1024) + ' MB',
+                    used: Math.round(memory.usedJSHeapSize / 2048 / 2048) + ' MB',
+                    total: Math.round(memory.totalJSHeapSize / 2048 / 2048) + ' MB',
+                    limit: Math.round(memory.jsHeapSizeLimit / 2048 / 2048) + ' MB',
                     usedRaw: memory.usedJSHeapSize,
                     totalRaw: memory.totalJSHeapSize,
                     limitRaw: memory.jsHeapSizeLimit
@@ -8564,7 +8564,7 @@ localStorage.setItem('ai_model', aiConfig.model);
             if (appState.currentImage) {
                 var w = appState.processor ? appState.processor.get_width() : 0;
                 var h = appState.processor ? appState.processor.get_height() : 0;
-                document.getElementById('srBtn').disabled = (w > 1024 || h > 1024);
+                document.getElementById('srBtn').disabled = (w > 2048 || h > 2048);
             }
 
             // 启用滑块
@@ -9622,8 +9622,8 @@ localStorage.setItem('ai_model', aiConfig.model);
                         // 更新 AI 超分状态
                         var srStatusEl = document.getElementById('srStatus');
                         if (srStatusEl) {
-                            if (width > 1024 || height > 1024) {
-                                srStatusEl.textContent = '⚠️ 图片太大，请使用 ≤1024x1024';
+                            if (width > 2048 || height > 2048) {
+                                srStatusEl.textContent = '⚠️ 图片太大，请使用 ≤2048x2048';
                             } else {
                                 srStatusEl.textContent = '✅ 图片已加载，可以开始超分';
                             }
@@ -9631,7 +9631,7 @@ localStorage.setItem('ai_model', aiConfig.model);
 
                         // 启用超分按钮
                         var srBtn = document.getElementById('srBtn');
-                        if (srBtn) srBtn.disabled = (width > 1024 || height > 1024);
+                        if (srBtn) srBtn.disabled = (width > 2048 || height > 2048);
 
                         // 清空历史记录，防止用户通过撤销/重做回到之前的图片
                         clearHistory();
@@ -13539,8 +13539,8 @@ localStorage.setItem('ai_model', aiConfig.model);
                 var width = appState.processor.get_width();
                 var height = appState.processor.get_height();
 
-                if (width > 1024 || height > 1024) {
-                    srStatusEl.textContent = '⚠️ 图片太大，请使用 ≤1024x1024';
+                if (width > 2048 || height > 2048) {
+                    srStatusEl.textContent = '⚠️ 图片太大，请使用 ≤2048x2048';
                     srBtn.disabled = false;
                     return;
                 }
@@ -14674,9 +14674,9 @@ function updateCanvas() {
 
             // 更新文件大小显示（只在值变化时更新DOM）
             const fileSize = Number(appState.processor.get_estimated_filesize());
-            const fileSizeKB = (fileSize / 1024).toFixed(2);
-            const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
-            const fileSizeStr = fileSize > 1024 * 1024
+            const fileSizeKB = (fileSize / 2048).toFixed(2);
+            const fileSizeMB = (fileSize / (2048 * 2048)).toFixed(2);
+            const fileSizeStr = fileSize > 2048 * 2048
                 ? `${fileSizeMB} MB`
                 : `${fileSizeKB} KB`;
             // 只在文件大小变化时更新DOM
