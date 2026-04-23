@@ -33,3 +33,7 @@ Thumbs.db
 photon-wasm/
 photon-wasm/pkg/
 photon-wasm/target/
+
+# Worktrees
+.worktrees/
+worktrees/
