@@ -1,4 +1,10 @@
-import * as tf from '@tensorflow/tfjs';
+// 使用 TFJS CDN (在运行时加载)
+async function loadTf() {
+    if (window.tf) return window.tf;
+    var tfLib = await import('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/+esm');
+    window.tf = tfLib.tf;
+    return window.tf;
+}
 
 const TILE_SIZE = 512;
 const OVERLAP = 10;
@@ -12,6 +18,7 @@ class SuperResolution {
 
     async load() {
         if (this.loaded) return;
+        const tf = await loadTf();
         this.model = await tf.loadGraphModel(this.modelUrl);
         this.loaded = true;
     }
@@ -31,6 +38,7 @@ class SuperResolution {
     }
 
     async processFull(imageData, scale) {
+        const tf = await loadTf();
         const tensor = tf.browser.fromPixels(imageData);
         const expanded = tensor.expandDims(0);
         const normalized = expanded.div(255.0);
