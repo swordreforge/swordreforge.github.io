@@ -5198,7 +5198,7 @@ localStorage.setItem('ai_model', aiConfig.model);
         function initLayerSystem(width, height) {
             if (!appState.layerStack) {
                 appState.layerStack = new LayerStack(width, height);
-                appState.layerStack.set_background_color(255, 255, 255, 255);
+                appState.layerStack.set_background_color(255, 255, 255, 0);
                 initIncrementalRendering();
                 document.getElementById('layersSection').style.display = 'block';
                 updateLayersList();
