@@ -1622,6 +1622,7 @@
                                 <button class="menu-item" onclick="applyAutoCropByColor()">自动抠图（颜色）</button>
                                 <button class="menu-item" onclick="applyRefineEdges()">边缘优化</button>
                                 <button class="menu-item" onclick="applySmartCrop()">智能抠图</button>
+                                <button class="menu-item" onclick="applyAiMatting()" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-weight: 600;">🤖 AI 抠图（人像）</button>
                             </div>
                         </div>
                         <div class="menu-section">
@@ -2892,6 +2893,14 @@
                     </div>
                     <div class="btn-group" style="margin-top: 8px;">
                         <button class="btn btn-primary" onclick="applySuperResolution()" id="srBtn" disabled>📈 2x 超分</button>
+                    </div>
+                    <hr style="border: none; border-top: 1px solid #444; margin: 16px 0;">
+                    <h4 style="margin: 0 0 8px 0; color: #764ba2;">🤖 AI 抠图</h4>
+                    <div id="mattingStatus" style="padding: 6px 10px; background: #333; border-radius: 6px; font-size: 0.85em; color: #888; margin-bottom: 8px;">
+                        ⏳ 等待图片加载...
+                    </div>
+                    <div class="btn-group" style="margin-top: 8px;">
+                        <button class="btn btn-primary" onclick="applyAiMatting()" id="mattingBtn" disabled style="background: linear-gradient(135deg, #667eea, #764ba2);">🤖 AI 人像抠图</button>
                     </div>
                 </div>
 
@@ -9633,6 +9642,17 @@ localStorage.setItem('ai_model', aiConfig.model);
                         var srBtn = document.getElementById('srBtn');
                         if (srBtn) srBtn.disabled = (width > 2048 || height > 2048);
 
+                        // 启用抠图按钮
+                        var mattingBtn = document.getElementById('mattingBtn');
+                        if (mattingBtn) mattingBtn.disabled = false;
+
+                        // 更新抠图状态
+                        var mattingStatusEl = document.getElementById('mattingStatus');
+                        if (mattingStatusEl) {
+                            mattingStatusEl.textContent = '✅ 图片已加载，可以开始抠图';
+                            mattingStatusEl.style.color = '#4caf50';
+                        }
+
                         // 清空历史记录，防止用户通过撤销/重做回到之前的图片
                         clearHistory();
 
@@ -13584,6 +13604,90 @@ localStorage.setItem('ai_model', aiConfig.model);
             }
 
             srBtn.disabled = false;
+        };
+
+        // AI 人像抠图
+        var mattingModule = null;
+        async function loadMattingModule() {
+            if (mattingModule) return mattingModule;
+            try {
+                mattingModule = await import('./ai-matting.js');
+                return mattingModule;
+            } catch (e) {
+                console.error('加载抠图模块失败:', e);
+                return null;
+            }
+        }
+
+        window.applyAiMatting = async function() {
+            if (!appState.processor) {
+                alert('请先加载图片');
+                return;
+            }
+
+            var mattingStatusEl = document.getElementById('mattingStatus');
+            var mattingBtn = document.getElementById('mattingBtn');
+            mattingStatusEl.textContent = '⏳ 加载模型中...';
+            mattingBtn.disabled = true;
+
+            try {
+                var MattingClass = await loadMattingModule();
+                if (!MattingClass) {
+                    throw new Error('抠图模块加载失败');
+                }
+
+                var matting = new MattingClass.default();
+                await matting.load();
+                mattingStatusEl.textContent = '✅ 模型已加载';
+
+                var width = appState.processor.get_width();
+                var height = appState.processor.get_height();
+
+                mattingStatusEl.textContent = '⏳ 处理中...';
+
+                var canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                var ctx = canvas.getContext('2d');
+                var imageData = ctx.createImageData(width, height);
+                var pixels = appState.processor.get_raw_pixels();
+                imageData.data.set(pixels);
+
+                var startTime = performance.now();
+                var resultData = await matting.process(imageData, function(progress) {
+                    mattingStatusEl.textContent = '⏳ 抠图中... ' + progress + '%';
+                });
+                var elapsed = (performance.now() - startTime) / 1000;
+
+                // 将结果写回 processor
+                appState.processor = ImageProcessor.new_from_bytes(resultData.data);
+                saveToHistory();
+                updateCanvas();
+
+                // 更新图层系统
+                if (appState.layerStack) {
+                    var composited = appState.layerStack.render_composite();
+                    var layerPixels = composited.get_raw_pixels();
+                    for (var i = 0; i < layerPixels.length; i += 4) {
+                        layerPixels[i] = resultData.data[i];
+                        layerPixels[i + 1] = resultData.data[i + 1];
+                        layerPixels[i + 2] = resultData.data[i + 2];
+                        layerPixels[i + 3] = resultData.data[i + 3];
+                    }
+                    renderLayersToCanvas();
+                }
+
+                mattingStatusEl.textContent = '✅ 完成! 耗时: ' + elapsed.toFixed(1) + 's';
+                Logger.info('AI 抠图完成: ' + width + 'x' + height + ', 耗时: ' + elapsed.toFixed(1) + 's');
+
+                matting.dispose();
+            } catch (error) {
+                Logger.error('AI 抠图失败:', error);
+                mattingStatusEl.textContent = '❌ 错误: ' + error.message;
+                alert('AI 抠图失败: ' + error.message);
+            }
+
+            mattingBtn.disabled = false;
         };
 
         // 重置图片
