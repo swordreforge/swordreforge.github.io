@@ -1622,7 +1622,8 @@
                                 <button class="menu-item" onclick="applyAutoCropByColor()">自动抠图（颜色）</button>
                                 <button class="menu-item" onclick="applyRefineEdges()">边缘优化</button>
                                 <button class="menu-item" onclick="applySmartCrop()">智能抠图</button>
-                                <button class="menu-item" onclick="applyAiMatting()" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-weight: 600;">🤖 AI 抠图（人像）</button>
+                                <button class="menu-item" onclick="applyAiMatting()">AI 人像抠图</button>
+                                <button class="menu-item" onclick="applyAiMattingCartoon()">AI 通用抠图</button>
                             </div>
                         </div>
                         <div class="menu-section">
@@ -2863,7 +2864,7 @@
                 </div>
 
                 <div class="section" data-section="ai-enhance">
-                    <h3>AI 图像增强 <span style="font-size: 0.7em; color: #ff9800; margin-left: 8px;">⚠️ ncnn</span></h3>
+                    <h3>AI 图像增强 <span style="font-size: 0.7em; color: #ff9800; margin-left: 8px;">ncnn</span></h3>
                     <div id="ncnnStatus" style="padding: 6px 10px; background: #333; border-radius: 6px; font-size: 0.85em; color: #888; margin-bottom: 8px;">
                         ⏳ AI模块加载中...
                     </div>
@@ -2873,7 +2874,7 @@
                         <div class="slider-value"><span id="ncnnSharpenValue">1.0</span></div>
                     </div>
                     <div class="btn-group" style="margin-top: 8px;">
-                        <button class="btn btn-success" onclick="applyNcnnSharpen()" id="ncnnSharpenBtn" disabled>🔍 AI 锐化</button>
+                        <button class="btn btn-success" onclick="applyNcnnSharpen()" id="ncnnSharpenBtn" disabled>AI 锐化</button>
                     </div>
                     <div class="slider-container" style="margin-top: 12px;">
                         <label>去噪核大小 (3/5/7)</label>
@@ -2881,26 +2882,27 @@
                         <div class="slider-value"><span id="ncnnDenoiseValue">3</span></div>
                     </div>
                     <div class="btn-group" style="margin-top: 8px;">
-                        <button class="btn btn-success" onclick="applyNcnnDenoise()" id="ncnnDenoiseBtn" disabled>🎯 AI 去噪</button>
+                        <button class="btn btn-success" onclick="applyNcnnDenoise()" id="ncnnDenoiseBtn" disabled>AI 去噪</button>
                     </div>
                     <div style="margin-top: 8px; font-size: 0.8em; color: #999;">
-                        💡 简单算法无需AI模型，速度较快
+                        简单算法无需AI模型，速度较快
                     </div>
                     <hr style="border: none; border-top: 1px solid #444; margin: 16px 0;">
-                    <h4 style="margin: 0 0 8px 0; color: #667eea;">🖼️ AI 超分辨率</h4>
+                    <h4 style="margin: 0 0 8px 0; color: #667eea;">AI 超分辨率</h4>
                     <div id="srStatus" style="padding: 6px 10px; background: #333; border-radius: 6px; font-size: 0.85em; color: #888; margin-bottom: 8px;">
                         ⏳ 等待图片加载...
                     </div>
                     <div class="btn-group" style="margin-top: 8px;">
-                        <button class="btn btn-primary" onclick="applySuperResolution()" id="srBtn" disabled>📈 2x 超分</button>
+                        <button class="btn btn-primary" onclick="applySuperResolution()" id="srBtn" disabled>2x 超分</button>
                     </div>
                     <hr style="border: none; border-top: 1px solid #444; margin: 16px 0;">
-                    <h4 style="margin: 0 0 8px 0; color: #764ba2;">🤖 AI 抠图</h4>
+                    <h4 style="margin: 0 0 8px 0; color: #e0e0e0;">AI 抠图</h4>
                     <div id="mattingStatus" style="padding: 6px 10px; background: #333; border-radius: 6px; font-size: 0.85em; color: #888; margin-bottom: 8px;">
                         ⏳ 等待图片加载...
                     </div>
                     <div class="btn-group" style="margin-top: 8px;">
-                        <button class="btn btn-primary" onclick="applyAiMatting()" id="mattingBtn" disabled style="background: linear-gradient(135deg, #667eea, #764ba2);">🤖 AI 人像抠图</button>
+                        <button class="btn" onclick="applyAiMatting()" id="mattingBtn" disabled>AI 人像抠图</button>
+                        <button class="btn" onclick="applyAiMattingCartoon()" id="mattingCartoonBtn" disabled>AI 通用抠图</button>
                     </div>
                 </div>
 
@@ -2984,7 +2986,7 @@
                 </div>
 
                 <div class="section" id="layersSection" style="display: none;">
-                    <h3>图层管理 <span style="font-size: 0.7em; color: #ff9800; margin-left: 8px;">⚠️ 实验性功能</span></h3>
+                    <h3>图层管理 <span style="font-size: 0.7em; color: #ff9800; margin-left: 8px;">实验性功能</span></h3>
                     <div class="btn-group" style="margin-bottom: 10px;">
                         <button class="btn btn-success" onclick="addNewLayer()" id="addLayerBtn">+ 新建图层</button>
                         <button class="btn" onclick="document.getElementById('layerFileInput').click()" id="addLayerFromFileBtn">+ 从文件添加</button>
@@ -3150,13 +3152,13 @@
                     <canvas id="cropOverlay" class="crop-overlay" style="display: none;"></canvas>
                     <div class="crop-controls" id="cropControls" style="display: none;">
                         <span id="cropRatioLabel" style="color: #e0e0e0; font-size: 0.9em; margin-right: 10px;">比例: 自由</span>
-                        <button class="btn" onclick="toggleCropRatio()" title="切换比例">🔄</button>
-                        <button class="btn btn-success" onclick="applyCrop()">✓ 确认裁剪</button>
-                        <button class="btn btn-danger" onclick="cancelCrop()">✕ 取消</button>
+                        <button class="btn" onclick="toggleCropRatio()" title="切换比例">翻转</button>
+                        <button class="btn btn-success" onclick="applyCrop()">确认裁剪</button>
+                        <button class="btn btn-danger" onclick="cancelCrop()">取消</button>
                     </div>
                     <div class="crop-controls" id="maskPreviewControls" style="display: none;">
-                        <button class="btn btn-success" onclick="confirmMaskPreview()">✓ 确认抠图</button>
-                        <button class="btn btn-danger" onclick="cancelMaskPreview()">✕ 取消</button>
+                        <button class="btn btn-success" onclick="confirmMaskPreview()">确认抠图</button>
+                        <button class="btn btn-danger" onclick="cancelMaskPreview()">取消</button>
                     </div>
                     <div id="textBox" class="text-box" style="display: none;">
                     <span id="textBoxContent"></span>
@@ -3179,7 +3181,7 @@
                 <div class="ai-sidebar-header">
                     <h3 style="color:#e0e0e0;font-size:0.95em;margin:0;display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="9" cy="16" r="1" fill="#667eea"/><circle cx="15" cy="16" r="1" fill="#667eea"/><path d="M12 2v4"/><path d="M8 6h8"/></svg>AI 助手</h3>
                     <div style="display:flex;gap:6px;align-items:center;">
-                        <span id="aiApiKeyHint" style="font-size:0.7em;color:#888;cursor:pointer;" onclick="showAiConfig()">⚙️ 配置</span>
+                        <span id="aiApiKeyHint" style="font-size:0.7em;color:#888;cursor:pointer;" onclick="showAiConfig()">配置</span>
                         <button onclick="toggleAiSidebar()" style="background:transparent;border:none;color:#888;cursor:pointer;font-size:16px;padding:2px 6px;">✕</button>
                     </div>
                 </div>
@@ -3707,7 +3709,7 @@ localStorage.setItem('ai_model', aiConfig.model);
                 msgDiv.style.background = '#2a2a2a';
                 msgDiv.style.color = '#e0e0e0';
             }
-            const prefix = role === 'user' ? '你' : (type === 'system' ? '⚙' : 'AI');
+            const prefix = role === 'user' ? '你' : (type === 'system' ? '系统' : 'AI');
             msgDiv.innerHTML = '<span style="font-weight:600;">' + prefix + ':</span> ' + content;
             container.appendChild(msgDiv);
             container.scrollTop = container.scrollHeight;
@@ -3766,6 +3768,13 @@ localStorage.setItem('ai_model', aiConfig.model);
                     var t = fnParams.threshold !== undefined ? fnParams.threshold : 50;
                     var f = fnParams.feather !== undefined ? fnParams.feather : 2;
                     appState.processor.smart_crop(t, f);
+                    return { success: true, action: fnName, params: fnParams };
+                } catch(e) {
+                    return { success: false, error: e.message };
+                }
+            } else if (fnName === 'cartoon_matting') {
+                try {
+                    await applyAiMattingCartoon();
                     return { success: true, action: fnName, params: fnParams };
                 } catch(e) {
                     return { success: false, error: e.message };
@@ -9645,6 +9654,8 @@ localStorage.setItem('ai_model', aiConfig.model);
                         // 启用抠图按钮
                         var mattingBtn = document.getElementById('mattingBtn');
                         if (mattingBtn) mattingBtn.disabled = false;
+                        var mattingCartoonBtn = document.getElementById('mattingCartoonBtn');
+                        if (mattingCartoonBtn) mattingCartoonBtn.disabled = false;
 
                         // 更新抠图状态
                         var mattingStatusEl = document.getElementById('mattingStatus');
@@ -13685,6 +13696,90 @@ localStorage.setItem('ai_model', aiConfig.model);
                 Logger.error('AI 抠图失败:', error);
                 mattingStatusEl.textContent = '❌ 错误: ' + error.message;
                 alert('AI 抠图失败: ' + error.message);
+            }
+
+            mattingBtn.disabled = false;
+        };
+
+        // AI 卡通/动漫抠图 (ToonOut)
+        var mattingCartoonModule = null;
+        async function loadMattingCartoonModule() {
+            if (mattingCartoonModule) return mattingCartoonModule;
+            try {
+                mattingCartoonModule = await import('./ai-matting-cartoon.js');
+                return mattingCartoonModule;
+            } catch (e) {
+                console.error('加载卡通抠图模块失败:', e);
+                return null;
+            }
+        }
+
+        window.applyAiMattingCartoon = async function() {
+            if (!appState.processor) {
+                alert('请先加载图片');
+                return;
+            }
+
+            var mattingStatusEl = document.getElementById('mattingStatus');
+            var mattingBtn = document.getElementById('mattingCartoonBtn');
+            mattingStatusEl.textContent = '⏳ 加载 BRIA RMBG 模型中...（约 44MB）';
+            mattingBtn.disabled = true;
+
+            try {
+                var MattingCartoonClass = await loadMattingCartoonModule();
+                if (!MattingCartoonClass) {
+                    throw new Error('卡通抠图模块加载失败');
+                }
+
+                var matting = new MattingCartoonClass.default();
+                await matting.load(function(msg, pct) {
+                    mattingStatusEl.textContent = msg + (pct > 0 ? ' ' + pct + '%' : '');
+                });
+                mattingStatusEl.textContent = '✅ 模型已加载';
+
+                var width = appState.processor.get_width();
+                var height = appState.processor.get_height();
+
+                mattingStatusEl.textContent = '⏳ 处理中...';
+
+                var canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                var ctx = canvas.getContext('2d');
+                var imageData = ctx.createImageData(width, height);
+                var pixels = appState.processor.get_raw_pixels();
+                imageData.data.set(pixels);
+
+                var startTime = performance.now();
+                var resultData = await matting.process(imageData, function(progress) {
+                    mattingStatusEl.textContent = '⏳ 抠图中... ' + progress + '%';
+                });
+                var elapsed = (performance.now() - startTime) / 1000;
+
+                appState.processor = new ImageProcessor(width, height, new Uint8Array(resultData.data));
+                saveToHistory();
+                updateCanvas();
+
+                if (appState.layerStack) {
+                    var composited = appState.layerStack.render_composite();
+                    var layerPixels = composited.get_raw_pixels();
+                    for (var i = 0; i < layerPixels.length; i += 4) {
+                        layerPixels[i] = resultData.data[i];
+                        layerPixels[i + 1] = resultData.data[i + 1];
+                        layerPixels[i + 2] = resultData.data[i + 2];
+                        layerPixels[i + 3] = resultData.data[i + 3];
+                    }
+                    renderLayersToCanvas();
+                }
+
+                mattingStatusEl.textContent = '✅ 完成! 耗时: ' + elapsed.toFixed(1) + 's';
+                Logger.info('AI 卡通抠图完成: ' + width + 'x' + height + ', 耗时: ' + elapsed.toFixed(1) + 's');
+
+                matting.dispose();
+            } catch (error) {
+                Logger.error('AI 卡通抠图失败:', error);
+                mattingStatusEl.textContent = '❌ 错误: ' + error.message;
+                alert('AI 卡通抠图失败: ' + error.message);
             }
 
             mattingBtn.disabled = false;

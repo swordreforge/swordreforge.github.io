@@ -360,6 +360,14 @@ const AI_FUNCTION_DEFINITIONS = [
             },
             required: ["model"]
         }
+    },
+    {
+        name: "cartoon_matting",
+        description: "AI 卡通/动漫抠图 (使用 ToonOut BiRefNet)，专门针对二次元/动漫/卡通图像进行高精度抠图去背景。相比 smart_crop 对卡通图像效果更好",
+        parameters: {
+            type: "object",
+            properties: {}
+        }
     }
 ];
 
@@ -587,7 +595,8 @@ const FUNCTION_DISPLAY_NAMES = {
     apply_circular_mask: "圆形抠图",
     auto_crop_by_color: "颜色抠图",
     smart_crop: "智能抠图",
-    super_resolution_2x: "AI超分"
+    super_resolution_2x: "AI超分",
+    cartoon_matting: "AI卡通抠图"
 };
 
 const RISKY_FUNCTIONS = new Set([
