@@ -13660,7 +13660,7 @@ localStorage.setItem('ai_model', aiConfig.model);
                 var elapsed = (performance.now() - startTime) / 1000;
 
                 // 将结果写回 processor
-                appState.processor = ImageProcessor.new_from_bytes(resultData.data);
+                appState.processor = new ImageProcessor(width, height, new Uint8Array(resultData.data));
                 saveToHistory();
                 updateCanvas();
 
