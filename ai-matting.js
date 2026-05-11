@@ -14,12 +14,13 @@ class AiMatting {
         if (this.loaded) return;
 
         ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/';
+        ort.env.wasm.numThreads = navigator.hardwareConcurrency || 4;
 
         console.log(`加载 ONNX 模型: ${this.modelUrl}`);
 
         try {
             this.session = await ort.InferenceSession.create(this.modelUrl, {
-                executionProviders: ['wasm'],
+                executionProviders: ['webgpu', 'wasm'],
             });
             this.loaded = true;
             console.log('ONNX 模型加载成功');
@@ -31,7 +32,7 @@ class AiMatting {
             console.log(`模型大小: ${(modelBuffer.byteLength / 1024 / 1024).toFixed(2)} MB`);
 
             this.session = await ort.InferenceSession.create(modelBuffer, {
-                executionProviders: ['wasm'],
+                executionProviders: ['webgpu', 'wasm'],
             });
             this.loaded = true;
             console.log('ONNX 模型通过 ArrayBuffer 加载成功');
@@ -58,7 +59,7 @@ class AiMatting {
         let matte = results.output.data;
 
         if (onProgress) onProgress(70);
-        const result = this.applyMatte(imageData, matte, imageData.width, imageData.height);
+        const result = this.applyMatte(imageData, matte, newW, newH, imageData.width, imageData.height);
         if (onProgress) onProgress(100);
         return result;
     }
@@ -80,11 +81,9 @@ class AiMatting {
         const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
         tempCtx.putImageData(imageData, 0, 0);
 
-        const matteCanvas = document.createElement('canvas');
-        matteCanvas.width = width;
-        matteCanvas.height = height;
-        const matteCtx = matteCanvas.getContext('2d', { willReadFrequently: true });
-        const matteData = matteCtx.createImageData(width, height);
+        const totalPixels = width * height;
+        const accumValues = new Float64Array(totalPixels);
+        const accumWeights = new Float64Array(totalPixels);
 
         for (let y = 0; y < height; y += step) {
             for (let x = 0; x < width; x += step) {
@@ -99,7 +98,8 @@ class AiMatting {
 
                 const matteGray = new Uint8Array(tileMatte.length);
                 for (let i = 0; i < tileMatte.length; i++) {
-                    matteGray[i] = Math.round(tileMatte[i] * 255);
+                    const v = tileMatte[i];
+                    matteGray[i] = v < 0.05 ? 0 : (v > 0.85 ? 255 : Math.round(((v - 0.05) / 0.8) * 255));
                 }
 
                 const tempMatteCanvas = document.createElement('canvas');
@@ -125,12 +125,11 @@ class AiMatting {
 
                 for (let ty = 0; ty < tileH; ty++) {
                     for (let tx = 0; tx < tileW; tx++) {
-                        const dstIdx = ((y + ty) * width + (x + tx)) * 4;
+                        const pixelIdx = (y + ty) * width + (x + tx);
                         const srcIdx = (ty * tileW + tx) * 4;
                         const blendWeight = this.getBlendWeight(tx, ty, tileW, tileH, overlap);
-                        const currentVal = matteData.data[dstIdx];
-                        const newVal = scaledMatteData.data[srcIdx];
-                        matteData.data[dstIdx] = Math.round(currentVal * (1 - blendWeight) + newVal * blendWeight);
+                        accumValues[pixelIdx] += scaledMatteData.data[srcIdx] * blendWeight;
+                        accumWeights[pixelIdx] += blendWeight;
                     }
                 }
                 processedTiles++;
@@ -138,13 +137,18 @@ class AiMatting {
             }
         }
 
-        matteCtx.putImageData(matteData, 0, 0);
+        const matteData = new ImageData(width, height);
+        for (let i = 0; i < totalPixels; i++) {
+            const alpha = accumWeights[i] > 0 ? Math.round(accumValues[i] / accumWeights[i]) : 0;
+            matteData.data[i * 4 + 3] = Math.min(255, alpha);
+        }
+
         const result = new ImageData(width, height);
-        for (let i = 0; i < width * height; i++) {
+        for (let i = 0; i < totalPixels; i++) {
             result.data[i * 4] = imageData.data[i * 4];
             result.data[i * 4 + 1] = imageData.data[i * 4 + 1];
             result.data[i * 4 + 2] = imageData.data[i * 4 + 2];
-            result.data[i * 4 + 3] = matteData.data[i * 4];
+            result.data[i * 4 + 3] = matteData.data[i * 4 + 3];
         }
         if (onProgress) onProgress(100);
         return result;
@@ -207,24 +211,25 @@ class AiMatting {
         return { scaleX: newW / imW, scaleY: newH / imH, newW, newH };
     }
 
-    applyMatte(imageData, matte, origW, origH) {
+    applyMatte(imageData, matte, matteW, matteH, origW, origH) {
         const matteCanvas = document.createElement('canvas');
-        const matteW = Math.round(matte.length ** 0.5);
-        const matteH = Math.round(matte.length / matteW);
         matteCanvas.width = matteW;
         matteCanvas.height = matteH;
         const matteCtx = matteCanvas.getContext('2d', { willReadFrequently: true });
         const matteImgData = matteCtx.createImageData(matteW, matteH);
-        for (let i = 0; i < matte.length; i++) {
-            const val = Math.round(matte[i] * 255);
-            const idx = i * 4;
-            matteImgData.data[idx] = val;
-            matteImgData.data[idx + 1] = val;
-            matteImgData.data[idx + 2] = val;
-            matteImgData.data[idx + 3] = 255;
+        for (let y = 0; y < matteH; y++) {
+            for (let x = 0; x < matteW; x++) {
+                const idx = y * matteW + x;
+                const v = matte[idx];
+                const val = v < 0.05 ? 0 : (v > 0.85 ? 255 : Math.round(((v - 0.05) / 0.8) * 255));
+                const dst = (y * matteW + x) * 4;
+                matteImgData.data[dst] = val;
+                matteImgData.data[dst + 1] = val;
+                matteImgData.data[dst + 2] = val;
+                matteImgData.data[dst + 3] = 255;
+            }
         }
         matteCtx.putImageData(matteImgData, 0, 0);
-
         const scaledMatteCanvas = document.createElement('canvas');
         scaledMatteCanvas.width = origW;
         scaledMatteCanvas.height = origH;
