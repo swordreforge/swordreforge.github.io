@@ -101,7 +101,7 @@ class AiMatting {
                 const matteGray = new Uint8Array(tileMatte.length);
                 for (let i = 0; i < tileMatte.length; i++) {
                     const v = tileMatte[i];
-                    matteGray[i] = v < 0.05 ? 0 : (v > 0.85 ? 255 : Math.round(((v - 0.05) / 0.8) * 255));
+                    matteGray[i] = v < 0.02 ? 0 : (v > 0.5 ? 255 : Math.round(((v - 0.02) / 0.48) * 255));
                 }
 
                 const tempMatteCanvas = document.createElement('canvas');
@@ -142,15 +142,20 @@ class AiMatting {
         const matteData = new ImageData(width, height);
         for (let i = 0; i < totalPixels; i++) {
             const alpha = accumWeights[i] > 0 ? Math.round(accumValues[i] / accumWeights[i]) : 0;
-            matteData.data[i * 4 + 3] = Math.min(255, alpha);
+            const clamped = Math.min(255, alpha);
+            matteData.data[i * 4] = clamped;
+            matteData.data[i * 4 + 1] = clamped;
+            matteData.data[i * 4 + 2] = clamped;
+            matteData.data[i * 4 + 3] = 255;
         }
+        this.morphologicalOpen(matteData, width, height);
 
         const result = new ImageData(width, height);
         for (let i = 0; i < totalPixels; i++) {
             result.data[i * 4] = imageData.data[i * 4];
             result.data[i * 4 + 1] = imageData.data[i * 4 + 1];
             result.data[i * 4 + 2] = imageData.data[i * 4 + 2];
-            result.data[i * 4 + 3] = matteData.data[i * 4 + 3];
+            result.data[i * 4 + 3] = matteData.data[i * 4];
         }
         if (onProgress) onProgress(100);
         return result;
@@ -223,7 +228,7 @@ class AiMatting {
             for (let x = 0; x < matteW; x++) {
                 const idx = y * matteW + x;
                 const v = matte[idx];
-                const val = v < 0.05 ? 0 : (v > 0.85 ? 255 : Math.round(((v - 0.05) / 0.8) * 255));
+                const val = v < 0.02 ? 0 : (v > 0.5 ? 255 : Math.round(((v - 0.02) / 0.48) * 255));
                 const dst = (y * matteW + x) * 4;
                 matteImgData.data[dst] = val;
                 matteImgData.data[dst + 1] = val;
@@ -231,6 +236,8 @@ class AiMatting {
                 matteImgData.data[dst + 3] = 255;
             }
         }
+        matteCtx.putImageData(matteImgData, 0, 0);
+        this.morphologicalOpen(matteImgData, matteW, matteH);
         matteCtx.putImageData(matteImgData, 0, 0);
         const scaledMatteCanvas = document.createElement('canvas');
         scaledMatteCanvas.width = origW;
@@ -247,6 +254,38 @@ class AiMatting {
             result.data[i * 4 + 3] = scaledMatte.data[i * 4];
         }
         return result;
+    }
+
+    morphologicalOpen(imageData, w, h) {
+        const data = imageData.data;
+        const pixels = new Uint8Array(w * h);
+        for (let i = 0; i < w * h; i++) pixels[i] = data[i * 4];
+
+        const eroded = new Uint8Array(w * h);
+        for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+                let min = 255;
+                for (let dy = -1; dy <= 1; dy++)
+                    for (let dx = -1; dx <= 1; dx++)
+                        if (pixels[(y + dy) * w + (x + dx)] < min)
+                            min = pixels[(y + dy) * w + (x + dx)];
+                eroded[y * w + x] = min;
+            }
+        }
+
+        for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+                let max = 0;
+                for (let dy = -1; dy <= 1; dy++)
+                    for (let dx = -1; dx <= 1; dx++)
+                        if (eroded[(y + dy) * w + (x + dx)] > max)
+                            max = eroded[(y + dy) * w + (x + dx)];
+                const idx = (y * w + x) * 4;
+                data[idx] = max;
+                data[idx + 1] = max;
+                data[idx + 2] = max;
+            }
+        }
     }
 
     dispose() {
