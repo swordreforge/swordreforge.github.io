@@ -21,6 +21,7 @@ class AiMatting {
         try {
             this.session = await ort.InferenceSession.create(this.modelUrl, {
                 executionProviders: ['webgpu', 'wasm'],
+                graphOptimizationLevel: 'all',
             });
             this.loaded = true;
             console.log('ONNX 模型加载成功');
@@ -33,6 +34,7 @@ class AiMatting {
 
             this.session = await ort.InferenceSession.create(modelBuffer, {
                 executionProviders: ['webgpu', 'wasm'],
+                graphOptimizationLevel: 'all',
             });
             this.loaded = true;
             console.log('ONNX 模型通过 ArrayBuffer 加载成功');
