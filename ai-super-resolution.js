@@ -102,7 +102,7 @@ class SuperResolution {
                 }
                 case 'prelu': {
                     const slope = this.weightTensors[layer.slopeName];
-                    out = tf.prelu(inp, slope);
+                    out = tf.prelu(inp, slope.reshape([1, -1, 1, 1]));
                     break;
                 }
                 case 'depthToSpace': {
