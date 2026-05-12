@@ -1,6 +1,7 @@
-// 使用 TFJS CDN (在运行时加载)
+// 使用全局 TFJS (由 index.html 中的 script 标签加载)
 async function loadTf() {
     if (window.tf) return window.tf;
+    // 如果 script 标签加载失败，回退到动态导入
     var tfLib = await import('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/+esm');
     window.tf = tfLib.default || tfLib;
     return window.tf;

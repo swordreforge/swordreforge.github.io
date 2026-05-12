@@ -2,9 +2,601 @@
   "format": "tfjs_graph_model",
   "generatedBy": "onnx-1.19",
   "convertedBy": "custom-extractor",
-  "graph": {
-    "name": "real_esrgan_x2",
-    "nodes": [
+  "weightsManifest": [
+    {
+      "paths": [
+        "weights.bin"
+      ],
+      "weights": [
+        {
+          "name": "conv0_weight",
+          "shape": [
+            64,
+            3,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 0,
+          "length": 6912
+        },
+        {
+          "name": "conv0_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 6912,
+          "length": 256
+        },
+        {
+          "name": "prelu0_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 7168,
+          "length": 256
+        },
+        {
+          "name": "conv1_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 7424,
+          "length": 147456
+        },
+        {
+          "name": "conv1_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 154880,
+          "length": 256
+        },
+        {
+          "name": "prelu1_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 155136,
+          "length": 256
+        },
+        {
+          "name": "conv2_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 155392,
+          "length": 147456
+        },
+        {
+          "name": "conv2_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 302848,
+          "length": 256
+        },
+        {
+          "name": "prelu2_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 303104,
+          "length": 256
+        },
+        {
+          "name": "conv3_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 303360,
+          "length": 147456
+        },
+        {
+          "name": "conv3_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 450816,
+          "length": 256
+        },
+        {
+          "name": "prelu3_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 451072,
+          "length": 256
+        },
+        {
+          "name": "conv4_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 451328,
+          "length": 147456
+        },
+        {
+          "name": "conv4_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 598784,
+          "length": 256
+        },
+        {
+          "name": "prelu4_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 599040,
+          "length": 256
+        },
+        {
+          "name": "conv5_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 599296,
+          "length": 147456
+        },
+        {
+          "name": "conv5_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 746752,
+          "length": 256
+        },
+        {
+          "name": "prelu5_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 747008,
+          "length": 256
+        },
+        {
+          "name": "conv6_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 747264,
+          "length": 147456
+        },
+        {
+          "name": "conv6_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 894720,
+          "length": 256
+        },
+        {
+          "name": "prelu6_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 894976,
+          "length": 256
+        },
+        {
+          "name": "conv7_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 895232,
+          "length": 147456
+        },
+        {
+          "name": "conv7_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1042688,
+          "length": 256
+        },
+        {
+          "name": "prelu7_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1042944,
+          "length": 256
+        },
+        {
+          "name": "conv8_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1043200,
+          "length": 147456
+        },
+        {
+          "name": "conv8_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1190656,
+          "length": 256
+        },
+        {
+          "name": "prelu8_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1190912,
+          "length": 256
+        },
+        {
+          "name": "conv9_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1191168,
+          "length": 147456
+        },
+        {
+          "name": "conv9_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1338624,
+          "length": 256
+        },
+        {
+          "name": "prelu9_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1338880,
+          "length": 256
+        },
+        {
+          "name": "conv10_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1339136,
+          "length": 147456
+        },
+        {
+          "name": "conv10_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1486592,
+          "length": 256
+        },
+        {
+          "name": "prelu10_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1486848,
+          "length": 256
+        },
+        {
+          "name": "conv11_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1487104,
+          "length": 147456
+        },
+        {
+          "name": "conv11_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1634560,
+          "length": 256
+        },
+        {
+          "name": "prelu11_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1634816,
+          "length": 256
+        },
+        {
+          "name": "conv12_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1635072,
+          "length": 147456
+        },
+        {
+          "name": "conv12_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1782528,
+          "length": 256
+        },
+        {
+          "name": "prelu12_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1782784,
+          "length": 256
+        },
+        {
+          "name": "conv13_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1783040,
+          "length": 147456
+        },
+        {
+          "name": "conv13_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1930496,
+          "length": 256
+        },
+        {
+          "name": "prelu13_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1930752,
+          "length": 256
+        },
+        {
+          "name": "conv14_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 1931008,
+          "length": 147456
+        },
+        {
+          "name": "conv14_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 2078464,
+          "length": 256
+        },
+        {
+          "name": "prelu14_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 2078720,
+          "length": 256
+        },
+        {
+          "name": "conv15_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 2078976,
+          "length": 147456
+        },
+        {
+          "name": "conv15_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 2226432,
+          "length": 256
+        },
+        {
+          "name": "prelu15_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 2226688,
+          "length": 256
+        },
+        {
+          "name": "conv16_weight",
+          "shape": [
+            64,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 2226944,
+          "length": 147456
+        },
+        {
+          "name": "conv16_bias",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 2374400,
+          "length": 256
+        },
+        {
+          "name": "prelu16_slope",
+          "shape": [
+            64
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 2374656,
+          "length": 256
+        },
+        {
+          "name": "conv_final_weight",
+          "shape": [
+            12,
+            64,
+            3,
+            3
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 2374912,
+          "length": 27648
+        },
+        {
+          "name": "conv_final_bias",
+          "shape": [
+            12
+          ],
+          "dtype": "float32",
+          "path": "weights.bin",
+          "offset": 2402560,
+          "length": 48
+        }
+      ]
+    }
+  ],
+  "modelTopology": {
+    "node": [
       {
         "name": "conv0",
         "op": "Conv",
@@ -434,599 +1026,10 @@
       {
         "name": "output"
       }
-    ]
-  },
-  "weightsManifest": [
-    {
-      "paths": [
-        "weights.bin"
-      ],
-      "weights": [
-        {
-          "name": "conv0_weight",
-          "shape": [
-            64,
-            3,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 0,
-          "length": 3456
-        },
-        {
-          "name": "conv0_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 3456,
-          "length": 128
-        },
-        {
-          "name": "prelu0_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 3584,
-          "length": 128
-        },
-        {
-          "name": "conv1_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 3712,
-          "length": 73728
-        },
-        {
-          "name": "conv1_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 77440,
-          "length": 128
-        },
-        {
-          "name": "prelu1_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 77568,
-          "length": 128
-        },
-        {
-          "name": "conv2_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 77696,
-          "length": 73728
-        },
-        {
-          "name": "conv2_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 151424,
-          "length": 128
-        },
-        {
-          "name": "prelu2_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 151552,
-          "length": 128
-        },
-        {
-          "name": "conv3_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 151680,
-          "length": 73728
-        },
-        {
-          "name": "conv3_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 225408,
-          "length": 128
-        },
-        {
-          "name": "prelu3_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 225536,
-          "length": 128
-        },
-        {
-          "name": "conv4_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 225664,
-          "length": 73728
-        },
-        {
-          "name": "conv4_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 299392,
-          "length": 128
-        },
-        {
-          "name": "prelu4_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 299520,
-          "length": 128
-        },
-        {
-          "name": "conv5_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 299648,
-          "length": 73728
-        },
-        {
-          "name": "conv5_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 373376,
-          "length": 128
-        },
-        {
-          "name": "prelu5_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 373504,
-          "length": 128
-        },
-        {
-          "name": "conv6_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 373632,
-          "length": 73728
-        },
-        {
-          "name": "conv6_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 447360,
-          "length": 128
-        },
-        {
-          "name": "prelu6_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 447488,
-          "length": 128
-        },
-        {
-          "name": "conv7_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 447616,
-          "length": 73728
-        },
-        {
-          "name": "conv7_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 521344,
-          "length": 128
-        },
-        {
-          "name": "prelu7_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 521472,
-          "length": 128
-        },
-        {
-          "name": "conv8_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 521600,
-          "length": 73728
-        },
-        {
-          "name": "conv8_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 595328,
-          "length": 128
-        },
-        {
-          "name": "prelu8_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 595456,
-          "length": 128
-        },
-        {
-          "name": "conv9_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 595584,
-          "length": 73728
-        },
-        {
-          "name": "conv9_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 669312,
-          "length": 128
-        },
-        {
-          "name": "prelu9_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 669440,
-          "length": 128
-        },
-        {
-          "name": "conv10_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 669568,
-          "length": 73728
-        },
-        {
-          "name": "conv10_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 743296,
-          "length": 128
-        },
-        {
-          "name": "prelu10_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 743424,
-          "length": 128
-        },
-        {
-          "name": "conv11_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 743552,
-          "length": 73728
-        },
-        {
-          "name": "conv11_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 817280,
-          "length": 128
-        },
-        {
-          "name": "prelu11_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 817408,
-          "length": 128
-        },
-        {
-          "name": "conv12_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 817536,
-          "length": 73728
-        },
-        {
-          "name": "conv12_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 891264,
-          "length": 128
-        },
-        {
-          "name": "prelu12_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 891392,
-          "length": 128
-        },
-        {
-          "name": "conv13_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 891520,
-          "length": 73728
-        },
-        {
-          "name": "conv13_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 965248,
-          "length": 128
-        },
-        {
-          "name": "prelu13_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 965376,
-          "length": 128
-        },
-        {
-          "name": "conv14_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 965504,
-          "length": 73728
-        },
-        {
-          "name": "conv14_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 1039232,
-          "length": 128
-        },
-        {
-          "name": "prelu14_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 1039360,
-          "length": 128
-        },
-        {
-          "name": "conv15_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 1039488,
-          "length": 73728
-        },
-        {
-          "name": "conv15_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 1113216,
-          "length": 128
-        },
-        {
-          "name": "prelu15_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 1113344,
-          "length": 128
-        },
-        {
-          "name": "conv16_weight",
-          "shape": [
-            64,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 1113472,
-          "length": 73728
-        },
-        {
-          "name": "conv16_bias",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 1187200,
-          "length": 128
-        },
-        {
-          "name": "prelu16_slope",
-          "shape": [
-            64
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 1187328,
-          "length": 128
-        },
-        {
-          "name": "conv_final_weight",
-          "shape": [
-            12,
-            64,
-            3,
-            3
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 1187456,
-          "length": 13824
-        },
-        {
-          "name": "conv_final_bias",
-          "shape": [
-            12
-          ],
-          "dtype": "float16",
-          "path": "weights.bin",
-          "offset": 1201280,
-          "length": 24
-        }
-      ]
+    ],
+    "versions": {
+      "producer": "1.0",
+      "minConsumer": "1.0"
     }
-  ]
+  }
 }
