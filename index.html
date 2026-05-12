@@ -8580,9 +8580,8 @@ localStorage.setItem('ai_model', aiConfig.model);
 
             // AI 超分按钮
             if (appState.currentImage) {
-                var w = appState.processor ? appState.processor.get_width() : 0;
-                var h = appState.processor ? appState.processor.get_height() : 0;
-                document.getElementById('srBtn').disabled = (w > 2048 || h > 2048);
+                var fileSize = appState.fileSize || 0;
+                document.getElementById('srBtn').disabled = (fileSize > 12 * 1024 * 1024);
             }
 
             // 启用滑块
@@ -9609,6 +9608,9 @@ localStorage.setItem('ai_model', aiConfig.model);
                         const width = appState.processor.get_width();
                         const height = appState.processor.get_height();
 
+                        // 保存文件大小用于超分限制检查
+                        appState.fileSize = file.size;
+
                         // 保存原始处理器用于无级调节
                         appState.originalProcessor = ImageProcessor.new_from_bytes(uint8Array);
 
@@ -9640,8 +9642,8 @@ localStorage.setItem('ai_model', aiConfig.model);
                         // 更新 AI 超分状态
                         var srStatusEl = document.getElementById('srStatus');
                         if (srStatusEl) {
-                            if (width > 2048 || height > 2048) {
-                                srStatusEl.textContent = '⚠️ 图片太大，请使用 ≤2048x2048';
+                            if (file.size > 12 * 1024 * 1024) {
+                                srStatusEl.textContent = '⚠️ 图片太大，请使用 ≤12MB';
                             } else {
                                 srStatusEl.textContent = '✅ 图片已加载，可以开始超分';
                             }
@@ -9649,7 +9651,7 @@ localStorage.setItem('ai_model', aiConfig.model);
 
                         // 启用超分按钮
                         var srBtn = document.getElementById('srBtn');
-                        if (srBtn) srBtn.disabled = (width > 2048 || height > 2048);
+                        if (srBtn) srBtn.disabled = (file.size > 12 * 1024 * 1024);
 
                         // 启用抠图按钮
                         var mattingBtn = document.getElementById('mattingBtn');
@@ -13576,8 +13578,8 @@ localStorage.setItem('ai_model', aiConfig.model);
                 var width = appState.processor.get_width();
                 var height = appState.processor.get_height();
 
-                if (width > 2048 || height > 2048) {
-                    srStatusEl.textContent = '⚠️ 图片太大，请使用 ≤2048x2048';
+                if (appState.fileSize && appState.fileSize > 12 * 1024 * 1024) {
+                    srStatusEl.textContent = '⚠️ 图片太大，请使用 ≤12MB';
                     srBtn.disabled = false;
                     return;
                 }
