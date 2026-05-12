@@ -43,9 +43,11 @@ class SuperResolution {
         const tensor = tf.browser.fromPixels(imageData);
         const expanded = tensor.expandDims(0);
         const normalized = expanded.div(255.0);
+        const nchw = tf.transpose(normalized, [0, 3, 1, 2]);
 
-        const result = this.model.predict(normalized);
-        const output = result.squeeze().mul(255.0);
+        const resultNchw = this.model.predict(nchw);
+        const resultNhwc = tf.transpose(resultNchw, [0, 2, 3, 1]);
+        const output = resultNhwc.squeeze().mul(255.0);
 
         const canvas = document.createElement('canvas');
         canvas.width = imageData.width * scale;
@@ -74,7 +76,7 @@ class SuperResolution {
         tempCanvas.width = width;
         tempCanvas.height = height;
         const tempCtx = tempCanvas.getContext('2d');
-        tempCtx.drawImage(imageData, 0, 0);
+        tempCtx.putImageData(imageData, 0, 0);
 
         for (let y = 0; y < height; y += step) {
             for (let x = 0; x < width; x += step) {
@@ -86,9 +88,11 @@ class SuperResolution {
                 const tensor = tf.browser.fromPixels(tileImageData);
                 const expanded = tensor.expandDims(0);
                 const normalized = expanded.div(255.0);
+                const nchw = tf.transpose(normalized, [0, 3, 1, 2]);
 
-                const result = this.model.predict(normalized);
-                const outputTensor = result.squeeze().mul(255.0);
+                const resultNchw = this.model.predict(nchw);
+                const resultNhwc = tf.transpose(resultNchw, [0, 2, 3, 1]);
+                const outputTensor = resultNhwc.squeeze().mul(255.0);
 
                 const scaledTileW = tileW * scale;
                 const scaledTileH = tileH * scale;

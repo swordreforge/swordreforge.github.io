@@ -609,62 +609,32 @@
             "type": 1
           },
           "shape": {
-            "shape": [
+            "dim": [
               {
-                "dim": [
-                  {
-                    "size": "1"
-                  },
-                  {
-                    "size": "-1"
-                  },
-                  {
-                    "size": "-1"
-                  },
-                  {
-                    "size": "3"
-                  }
-                ]
+                "size": "1"
+              },
+              {
+                "size": "3"
+              },
+              {
+                "size": "-1"
+              },
+              {
+                "size": "-1"
               }
             ]
           }
         }
       },
       {
-        "name": "transpose_input",
-        "op": "Transpose",
-        "inputs": [
-          "input_placeholder"
-        ],
-        "outputs": [
-          "transpose_input"
-        ],
-        "attr": {
-          "T": {
-            "type": 1
-          },
-          "Tperm": {
-            "type": 3
-          },
-          "perm": {
-            "list": [
-              0,
-              3,
-              1,
-              2
-            ]
-          }
-        }
-      },
-      {
-        "name": "conv2d_conv0",
+        "name": "conv0_conv2d",
         "op": "Conv2D",
         "inputs": [
-          "transpose_input",
+          "input_placeholder",
           "conv0_weight"
         ],
         "outputs": [
-          "conv2d_conv0_out"
+          "conv0_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -698,7 +668,7 @@
         "name": "conv0_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv0_out",
+          "conv0_conv2d_out",
           "conv0_bias"
         ],
         "outputs": [
@@ -727,14 +697,14 @@
         }
       },
       {
-        "name": "conv2d_conv1",
+        "name": "conv1_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu0_out",
           "conv1_weight"
         ],
         "outputs": [
-          "conv2d_conv1_out"
+          "conv1_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -768,7 +738,7 @@
         "name": "conv1_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv1_out",
+          "conv1_conv2d_out",
           "conv1_bias"
         ],
         "outputs": [
@@ -797,14 +767,14 @@
         }
       },
       {
-        "name": "conv2d_conv2",
+        "name": "conv2_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu1_out",
           "conv2_weight"
         ],
         "outputs": [
-          "conv2d_conv2_out"
+          "conv2_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -838,7 +808,7 @@
         "name": "conv2_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv2_out",
+          "conv2_conv2d_out",
           "conv2_bias"
         ],
         "outputs": [
@@ -867,14 +837,14 @@
         }
       },
       {
-        "name": "conv2d_conv3",
+        "name": "conv3_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu2_out",
           "conv3_weight"
         ],
         "outputs": [
-          "conv2d_conv3_out"
+          "conv3_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -908,7 +878,7 @@
         "name": "conv3_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv3_out",
+          "conv3_conv2d_out",
           "conv3_bias"
         ],
         "outputs": [
@@ -937,14 +907,14 @@
         }
       },
       {
-        "name": "conv2d_conv4",
+        "name": "conv4_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu3_out",
           "conv4_weight"
         ],
         "outputs": [
-          "conv2d_conv4_out"
+          "conv4_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -978,7 +948,7 @@
         "name": "conv4_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv4_out",
+          "conv4_conv2d_out",
           "conv4_bias"
         ],
         "outputs": [
@@ -1007,14 +977,14 @@
         }
       },
       {
-        "name": "conv2d_conv5",
+        "name": "conv5_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu4_out",
           "conv5_weight"
         ],
         "outputs": [
-          "conv2d_conv5_out"
+          "conv5_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -1048,7 +1018,7 @@
         "name": "conv5_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv5_out",
+          "conv5_conv2d_out",
           "conv5_bias"
         ],
         "outputs": [
@@ -1077,14 +1047,14 @@
         }
       },
       {
-        "name": "conv2d_conv6",
+        "name": "conv6_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu5_out",
           "conv6_weight"
         ],
         "outputs": [
-          "conv2d_conv6_out"
+          "conv6_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -1118,7 +1088,7 @@
         "name": "conv6_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv6_out",
+          "conv6_conv2d_out",
           "conv6_bias"
         ],
         "outputs": [
@@ -1147,14 +1117,14 @@
         }
       },
       {
-        "name": "conv2d_conv7",
+        "name": "conv7_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu6_out",
           "conv7_weight"
         ],
         "outputs": [
-          "conv2d_conv7_out"
+          "conv7_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -1188,7 +1158,7 @@
         "name": "conv7_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv7_out",
+          "conv7_conv2d_out",
           "conv7_bias"
         ],
         "outputs": [
@@ -1217,14 +1187,14 @@
         }
       },
       {
-        "name": "conv2d_conv8",
+        "name": "conv8_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu7_out",
           "conv8_weight"
         ],
         "outputs": [
-          "conv2d_conv8_out"
+          "conv8_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -1258,7 +1228,7 @@
         "name": "conv8_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv8_out",
+          "conv8_conv2d_out",
           "conv8_bias"
         ],
         "outputs": [
@@ -1287,14 +1257,14 @@
         }
       },
       {
-        "name": "conv2d_conv9",
+        "name": "conv9_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu8_out",
           "conv9_weight"
         ],
         "outputs": [
-          "conv2d_conv9_out"
+          "conv9_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -1328,7 +1298,7 @@
         "name": "conv9_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv9_out",
+          "conv9_conv2d_out",
           "conv9_bias"
         ],
         "outputs": [
@@ -1357,14 +1327,14 @@
         }
       },
       {
-        "name": "conv2d_conv10",
+        "name": "conv10_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu9_out",
           "conv10_weight"
         ],
         "outputs": [
-          "conv2d_conv10_out"
+          "conv10_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -1398,7 +1368,7 @@
         "name": "conv10_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv10_out",
+          "conv10_conv2d_out",
           "conv10_bias"
         ],
         "outputs": [
@@ -1427,14 +1397,14 @@
         }
       },
       {
-        "name": "conv2d_conv11",
+        "name": "conv11_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu10_out",
           "conv11_weight"
         ],
         "outputs": [
-          "conv2d_conv11_out"
+          "conv11_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -1468,7 +1438,7 @@
         "name": "conv11_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv11_out",
+          "conv11_conv2d_out",
           "conv11_bias"
         ],
         "outputs": [
@@ -1497,14 +1467,14 @@
         }
       },
       {
-        "name": "conv2d_conv12",
+        "name": "conv12_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu11_out",
           "conv12_weight"
         ],
         "outputs": [
-          "conv2d_conv12_out"
+          "conv12_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -1538,7 +1508,7 @@
         "name": "conv12_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv12_out",
+          "conv12_conv2d_out",
           "conv12_bias"
         ],
         "outputs": [
@@ -1567,14 +1537,14 @@
         }
       },
       {
-        "name": "conv2d_conv13",
+        "name": "conv13_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu12_out",
           "conv13_weight"
         ],
         "outputs": [
-          "conv2d_conv13_out"
+          "conv13_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -1608,7 +1578,7 @@
         "name": "conv13_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv13_out",
+          "conv13_conv2d_out",
           "conv13_bias"
         ],
         "outputs": [
@@ -1637,14 +1607,14 @@
         }
       },
       {
-        "name": "conv2d_conv14",
+        "name": "conv14_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu13_out",
           "conv14_weight"
         ],
         "outputs": [
-          "conv2d_conv14_out"
+          "conv14_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -1678,7 +1648,7 @@
         "name": "conv14_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv14_out",
+          "conv14_conv2d_out",
           "conv14_bias"
         ],
         "outputs": [
@@ -1707,14 +1677,14 @@
         }
       },
       {
-        "name": "conv2d_conv15",
+        "name": "conv15_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu14_out",
           "conv15_weight"
         ],
         "outputs": [
-          "conv2d_conv15_out"
+          "conv15_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -1748,7 +1718,7 @@
         "name": "conv15_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv15_out",
+          "conv15_conv2d_out",
           "conv15_bias"
         ],
         "outputs": [
@@ -1777,14 +1747,14 @@
         }
       },
       {
-        "name": "conv2d_conv16",
+        "name": "conv16_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu15_out",
           "conv16_weight"
         ],
         "outputs": [
-          "conv2d_conv16_out"
+          "conv16_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -1818,7 +1788,7 @@
         "name": "conv16_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv16_out",
+          "conv16_conv2d_out",
           "conv16_bias"
         ],
         "outputs": [
@@ -1847,14 +1817,14 @@
         }
       },
       {
-        "name": "conv2d_conv_final",
+        "name": "conv_final_conv2d",
         "op": "Conv2D",
         "inputs": [
           "prelu16_out",
           "conv_final_weight"
         ],
         "outputs": [
-          "conv2d_conv_final_out"
+          "conv_final_conv2d_out"
         ],
         "attr": {
           "T": {
@@ -1888,7 +1858,7 @@
         "name": "conv_final_add",
         "op": "Add",
         "inputs": [
-          "conv2d_conv_final_out",
+          "conv_final_conv2d_out",
           "conv_final_bias"
         ],
         "outputs": [
@@ -1907,7 +1877,7 @@
           "conv_final_out"
         ],
         "outputs": [
-          "pixelshuffle_out"
+          "output"
         ],
         "attr": {
           "T": {
@@ -1920,32 +1890,6 @@
             "s": "NCHW"
           }
         }
-      },
-      {
-        "name": "transpose_output",
-        "op": "Transpose",
-        "inputs": [
-          "pixelshuffle_out"
-        ],
-        "outputs": [
-          "output"
-        ],
-        "attr": {
-          "T": {
-            "type": 1
-          },
-          "Tperm": {
-            "type": 3
-          },
-          "perm": {
-            "list": [
-              0,
-              2,
-              3,
-              1
-            ]
-          }
-        }
       }
     ],
     "inputs": [
@@ -1953,9 +1897,9 @@
         "name": "input_placeholder",
         "shape": [
           1,
+          3,
           -1,
-          -1,
-          3
+          -1
         ]
       }
     ],
