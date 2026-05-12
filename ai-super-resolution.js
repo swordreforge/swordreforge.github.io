@@ -97,7 +97,7 @@ class SuperResolution {
                 }
                 case 'bias': {
                     const b = this.weightTensors[layer.biasName];
-                    out = tf.add(inp, b);
+                    out = tf.add(inp, b.reshape([1, -1, 1, 1]));
                     break;
                 }
                 case 'prelu': {
