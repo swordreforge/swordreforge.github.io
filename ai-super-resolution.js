@@ -1,7 +1,5 @@
-// 使用全局 TFJS (由 index.html 中的 script 标签加载)
 async function loadTf() {
     if (window.tf) return window.tf;
-    // 如果 script 标签加载失败，回退到动态导入
     var tfLib = await import('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/+esm');
     window.tf = tfLib.default || tfLib;
     return window.tf;
@@ -12,29 +10,126 @@ const OVERLAP = 10;
 
 class SuperResolution {
     constructor() {
-        this.model = null;
         this.modelUrl = 'models/real_esrgan_x2_webgl/model.json';
+        this.weightsUrl = 'models/real_esrgan_x2_webgl/weights.bin';
         this.loaded = false;
+        this.layers = [];
+        this.weightTensors = {};
     }
 
     async load() {
         if (this.loaded) return;
         const tf = await loadTf();
-        this.model = await tf.loadGraphModel(this.modelUrl);
+
+        const resp = await fetch(this.modelUrl);
+        const modelJson = await resp.json();
+        const manifest = modelJson.weightsManifest[0];
+
+        const weightsResp = await fetch(this.weightsUrl);
+        const weightsBuf = await weightsResp.arrayBuffer();
+
+        let offset = 0;
+        for (const spec of manifest.weights) {
+            const size = spec.shape.reduce((a, b) => a * b, 1);
+            const bytesPerElement = spec.dtype === 'float32' ? 4 : 2;
+            const byteLength = size * bytesPerElement;
+            const data = weightsBuf.slice(offset, offset + byteLength);
+
+            let tensorData;
+            if (spec.dtype === 'float32') {
+                tensorData = new Float32Array(data);
+            } else {
+                tensorData = new Float32Array(data);
+            }
+
+            const tensor = tf.tensor(tensorData, spec.shape, 'float32');
+            this.weightTensors[spec.name] = tensor;
+            offset += byteLength;
+        }
+
+        this.buildGraph(modelJson);
         this.loaded = true;
+    }
+
+    buildGraph(modelJson) {
+        const nodes = modelJson.modelTopology.node;
+        for (const n of nodes) {
+            if (n.op === 'Placeholder') continue;
+            if (n.op === 'Conv2D') {
+                const inputName = n.inputs[0];
+                const weightName = n.inputs[1];
+                this.layers.push({ type: 'conv2d', name: n.name, inputName, weightName, outputName: n.outputs[0] });
+            } else if (n.op === 'Add') {
+                const biasName = n.inputs[1];
+                const inputName = n.inputs[0];
+                this.layers.push({ type: 'bias', name: n.name, biasName, inputName, outputName: n.outputs[0] });
+            } else if (n.op === 'Prelu') {
+                const slopeName = n.inputs[1];
+                const inputName = n.inputs[0];
+                this.layers.push({ type: 'prelu', name: n.name, slopeName, inputName, outputName: n.outputs[0] });
+            } else if (n.op === 'DepthToSpace') {
+                const inputName = n.inputs[0];
+                this.layers.push({ type: 'depthToSpace', name: n.name, inputName, outputName: n.outputs[0] });
+            } else if (n.op === 'Transpose') {
+                const inputName = n.inputs[0];
+                const perm = n.attr.perm.list;
+                this.layers.push({ type: 'transpose', name: n.name, inputName, perm, outputName: n.outputs[0] });
+            }
+        }
+    }
+
+    async executeNet(inputTensor) {
+        const tf = await loadTf();
+        const tensors = { 'input_placeholder': inputTensor };
+
+        for (const layer of this.layers) {
+            const inp = tensors[layer.inputName];
+            if (!inp) {
+                throw new Error(`Missing input ${layer.inputName} for ${layer.name}`);
+            }
+
+            let out;
+            switch (layer.type) {
+                case 'conv2d': {
+                    const w = this.weightTensors[layer.weightName];
+                    out = tf.conv2d(inp, w, [1, 1], 'same', 'NCHW');
+                    break;
+                }
+                case 'bias': {
+                    const b = this.weightTensors[layer.biasName];
+                    out = tf.add(inp, b);
+                    break;
+                }
+                case 'prelu': {
+                    const slope = this.weightTensors[layer.slopeName];
+                    out = tf.prelu(inp, slope);
+                    break;
+                }
+                case 'depthToSpace': {
+                    out = tf.depthToSpace(inp, 2, 'NCHW');
+                    break;
+                }
+                case 'transpose': {
+                    out = tf.transpose(inp, layer.perm);
+                    break;
+                }
+            }
+
+            tensors[layer.outputName] = out;
+            if (inp !== inputTensor) inp.dispose();
+        }
+
+        return tensors['output'];
     }
 
     async process(imageData, onProgress, scale = 2) {
         await this.load();
-
         const width = imageData.width;
         const height = imageData.height;
-        const totalPixels = width * height;
 
         if (width <= TILE_SIZE && height <= TILE_SIZE) {
             return await this.processFull(imageData, scale);
         }
-
         return await this.processTiled(imageData, width, height, scale, onProgress);
     }
 
@@ -44,8 +139,9 @@ class SuperResolution {
         const expanded = tensor.expandDims(0);
         const normalized = expanded.div(255.0);
         const nchw = tf.transpose(normalized, [0, 3, 1, 2]);
+        tensor.dispose();
 
-        const resultNchw = this.model.predict(nchw);
+        const resultNchw = await this.executeNet(nchw);
         const resultNhwc = tf.transpose(resultNchw, [0, 2, 3, 1]);
         const output = resultNhwc.squeeze().mul(255.0);
 
@@ -57,6 +153,7 @@ class SuperResolution {
     }
 
     async processTiled(imageData, width, height, scale, onProgress) {
+        const tf = await loadTf();
         const scaledWidth = width * scale;
         const scaledHeight = height * scale;
         const outputCanvas = document.createElement('canvas');
@@ -89,8 +186,9 @@ class SuperResolution {
                 const expanded = tensor.expandDims(0);
                 const normalized = expanded.div(255.0);
                 const nchw = tf.transpose(normalized, [0, 3, 1, 2]);
+                tensor.dispose();
 
-                const resultNchw = this.model.predict(nchw);
+                const resultNchw = await this.executeNet(nchw);
                 const resultNhwc = tf.transpose(resultNchw, [0, 2, 3, 1]);
                 const outputTensor = resultNhwc.squeeze().mul(255.0);
 
@@ -127,10 +225,13 @@ class SuperResolution {
     }
 
     dispose() {
-        if (this.model) {
-            this.model.dispose();
-            this.loaded = false;
+        const tf = window.tf;
+        if (!tf) return;
+        for (const name in this.weightTensors) {
+            this.weightTensors[name].dispose();
         }
+        this.weightTensors = {};
+        this.loaded = false;
     }
 }
 
