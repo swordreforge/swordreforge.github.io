@@ -3647,6 +3647,12 @@
             }
         };
 
+        window.toggleAiBackendSettings = function() {
+            const isLocal = document.querySelector('input[name="aiBackend"]:checked').value === 'local';
+            document.getElementById('aiRemoteSettings').style.display = isLocal ? 'none' : 'block';
+            document.getElementById('aiLocalSettings').style.display = isLocal ? 'block' : 'none';
+        };
+
         window.closeAiConfigModal = function() {
             document.getElementById('aiConfigModal').style.display = 'none';
         };
@@ -15279,10 +15285,10 @@ window.updateBrushColorFromSidebar = function() {
                 <label style="color:#aaa; font-size:0.85em; display:block; margin-bottom:6px;">推理后端</label>
                 <div style="display:flex; gap:12px;">
                     <label style="color:#e0e0e0; font-size:0.9em; display:flex; align-items:center; gap:4px; cursor:pointer;">
-                        <input type="radio" name="aiBackend" value="remote" checked> 远程 API
+                        <input type="radio" name="aiBackend" value="remote" checked onchange="toggleAiBackendSettings()"> 远程 API
                     </label>
                     <label style="color:#e0e0e0; font-size:0.9em; display:flex; align-items:center; gap:4px; cursor:pointer;">
-                        <input type="radio" name="aiBackend" value="local"> 本地模型
+                        <input type="radio" name="aiBackend" value="local" onchange="toggleAiBackendSettings()"> 本地模型
                     </label>
                 </div>
             </div>
