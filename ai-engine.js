@@ -1,3 +1,5 @@
+const WLLAMA_WASM_PATH = './wllama/esm/wasm/wllama.wasm';
+
 let wllamaModule = null;
 
 async function getWllama() {
@@ -16,18 +18,16 @@ export class WllamaBackend {
     this._abortController = null;
   }
 
-  async init() {
-  }
-
   async loadModel(config) {
+    if (!config || !config.url) {
+      throw new Error('loadModel requires config with at least a url');
+    }
     const { name, url, mmprojUrl, onProgress } = config;
     if (this.wllama) {
       await this.unloadModel();
     }
     const { Wllama } = await getWllama();
-    this.wllama = new Wllama({
-      default: './wllama/esm/wasm/wllama.wasm'
-    });
+    this.wllama = new Wllama({ default: WLLAMA_WASM_PATH });
     const params = {
       n_ctx: 4096,
       n_threads: navigator.hardwareConcurrency || 4
@@ -47,9 +47,7 @@ export class WllamaBackend {
       await this.unloadModel();
     }
     const { Wllama } = await getWllama();
-    this.wllama = new Wllama({
-      default: './wllama/esm/wasm/wllama.wasm'
-    });
+    this.wllama = new Wllama({ default: WLLAMA_WASM_PATH });
     const arrayBuffer = await file.arrayBuffer();
     const blob = new Blob([arrayBuffer]);
     await this.wllama.loadModel([blob], {
@@ -92,6 +90,10 @@ export class WllamaBackend {
     }
   }
 
+  async dispose() {
+    await this.unloadModel();
+  }
+
   abort() {
     if (this._abortController) {
       this._abortController.abort();
@@ -117,9 +119,10 @@ export class RemoteBackend {
   }
 
   configure(config) {
-    this.apiKey = config.apiKey || '';
-    this.baseUrl = config.baseUrl || '';
-    this.model = config.model || '';
+    if (!config) return;
+    if (config.apiKey !== undefined) this.apiKey = config.apiKey;
+    if (config.baseUrl !== undefined) this.baseUrl = config.baseUrl;
+    if (config.model !== undefined) this.model = config.model;
   }
 
   async chat(messages, tools) {
@@ -195,10 +198,16 @@ export class AiEngine {
   }
 
   async loadModel(config) {
+    if (this._backendType !== 'local') {
+      throw new Error('Cannot load model in remote mode. Switch to local backend first.');
+    }
     return this.localBackend.loadModel(config);
   }
 
   async loadFromFile(file) {
+    if (this._backendType !== 'local') {
+      throw new Error('Cannot load model in remote mode. Switch to local backend first.');
+    }
     return this.localBackend.loadFromFile(file);
   }
 
@@ -211,12 +220,11 @@ export class AiEngine {
   }
 
   getStatus() {
-    const s = this.localBackend.getStatus();
-    return {
-      type: this._backendType,
-      loaded: s.loaded,
-      modelName: s.modelName,
-      isMultimodal: s.isMultimodal
-    };
+    if (this._backendType === 'local') {
+      const s = this.localBackend.getStatus();
+      return { type: 'local', loaded: s.loaded, modelName: s.modelName, isMultimodal: s.isMultimodal };
+    }
+    const s = this.remoteBackend.getStatus();
+    return { type: 'remote', loaded: s.configured, modelName: s.model, isMultimodal: false };
   }
 }
