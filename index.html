@@ -3201,6 +3201,25 @@
         // ==================== AI 助手功能 ====================
 
         let aiFunctionsModule = null;
+        let aiEngine = null;
+        let modelManager = null;
+
+        async function getAiEngine() {
+          if (aiEngine) return aiEngine;
+          const { AiEngine } = await import('./ai-engine.js');
+          const { ModelManager } = await import('./ai-model-manager.js');
+          aiEngine = new AiEngine();
+          modelManager = new ModelManager();
+          aiEngine.remoteBackend.configure({
+            apiKey: aiConfig.apiKey,
+            baseUrl: aiConfig.baseUrl,
+            model: aiConfig.model,
+          });
+          if (aiConfig.backendType === 'local') {
+            aiEngine.switchBackend('local');
+          }
+          return aiEngine;
+        }
 
         async function loadAiFunctions() {
             if (aiFunctionsModule) return aiFunctionsModule;
@@ -3212,6 +3231,7 @@
             apiKey: localStorage.getItem('ai_api_key') || '',
             baseUrl: localStorage.getItem('ai_base_url') || 'https://api.openai.com/v1',
             model: localStorage.getItem('ai_model') || 'gpt-4o-mini',
+            backendType: localStorage.getItem('ai_backend_type') || 'remote',
             confirmEnabled: localStorage.getItem('ai_confirm_enabled') !== '0'
         };
 
@@ -3593,13 +3613,33 @@
             }
         }
 
-        window.showAiConfig = function() {
+        window.showAiConfig = async function() {
             const modal = document.getElementById('aiConfigModal');
             modal.style.display = 'flex';
             document.getElementById('aiApiKeyInput').value = aiConfig.apiKey;
             document.getElementById('aiApiBaseInput').value = aiConfig.baseUrl;
             document.getElementById('aiModelInput').value = aiConfig.model;
-                document.getElementById('aiConfirmEnabled').checked = aiConfig.confirmEnabled;
+            document.getElementById('aiConfirmEnabled').checked = aiConfig.confirmEnabled;
+            const backendRadio = document.querySelector('input[name="aiBackend"][value="' + aiConfig.backendType + '"]');
+            if (backendRadio) backendRadio.checked = true;
+            const statusEl = document.getElementById('aiLocalModelStatus');
+            if (statusEl && aiEngine) {
+              const s = aiEngine.getStatus();
+              statusEl.textContent = s.loaded ? '✅ ' + s.modelName : '未加载';
+            }
+            const isLocal = aiConfig.backendType === 'local';
+            document.getElementById('aiRemoteSettings').style.display = isLocal ? 'none' : 'block';
+            document.getElementById('aiLocalSettings').style.display = isLocal ? 'block' : 'none';
+            const presetSelect = document.getElementById('aiPresetModelSelect');
+            if (presetSelect && presetSelect.options.length <= 1) {
+              const { ModelManager } = await import('./ai-model-manager.js');
+              for (const p of ModelManager.PRESET_MODELS) {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name + ' (' + p.size + ')';
+                presetSelect.appendChild(opt);
+              }
+            }
         };
 
         window.closeAiConfigModal = function() {
@@ -3612,17 +3652,28 @@
             aiConfig.model = document.getElementById('aiModelInput').value.trim() || 'gpt-4o-mini';
             localStorage.setItem('ai_api_key', aiConfig.apiKey);
             localStorage.setItem('ai_base_url', aiConfig.baseUrl);
-localStorage.setItem('ai_model', aiConfig.model);
-                aiConfig.confirmEnabled = document.getElementById('aiConfirmEnabled').checked;
-                localStorage.setItem('ai_confirm_enabled', aiConfig.confirmEnabled ? '1' : '0');
- closeAiConfigModal();
+            localStorage.setItem('ai_model', aiConfig.model);
+            aiConfig.confirmEnabled = document.getElementById('aiConfirmEnabled').checked;
+            localStorage.setItem('ai_confirm_enabled', aiConfig.confirmEnabled ? '1' : '0');
+            const newBackend = document.querySelector('input[name="aiBackend"]:checked').value;
+            if (newBackend !== aiConfig.backendType) {
+              aiConfig.backendType = newBackend;
+              localStorage.setItem('ai_backend_type', newBackend);
+              if (aiEngine) {
+                aiEngine.switchBackend(newBackend);
+              }
+            }
+            closeAiConfigModal();
             updateAiKeyHint();
             addAiChatMessage('系统', '配置已保存 ✓', 'system');
         };
 
         function updateAiKeyHint() {
             const hint = document.getElementById('aiApiKeyHint');
-            if (aiConfig.apiKey) {
+            if (aiConfig.backendType === 'local') {
+              hint.textContent = aiEngine && aiEngine.getStatus().loaded ? '✅ 本地模型已加载' : '🔧 本地模型未加载';
+              hint.style.color = aiEngine && aiEngine.getStatus().loaded ? '#4caf50' : '#ff9800';
+            } else if (aiConfig.apiKey) {
                 hint.textContent = '✅ API Key 已配置 | 点击修改';
                 hint.style.color = '#4caf50';
             } else {
@@ -3795,7 +3846,7 @@ localStorage.setItem('ai_model', aiConfig.model);
             const message = input.value.trim();
             if (!message) return;
 
-            if (!aiConfig.apiKey) {
+            if (aiConfig.backendType !== 'local' && !aiConfig.apiKey) {
                 showAiConfig();
                 return;
             }
@@ -3822,27 +3873,26 @@ localStorage.setItem('ai_model', aiConfig.model);
                 for (let turn = 0; turn < MAX_TURNS; turn++) {
                     const apiMessages = buildMessagesForApi();
 
-                    const response = await fetch(aiConfig.baseUrl + '/chat/completions', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + aiConfig.apiKey
-                        },
-                        body: JSON.stringify({
-                            model: aiConfig.model,
-                            messages: apiMessages,
-                            tools: tools,
-                            tool_choice: 'auto',
-                            max_tokens: 2048
-                        })
-                    });
+                    const engine = await getAiEngine();
 
-                    if (!response.ok) {
-                        const errData = await response.json().catch(function() { return {}; });
-                        throw new Error(errData.error && errData.error.message ? errData.error.message : 'API 错误 ' + response.status);
+                    if (engine.backendType === 'local' && (!engine.localBackend || !engine.localBackend.modelLoaded)) {
+                      addAiChatMessage('assistant', '请先加载本地模型（点击配置 → 本地模型 → 加载）', 'system');
+                      sendBtn.disabled = false;
+                      input.disabled = false;
+                      sendBtn.textContent = '发送';
+                      aiMessageInProgress = false;
+                      return;
                     }
 
-                    const data = await response.json();
+                    if (engine.backendType === 'remote') {
+                      engine.remoteBackend.configure({
+                        apiKey: aiConfig.apiKey,
+                        baseUrl: aiConfig.baseUrl,
+                        model: aiConfig.model,
+                      });
+                    }
+
+                    const data = await engine.chat(apiMessages, tools);
                     const choice = data.choices[0];
                     const assistantMsg = choice.message;
 
@@ -15138,12 +15188,77 @@ window.updateBrushColorFromSidebar = function() {
             }
         }
 
+        window.loadSelectedPresetModel = async function() {
+          const select = document.getElementById('aiPresetModelSelect');
+          const presetId = select.value;
+          if (!presetId) return;
+
+          const engine = await getAiEngine();
+          const preset = (await import('./ai-model-manager.js')).ModelManager.PRESET_MODELS.find(p => p.id === presetId);
+          if (!preset) return;
+
+          const statusEl = document.getElementById('aiLocalModelStatus');
+          statusEl.textContent = '准备中: ' + preset.name + '...';
+
+          try {
+            await modelManager.downloadModel(presetId);
+            statusEl.textContent = '加载中: ' + preset.name + '...';
+            await engine.loadModel({
+              name: preset.name,
+              url: preset.url,
+              onProgress: function(pct) {
+                statusEl.textContent = '加载中: ' + preset.name + ' (' + Math.round(pct * 100) + '%)';
+              },
+            });
+            statusEl.textContent = '✅ ' + preset.name + ' 已加载';
+            addAiChatMessage('assistant', '本地模型 ' + preset.name + ' 已加载', 'system');
+          } catch(e) {
+            statusEl.textContent = '❌ 失败: ' + e.message;
+            addAiChatMessage('assistant', '模型加载失败: ' + e.message, 'system');
+          }
+        };
+
+        window.uploadLocalModel = async function() {
+          const input = document.getElementById('aiModelFileInput');
+          const file = input.files[0];
+          if (!file) return;
+
+          const engine = await getAiEngine();
+          const statusEl = document.getElementById('aiLocalModelStatus');
+          statusEl.textContent = '加载中: ' + file.name + '...';
+
+          try {
+            await engine.loadFromFile(file);
+            statusEl.textContent = '✅ ' + file.name + ' 已加载';
+            addAiChatMessage('assistant', '自定义模型 ' + file.name + ' 已加载', 'system');
+          } catch(e) {
+            statusEl.textContent = '❌ 失败: ' + e.message;
+            addAiChatMessage('assistant', '模型加载失败: ' + e.message, 'system');
+          }
+        };
+
+        window.unloadLocalModel = async function() {
+          const engine = await getAiEngine();
+          await engine.unloadModel();
+          document.getElementById('aiLocalModelStatus').textContent = '未加载';
+          addAiChatMessage('assistant', '本地模型已卸载', 'system');
+        };
+
         // 页面加载完成后，先隐藏加载动画（因为现在默认是可见的）
         document.addEventListener('DOMContentLoaded', () => {
             const loadingEl = document.getElementById('loading');
             if (loadingEl) {
                 loadingEl.style.display = 'none';
             }
+            document.querySelectorAll('input[name="aiBackend"]').forEach(function(radio) {
+              radio.addEventListener('change', function() {
+                const isLocal = this.value === 'local';
+                const remoteEl = document.getElementById('aiRemoteSettings');
+                const localEl = document.getElementById('aiLocalSettings');
+                if (remoteEl) remoteEl.style.display = isLocal ? 'none' : 'block';
+                if (localEl) localEl.style.display = isLocal ? 'block' : 'none';
+              });
+            });
         });
 
         // 初始化
@@ -15151,20 +15266,59 @@ window.updateBrushColorFromSidebar = function() {
     </script>
 
     <div id="aiConfigModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:10000; align-items:center; justify-content:center;">
-        <div style="background:#2a2a2a; border-radius:12px; padding:24px; width:400px; max-width:90vw; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+        <div style="background:#2a2a2a; border-radius:12px; padding:24px; width:480px; max-width:90vw; max-height:85vh; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
             <h3 style="color:#e0e0e0; margin-bottom:16px;">AI 助手配置</h3>
-            <div style="margin-bottom:12px;">
-                <label style="color:#aaa; font-size:0.85em;">API Key</label>
-                <input type="password" id="aiApiKeyInput" placeholder="sk-..." style="width:100%; padding:8px; background:#333; color:#e0e0e0; border:1px solid #555; border-radius:6px; margin-top:4px;">
-            </div>
-            <div style="margin-bottom:12px;">
-                <label style="color:#aaa; font-size:0.85em;">API Base URL</label>
-                <input type="text" id="aiApiBaseInput" placeholder="https://api.openai.com/v1" style="width:100%; padding:8px; background:#333; color:#e0e0e0; border:1px solid #555; border-radius:6px; margin-top:4px;">
-            </div>
+            
+            <!-- Backend selector -->
             <div style="margin-bottom:16px;">
-                <label style="color:#aaa; font-size:0.85em;">模型</label>
-                <input type="text" id="aiModelInput" placeholder="gpt-4o-mini" style="width:100%; padding:8px; background:#333; color:#e0e0e0; border:1px solid #555; border-radius:6px; margin-top:4px;">
+                <label style="color:#aaa; font-size:0.85em; display:block; margin-bottom:6px;">推理后端</label>
+                <div style="display:flex; gap:12px;">
+                    <label style="color:#e0e0e0; font-size:0.9em; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                        <input type="radio" name="aiBackend" value="remote" checked> 远程 API
+                    </label>
+                    <label style="color:#e0e0e0; font-size:0.9em; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                        <input type="radio" name="aiBackend" value="local"> 本地模型
+                    </label>
+                </div>
             </div>
+
+            <!-- Remote settings -->
+            <div id="aiRemoteSettings">
+                <div style="margin-bottom:12px;">
+                    <label style="color:#aaa; font-size:0.85em;">API Key</label>
+                    <input type="password" id="aiApiKeyInput" placeholder="sk-..." style="width:100%; padding:8px; background:#333; color:#e0e0e0; border:1px solid #555; border-radius:6px; margin-top:4px;">
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="color:#aaa; font-size:0.85em;">API Base URL</label>
+                    <input type="text" id="aiApiBaseInput" placeholder="https://api.openai.com/v1" style="width:100%; padding:8px; background:#333; color:#e0e0e0; border:1px solid #555; border-radius:6px; margin-top:4px;">
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="color:#aaa; font-size:0.85em;">模型</label>
+                    <input type="text" id="aiModelInput" placeholder="gpt-4o-mini" style="width:100%; padding:8px; background:#333; color:#e0e0e0; border:1px solid #555; border-radius:6px; margin-top:4px;">
+                </div>
+            </div>
+
+            <!-- Local settings -->
+            <div id="aiLocalSettings" style="display:none;">
+                <div style="margin-bottom:12px;">
+                    <label style="color:#aaa; font-size:0.85em;">预设模型</label>
+                    <select id="aiPresetModelSelect" style="width:100%; padding:8px; background:#333; color:#e0e0e0; border:1px solid #555; border-radius:6px; margin-top:4px;">
+                        <option value="">选择预设模型...</option>
+                    </select>
+                    <button class="btn" onclick="loadSelectedPresetModel()" id="aiLoadModelBtn" style="margin-top:6px; padding:6px 12px; font-size:0.85em;">加载模型</button>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="color:#aaa; font-size:0.85em;">或上传 .gguf 文件</label>
+                    <input type="file" id="aiModelFileInput" accept=".gguf" style="display:block; margin-top:4px; color:#e0e0e0;">
+                    <button class="btn" onclick="uploadLocalModel()" style="margin-top:4px; padding:6px 12px; font-size:0.85em;">加载上传的模型</button>
+                </div>
+                <div style="margin-bottom:12px; padding:8px; background:#333; border-radius:6px;">
+                    <span style="color:#888; font-size:0.85em;">状态: </span>
+                    <span id="aiLocalModelStatus" style="color:#aaa; font-size:0.85em;">未加载</span>
+                    <button class="btn btn-danger" onclick="unloadLocalModel()" style="margin-left:8px; padding:2px 8px; font-size:0.75em;">卸载</button>
+                </div>
+            </div>
+
             <div style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
                 <input type="checkbox" id="aiConfirmEnabled" checked style="width:auto; margin:0;">
                 <label for="aiConfirmEnabled" style="color:#aaa; font-size:0.85em; cursor:pointer;">破坏性操作需确认</label>
