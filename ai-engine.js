@@ -1,4 +1,6 @@
-const WLLAMA_WASM_PATH = './wllama/esm/wasm/wllama.wasm';
+function getWasmUrl() {
+  return new URL('./wllama/esm/wasm/wllama.wasm', document.baseURI).href;
+}
 
 let wllamaModule = null;
 
@@ -27,15 +29,18 @@ export class WllamaBackend {
       await this.unloadModel();
     }
     const { Wllama } = await getWllama();
-    this.wllama = new Wllama({ default: WLLAMA_WASM_PATH });
+    this.wllama = new Wllama({ default: getWasmUrl() });
     const params = {
-      n_ctx: 4096,
+      n_ctx: 8192,
       n_threads: navigator.hardwareConcurrency || 4
     };
     if (onProgress) {
       params.progressCallback = onProgress;
     }
-    const modelSource = mmprojUrl ? { url, mmprojUrl } : url;
+    const resolveUrl = (u) => new URL(u, document.baseURI).href;
+    const modelSource = mmprojUrl
+      ? { url: resolveUrl(url), mmprojUrl: resolveUrl(mmprojUrl) }
+      : resolveUrl(url);
     await this.wllama.loadModelFromUrl(modelSource, params);
     this.modelLoaded = true;
     this.modelName = name || '';
@@ -47,11 +52,11 @@ export class WllamaBackend {
       await this.unloadModel();
     }
     const { Wllama } = await getWllama();
-    this.wllama = new Wllama({ default: WLLAMA_WASM_PATH });
+    this.wllama = new Wllama({ default: getWasmUrl() });
     const arrayBuffer = await file.arrayBuffer();
     const blob = new Blob([arrayBuffer]);
     await this.wllama.loadModel([blob], {
-      n_ctx: 4096,
+      n_ctx: 8192,
       n_threads: navigator.hardwareConcurrency || 4
     });
     this.modelLoaded = true;
