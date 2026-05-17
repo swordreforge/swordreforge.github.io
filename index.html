@@ -3648,9 +3648,17 @@
         };
 
         window.toggleAiBackendSettings = function() {
-            const isLocal = document.querySelector('input[name="aiBackend"]:checked').value === 'local';
+            const newBackend = document.querySelector('input[name="aiBackend"]:checked').value;
+            const isLocal = newBackend === 'local';
             document.getElementById('aiRemoteSettings').style.display = isLocal ? 'none' : 'block';
             document.getElementById('aiLocalSettings').style.display = isLocal ? 'block' : 'none';
+            if (newBackend !== aiConfig.backendType) {
+              aiConfig.backendType = newBackend;
+              localStorage.setItem('ai_backend_type', newBackend);
+              if (aiEngine) {
+                aiEngine.switchBackend(newBackend);
+              }
+            }
         };
 
         window.closeAiConfigModal = function() {
