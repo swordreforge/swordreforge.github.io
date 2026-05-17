@@ -143,13 +143,14 @@ class SuperResolution {
 
         const resultNchw = await this.executeNet(nchw);
         const resultNhwc = tf.transpose(resultNchw, [0, 2, 3, 1]);
-        const output = resultNhwc.squeeze().mul(255.0);
+        const output = resultNhwc.squeeze();
 
         const canvas = document.createElement('canvas');
         canvas.width = imageData.width * scale;
         canvas.height = imageData.height * scale;
-        const outputImageData = await tf.browser.toPixels(output, canvas);
-        return outputImageData;
+        await tf.browser.toPixels(output, canvas);
+        const ctx = canvas.getContext('2d');
+        return ctx.getImageData(0, 0, canvas.width, canvas.height);
     }
 
     async processTiled(imageData, width, height, scale, onProgress) {
@@ -190,7 +191,7 @@ class SuperResolution {
 
                 const resultNchw = await this.executeNet(nchw);
                 const resultNhwc = tf.transpose(resultNchw, [0, 2, 3, 1]);
-                const outputTensor = resultNhwc.squeeze().mul(255.0);
+                const outputTensor = resultNhwc.squeeze();
 
                 const scaledTileW = tileW * scale;
                 const scaledTileH = tileH * scale;
@@ -206,10 +207,10 @@ class SuperResolution {
                     for (let tx = 0; tx < scaledTileW; tx++) {
                         const dstIdx = (scaledY + ty) * scaledWidth * 4 + (scaledX + tx) * 4;
                         const srcIdx = ty * scaledTileW * 4 + tx * 4;
-                        outputImageData.data[dstIdx] = tiledImageData.data[srcIdx];
-                        outputImageData.data[dstIdx + 1] = tiledImageData.data[srcIdx + 1];
-                        outputImageData.data[dstIdx + 2] = tiledImageData.data[srcIdx + 2];
-                        outputImageData.data[dstIdx + 3] = tiledImageData.data[srcIdx + 3];
+                        outputImageData.data[dstIdx] = tiledImageData[srcIdx];
+                        outputImageData.data[dstIdx + 1] = tiledImageData[srcIdx + 1];
+                        outputImageData.data[dstIdx + 2] = tiledImageData[srcIdx + 2];
+                        outputImageData.data[dstIdx + 3] = tiledImageData[srcIdx + 3];
                     }
                 }
 

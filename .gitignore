@@ -37,3 +37,10 @@ photon-wasm/target/
 # Worktrees
 .worktrees/
 worktrees/
+
+# wllama (has own git repo)
+wllama/
+
+# Downloaded GGUF models
+Qwen2.5-1.5B-Instruct-GGUF/
+*.gguf

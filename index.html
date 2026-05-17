@@ -13523,8 +13523,8 @@ localStorage.setItem('ai_model', aiConfig.model);
                 ncnn.__Z15free_image_dataPh(resultPtr);
                 ncnn._free(inputPtr);
 
-                appState.processor = new ImageProcessor(width, height, processedPixels);
                 saveToHistory();
+                appState.processor = new ImageProcessor(width, height, processedPixels);
                 updateCanvas();
 
                 Logger.info('AI 去噪完成, kernelSize=' + kernelSize);
@@ -13602,8 +13602,8 @@ localStorage.setItem('ai_model', aiConfig.model);
 
                 var newWidth = width * 2;
                 var newHeight = height * 2;
-                appState.processor = new ImageProcessor(newWidth, newHeight, resultData.data);
                 saveToHistory();
+                appState.processor = new ImageProcessor(newWidth, newHeight, resultData.data);
                 updateCanvas();
 
                 srStatusEl.textContent = '✅ 完成! 耗时: ' + elapsed.toFixed(1) + 's';
@@ -13673,8 +13673,8 @@ localStorage.setItem('ai_model', aiConfig.model);
                 var elapsed = (performance.now() - startTime) / 1000;
 
                 // 将结果写回 processor
-                appState.processor = new ImageProcessor(width, height, new Uint8Array(resultData.data));
                 saveToHistory();
+                appState.processor = new ImageProcessor(width, height, new Uint8Array(resultData.data));
                 updateCanvas();
 
                 // 更新图层系统
@@ -13758,8 +13758,8 @@ localStorage.setItem('ai_model', aiConfig.model);
                 });
                 var elapsed = (performance.now() - startTime) / 1000;
 
-                appState.processor = new ImageProcessor(width, height, new Uint8Array(resultData.data));
                 saveToHistory();
+                appState.processor = new ImageProcessor(width, height, new Uint8Array(resultData.data));
                 updateCanvas();
 
                 if (appState.layerStack) {
