@@ -3615,6 +3615,11 @@
 
         window.showAiConfig = async function() {
             const modal = document.getElementById('aiConfigModal');
+            modal.querySelectorAll('button, input, select').forEach(function(el) {
+              el.disabled = false;
+              el.style.opacity = '';
+              el.style.cursor = '';
+            });
             modal.style.display = 'flex';
             document.getElementById('aiApiKeyInput').value = aiConfig.apiKey;
             document.getElementById('aiApiBaseInput').value = aiConfig.baseUrl;
